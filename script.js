@@ -232,8 +232,14 @@ async function addTransaction(transaction) {
 
 async function deleteTransaction(index) {
     const transaction = transactions[index];
+
+    const confirmMsg = `Confirmer la suppression de cette transaction:\n${transaction.description} — ${formatCurrency(transaction.amount)} (${transaction.date})`;
+    const confirmed = window.confirm(confirmMsg);
+    if (!confirmed) return;
+
+    // Remove from local array after confirmation
     transactions.splice(index, 1);
-    
+
     if (db && transaction.firebaseId) {
         try {
             await db.collection('transactions').doc(transaction.firebaseId).delete();
@@ -244,7 +250,7 @@ async function deleteTransaction(index) {
     } else {
         localStorage.setItem('transactions', JSON.stringify(transactions));
     }
-    
+
     updateDashboard();
 }
 
