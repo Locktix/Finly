@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finly - Gestion de Budget Personnel</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-container">
+            <div class="logo">
+                <i class="fas fa-wallet"></i>
+                <span>Finly</span>
+            </div>
+            <button class="config-btn" id="configBtn">
+                <i class="fas fa-gear"></i> Configuration
+            </button>
+        </div>
+    </header>
+
+    <!-- Modal Configuration Firebase -->
+    <div class="modal" id="configModal">
+        <div class="modal-content config-modal">
+            <button class="modal-close" id="closeConfigBtn">&times;</button>
+            <h2>À propos de la Configuration</h2>
+            <p class="config-info">Firebase est déjà configuré et connecté à votre base de données Firestore. Toutes vos transactions seront synchronisées en temps réel.</p>
+            <div style="background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                <p style="font-size: 0.875rem; color: #6b7280;"><strong>Projet:</strong> finly-f82be</p>
+                <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;"><strong>Statut:</strong> <span style="color: #10b981;">✓ Connecté</span></p>
+            </div>
+            <button type="button" class="btn-primary" id="closeConfigBtn2">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <main class="main-container">
+        <!-- Summary Cards -->
+        <section class="summary-section">
+            <div class="summary-card income">
+                <div class="summary-header">
+                    <i class="fas fa-arrow-down"></i>
+                    <h3>Total Recettes</h3>
+                </div>
+                <p class="summary-value" id="totalIncome">0,00 €</p>
+            </div>
+
+            <div class="summary-card expense">
+                <div class="summary-header">
+                    <i class="fas fa-arrow-up"></i>
+                    <h3>Total Dépenses</h3>
+                </div>
+                <p class="summary-value" id="totalExpense">0,00 €</p>
+            </div>
+
+            <div class="summary-card balance">
+                <div class="summary-header">
+                    <i class="fas fa-scale-balanced"></i>
+                    <h3>Solde Global</h3>
+                </div>
+                <p class="summary-value" id="totalBalance">0,00 €</p>
+            </div>
+        </section>
+
+        <!-- Action Buttons -->
+        <section class="actions-section">
+            <button class="btn-action income-btn" id="addIncomeBtn">
+                <i class="fas fa-plus"></i> Ajouter une Recette
+            </button>
+            <button class="btn-action expense-btn" id="addExpenseBtn">
+                <i class="fas fa-plus"></i> Ajouter une Dépense
+            </button>
+        </section>
+
+        <!-- Transactions Table -->
+        <section class="transactions-section">
+            <div class="transactions-header">
+                <h2>Transactions Récentes</h2>
+                <span class="transaction-count" id="transactionCount">0 transactions</span>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Catégorie</th>
+                            <th>Montant</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr class="empty-row">
+                            <td colspan="6">Aucune transaction. Commencez par ajouter une recette ou une dépense.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal Ajouter Dépense -->
+    <div class="modal" id="expenseModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeExpenseBtn">&times;</button>
+            <h2>Ajouter une Dépense</h2>
+            <form id="expenseForm">
+                <div class="form-group">
+                    <label for="expenseName">Description</label>
+                    <input type="text" id="expenseName" placeholder="Ex: Épicerie" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseCategory">Catégorie</label>
+                    <select id="expenseCategory" required>
+                        <option value="">Sélectionner une catégorie</option>
+                        <option value="Assurances">Assurances</option>
+                        <option value="Magasins">Magasins</option>
+                        <option value="Épargne">Épargne</option>
+                        <option value="Loisirs">Loisirs</option>
+                        <option value="Transport">Transport</option>
+                        <option value="Santé">Santé</option>
+                        <option value="Restaurants">Restaurants</option>
+                        <option value="Services">Services</option>
+                        <option value="Autres">Autres</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseAmount">Montant (€)</label>
+                    <input type="number" id="expenseAmount" placeholder="0.00" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="expenseDate">Date</label>
+                    <input type="date" id="expenseDate" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Ajouter une Dépense</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Ajouter Recette -->
+    <div class="modal" id="incomeModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeIncomeBtn">&times;</button>
+            <h2>Ajouter une Recette</h2>
+            <form id="incomeForm">
+                <div class="form-group">
+                    <label for="incomeName">Description</label>
+                    <input type="text" id="incomeName" placeholder="Ex: Salaire" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="incomeCategory">Catégorie</label>
+                    <select id="incomeCategory" required>
+                        <option value="">Sélectionner une catégorie</option>
+                        <option value="Salaire">Salaire</option>
+                        <option value="Revenus">Revenus</option>
+                        <option value="Autres">Autres</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="incomeAmount">Montant (€)</label>
+                    <input type="number" id="incomeAmount" placeholder="0.00" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="incomeDate">Date</label>
+                    <input type="date" id="incomeDate" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Ajouter une Recette</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Finly - Gestion de Budget Personnel. Tous droits réservés.</p>
+    </footer>
+
+    <!-- Firebase SDK (Compat version) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Application Script -->
+    <script src="script.js"></script>
+</body>
+</html>
