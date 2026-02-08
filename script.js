@@ -174,6 +174,11 @@ function setupFormListeners() {
 // GESTION DES TRANSACTIONS
 // ======================
 let transactions = [];
+let selectedMonth = null; // Format: "YYYY-MM"
+
+function getSelectedMonth() {
+    return selectedMonth || new Date().toISOString().slice(0, 7);
+}
 
 async function addTransaction(transaction) {
     transactions.push(transaction);
@@ -244,12 +249,21 @@ function updateDashboard() {
     updateTransactionsTable();
 }
 
+function getTransactionsForMonth(month) {
+    return transactions.filter(t => {
+        return t.date.startsWith(month);
+    });
+}
+
 function updateSummary() {
-    const totalIncome = transactions
+    const month = getSelectedMonth();
+    const monthTransactions = getTransactionsForMonth(month);
+    
+    const totalIncome = monthTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
     
-    const totalExpense = transactions
+    const totalExpense = monthTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
     
@@ -278,15 +292,18 @@ function updateSummary() {
 function updateTransactionsTable() {
     const tableBody = document.getElementById('transactionsBody');
     const countElement = document.getElementById('transactionCount');
+    const month = getSelectedMonth();
+    
+    const monthTransactions = getTransactionsForMonth(month);
 
-    if (transactions.length === 0) {
-        tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucune transaction. Commencez par ajouter une recette ou une dépense.</td></tr>';
+    if (monthTransactions.length === 0) {
+        tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucune transaction pour ce mois.</td></tr>';
         countElement.textContent = '0 transactions';
         return;
     }
 
     // Trier les transactions par date (plus récentes d'abord)
-    const sorted = [...transactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...monthTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     let html = '';
     sorted.forEach((transaction, index) => {
@@ -317,7 +334,7 @@ function updateTransactionsTable() {
     });
 
     tableBody.innerHTML = html;
-    countElement.textContent = `${transactions.length} transaction${transactions.length > 1 ? 's' : ''}`;
+    countElement.textContent = `${monthTransactions.length} transaction${monthTransactions.length > 1 ? 's' : ''}`;
 }
 
 // ======================
@@ -350,12 +367,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupFormListeners();
     
     // Mise à jour initiale du dashboard
+    const today = new Date();
+    const currentMonth = today.toISOString().slice(0, 7);
+    selectedMonth = currentMonth;
+    document.getElementById('monthFilter').value = currentMonth;
+    
     updateDashboard();
 
     // Ajouter les valeurs par défaut aux champs de date
-    const today = new Date().toISOString().split('T')[0];
-    document.getElementById('expenseDate').value = today;
-    document.getElementById('incomeDate').value = today;
+    const todayStr = today.toISOString().split('T')[0];
+    document.getElementById('expenseDate').value = todayStr;
+    document.getElementById('incomeDate').value = todayStr;
+    
+    // Listener pour le changement de mois
+    document.getElementById('monthFilter').addEventListener('change', (e) => {
+        selectedMonth = e.target.value;
+        updateDashboard();
+    });
 });
 
 // Sauvegarder automatiquement les transactions locales quand elles changent

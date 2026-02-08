@@ -82,8 +82,14 @@
         <!-- Transactions Table -->
         <section class="transactions-section">
             <div class="transactions-header">
-                <h2>Transactions Récentes</h2>
-                <span class="transaction-count" id="transactionCount">0 transactions</span>
+                <div>
+                    <h2>Transactions Récentes</h2>
+                    <span class="transaction-count" id="transactionCount">0 transactions</span>
+                </div>
+                <div class="month-selector">
+                    <label for="monthFilter">Filtrer par mois:</label>
+                    <input type="month" id="monthFilter">
+                </div>
             </div>
             
             <div class="table-responsive">
