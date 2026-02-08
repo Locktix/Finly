@@ -428,6 +428,30 @@ body {
     transform: scale(1.1);
 }
 
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.btn-edit {
+    background-color: transparent;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.btn-edit:hover {
+    color: #1d4ed8;
+    transform: scale(1.1);
+}
+
 /* ======================
    MODALES
    ====================== */
@@ -696,6 +720,16 @@ body {
 
     .logo i {
         font-size: var(--font-size-2xl);
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .btn-edit,
+    .btn-delete {
+        font-size: var(--font-size-sm);
+        padding: var(--spacing-xs) var(--spacing-xs);
     }
 }
 

@@ -114,6 +114,39 @@
         </section>
     </main>
 
+    <!-- Modal Modifier Dépense/Recette -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeEditBtn">&times;</button>
+            <h2 id="editTitle">Modifier une Dépense</h2>
+            <form id="editForm">
+                <div class="form-group">
+                    <label for="editName">Description</label>
+                    <input type="text" id="editName" placeholder="Ex: Épicerie" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editCategory">Catégorie</label>
+                    <select id="editCategory" required>
+                        <option value="">Sélectionner une catégorie</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editAmount">Montant (€)</label>
+                    <input type="number" id="editAmount" placeholder="0.00" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editDate">Date</label>
+                    <input type="date" id="editDate" required>
+                </div>
+
+                <button type="submit" class="btn-primary">Enregistrer les Modifications</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal Ajouter Dépense -->
     <div class="modal" id="expenseModal">
         <div class="modal-content">

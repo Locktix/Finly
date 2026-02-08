@@ -30,6 +30,12 @@ const categoryIcons = {
     'Autres': 'fa-ellipsis-h'
 };
 
+const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Autres'];
+const incomeCategories = ['Salaire', 'Revenus', 'Autres'];
+
+let currentEditingIndex = null;
+let currentEditingType = null;
+
 // ======================
 // INITIALISATION FIREBASE
 // ======================
@@ -110,6 +116,11 @@ function setupModalListeners() {
         closeModal('incomeModal');
     });
 
+    // Modal Modifier
+    document.getElementById('closeEditBtn').addEventListener('click', () => {
+        closeModal('editModal');
+    });
+
     // Modal Configuration
     document.getElementById('configBtn').addEventListener('click', () => {
         openModal('configModal');
@@ -168,6 +179,27 @@ function setupFormListeners() {
         document.getElementById('incomeForm').reset();
         closeModal('incomeModal');
     });
+
+    // Formulaire Modifier
+    document.getElementById('editForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const updatedTransaction = {
+            type: currentEditingType,
+            description: document.getElementById('editName').value,
+            category: document.getElementById('editCategory').value,
+            amount: parseFloat(document.getElementById('editAmount').value),
+            date: document.getElementById('editDate').value,
+            timestamp: transactions[currentEditingIndex].timestamp
+        };
+        
+        if (transactions[currentEditingIndex].firebaseId) {
+            updatedTransaction.firebaseId = transactions[currentEditingIndex].firebaseId;
+        }
+        
+        updateTransaction(currentEditingIndex, updatedTransaction);
+        document.getElementById('editForm').reset();
+        closeModal('editModal');
+    });
 }
 
 // ======================
@@ -214,6 +246,62 @@ async function deleteTransaction(index) {
     }
     
     updateDashboard();
+}
+
+async function updateTransaction(index, updatedTransaction) {
+    const oldTransaction = transactions[index];
+    transactions[index] = updatedTransaction;
+    
+    if (db && oldTransaction.firebaseId) {
+        try {
+            await db.collection('transactions').doc(oldTransaction.firebaseId).update(updatedTransaction);
+            console.log('Transaction mise à jour sur Firebase');
+        } catch (error) {
+            console.error('Erreur lors de la mise à jour:', error);
+        }
+    } else {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+    
+    updateDashboard();
+}
+
+function openEditModal(index) {
+    const transaction = transactions[index];
+    currentEditingIndex = index;
+    currentEditingType = transaction.type;
+    
+    // Mettre à jour le titre et les catégories
+    const titleEl = document.getElementById('editTitle');
+    const categorySelect = document.getElementById('editCategory');
+    
+    if (transaction.type === 'expense') {
+        titleEl.textContent = 'Modifier une Dépense';
+        categorySelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
+        expenseCategories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            categorySelect.appendChild(option);
+        });
+    } else {
+        titleEl.textContent = 'Modifier une Recette';
+        categorySelect.innerHTML = '<option value="">Sélectionner une catégorie</option>';
+        incomeCategories.forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            categorySelect.appendChild(option);
+        });
+    }
+    
+    // Pré-remplir les champs
+    document.getElementById('editName').value = transaction.description;
+    document.getElementById('editCategory').value = transaction.category;
+    document.getElementById('editAmount').value = transaction.amount;
+    document.getElementById('editDate').value = transaction.date;
+    
+    openModal('editModal');
 }
 
 async function loadTransactionsFromFirebase() {
@@ -325,9 +413,14 @@ function updateTransactionsTable() {
                 <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
                 <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
                 <td>
-                    <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
-                        <i class="fas fa-trash-alt"></i> Supprimer
-                    </button>
+                    <div class="action-buttons">
+                        <button class="btn-edit" onclick="openEditModal(${originalIndex})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
+                            <i class="fas fa-trash-alt"></i> Supprimer
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
