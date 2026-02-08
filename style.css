@@ -335,118 +335,6 @@ body {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-/* Cartes de transactions */
-.transactions-cards {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-lg);
-}
-
-.transaction-card {
-    background-color: var(--color-bg-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    border-left: 4px solid transparent;
-    box-shadow: var(--shadow-sm);
-    transition: all var(--transition-base);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: var(--spacing-lg);
-    border: 1px solid var(--color-border);
-}
-
-.transaction-card:hover {
-    transform: translateX(4px);
-    box-shadow: var(--shadow-lg);
-}
-
-.transaction-card.income {
-    border-left-color: var(--color-income);
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(16, 185, 129, 0) 100%);
-}
-
-.transaction-card.expense {
-    border-left-color: var(--color-expense);
-    background: linear-gradient(135deg, rgba(239, 68, 68, 0.03) 0%, rgba(239, 68, 68, 0) 100%);
-}
-
-.transaction-card-icon {
-    font-size: var(--font-size-2xl);
-    color: var(--color-text-secondary);
-    min-width: 50px;
-    text-align: center;
-}
-
-.transaction-card.income .transaction-card-icon {
-    color: var(--color-income);
-}
-
-.transaction-card.expense .transaction-card-icon {
-    color: var(--color-expense);
-}
-
-.transaction-card-content {
-    flex: 1;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: var(--spacing-lg);
-    align-items: center;
-}
-
-.transaction-card-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.transaction-card-label {
-    font-size: var(--font-size-xs);
-    color: var(--color-text-secondary);
-    text-transform: uppercase;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    margin-bottom: var(--spacing-xs);
-}
-
-.transaction-card-value {
-    font-size: var(--font-size-lg);
-    color: var(--color-text-primary);
-    font-weight: 600;
-}
-
-.transaction-card-amount {
-    font-size: var(--font-size-xl);
-    font-weight: 700;
-}
-
-.transaction-card.income .transaction-card-amount {
-    color: var(--color-income);
-}
-
-.transaction-card.expense .transaction-card-amount {
-    color: var(--color-expense);
-}
-
-.transaction-card-actions {
-    display: flex;
-    gap: var(--spacing-md);
-    align-items: center;
-}
-
-.empty-card {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: var(--spacing-2xl) var(--spacing-lg);
-    color: var(--color-text-secondary);
-}
-
-.empty-card i {
-    font-size: var(--font-size-3xl);
-    margin-bottom: var(--spacing-lg);
-    opacity: 0.5;
-    display: block;
-}
-
 .table-responsive {
     overflow-x: auto;
 }
@@ -488,6 +376,38 @@ body {
 
 .transactions-table tbody tr.empty-row:hover {
     background-color: transparent;
+}
+
+.transaction-amount {
+    font-weight: 600;
+    font-size: var(--font-size-base);
+}
+
+.transaction-amount.income {
+    color: var(--color-income);
+}
+
+.transaction-amount.expense {
+    color: var(--color-expense);
+}
+
+.transaction-type {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-md);
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    text-transform: uppercase;
+    font-size: var(--font-size-xs);
+}
+
+.transaction-type.income {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--color-income);
+}
+
+.transaction-type.expense {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--color-expense);
 }
 
 .btn-delete {
@@ -740,6 +660,15 @@ body {
         padding: var(--spacing-md);
     }
 
+    .transactions-table {
+        font-size: var(--font-size-xs);
+    }
+
+    .transactions-table th,
+    .transactions-table td {
+        padding: var(--spacing-sm);
+    }
+
     .modal-content {
         padding: var(--spacing-lg);
         margin: var(--spacing-md);
@@ -760,20 +689,9 @@ body {
         width: 100%;
     }
 
-    .transaction-card {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--spacing-md);
-    }
-
-    .transaction-card-content {
-        grid-template-columns: repeat(2, 1fr);
-        width: 100%;
-    }
-
-    .transaction-card-actions {
-        width: 100%;
-        justify-content: flex-end;
+    .transaction-type {
+        padding: var(--spacing-xs) var(--spacing-sm);
+        font-size: var(--font-size-xs);
     }
 }
 
@@ -812,23 +730,6 @@ body {
     .btn-delete {
         font-size: var(--font-size-sm);
         padding: var(--spacing-xs) var(--spacing-xs);
-    }
-
-    .transaction-card-content {
-        grid-template-columns: 1fr;
-    }
-
-    .transaction-card-item {
-        width: 100%;
-    }
-
-    .empty-card {
-        padding: var(--spacing-lg) var(--spacing-md);
-    }
-
-    .empty-card i {
-        font-size: var(--font-size-2xl);
-        margin-bottom: var(--spacing-md);
     }
 }
 

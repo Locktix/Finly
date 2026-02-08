@@ -92,11 +92,24 @@
                 </div>
             </div>
             
-            <div class="transactions-cards" id="transactionsCards">
-                <div class="empty-card">
-                    <i class="fas fa-inbox"></i>
-                    <p>Aucune transaction. Commencez par ajouter une recette ou une dépense.</p>
-                </div>
+            <div class="table-responsive">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Catégorie</th>
+                            <th>Montant</th>
+                            <th>Type</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr class="empty-row">
+                            <td colspan="6">Aucune transaction. Commencez par ajouter une recette ou une dépense.</td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </section>
     </main>
