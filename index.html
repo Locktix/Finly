@@ -91,6 +91,64 @@
                     <input type="month" id="monthFilter">
                 </div>
             </div>
+
+            <!-- Filters Section -->
+            <div class="filters-section">
+                <button class="toggle-filters-btn" id="toggleFiltersBtn">
+                    <i class="fas fa-sliders-h"></i> Filtres Avancés
+                </button>
+                
+                <div class="filters-panel" id="filtersPanel">
+                    <!-- Search Filter -->
+                    <div class="filter-group">
+                        <label for="searchFilter">
+                            <i class="fas fa-search"></i> Rechercher
+                        </label>
+                        <input type="text" id="searchFilter" placeholder="Description, catégorie..." class="filter-input">
+                    </div>
+
+                    <!-- Category Filter -->
+                    <div class="filter-group">
+                        <label>
+                            <i class="fas fa-tag"></i> Catégories
+                        </label>
+                        <div class="filter-checkboxes" id="categoryFilter">
+                            <!-- Sera rempli dynamiquement -->
+                        </div>
+                    </div>
+
+                    <!-- Amount Filter -->
+                    <div class="filter-group">
+                        <label>
+                            <i class="fas fa-money-bill"></i> Montant (€)
+                        </label>
+                        <div class="filter-amount">
+                            <input type="number" id="minAmount" placeholder="Min" class="filter-input amount-input">
+                            <span class="separator">-</span>
+                            <input type="number" id="maxAmount" placeholder="Max" class="filter-input amount-input">
+                        </div>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div class="filter-group">
+                        <label>
+                            <i class="fas fa-calendar"></i> Période
+                        </label>
+                        <div class="filter-dates">
+                            <input type="date" id="dateFrom" class="filter-input date-input">
+                            <span class="separator">à</span>
+                            <input type="date" id="dateTo" class="filter-input date-input">
+                        </div>
+                    </div>
+
+                    <!-- Filter Actions -->
+                    <div class="filter-actions">
+                        <button class="btn-secondary" id="resetFiltersBtn">
+                            <i class="fas fa-redo"></i> Réinitialiser
+                        </button>
+                    </div>
+                </div>
+            </div>
             
             <div class="table-responsive">
                 <table class="transactions-table">

@@ -207,6 +207,14 @@ function setupFormListeners() {
 // ======================
 let transactions = [];
 let selectedMonth = null; // Format: "YYYY-MM"
+let activeFilters = {
+    search: '',
+    categories: [],
+    minAmount: null,
+    maxAmount: null,
+    dateFrom: null,
+    dateTo: null
+};
 
 function getSelectedMonth() {
     return selectedMonth || new Date().toISOString().slice(0, 7);
@@ -347,15 +355,43 @@ function getTransactionsForMonth(month) {
     });
 }
 
+function applyFilters(transactionsList) {
+    return transactionsList.filter(t => {
+        // Filtre recherche
+        if (activeFilters.search) {
+            const search = activeFilters.search.toLowerCase();
+            const matchSearch = t.description.toLowerCase().includes(search) || 
+                              t.category.toLowerCase().includes(search);
+            if (!matchSearch) return false;
+        }
+
+        // Filtre catégories
+        if (activeFilters.categories.length > 0) {
+            if (!activeFilters.categories.includes(t.category)) return false;
+        }
+
+        // Filtre montant
+        if (activeFilters.minAmount !== null && t.amount < activeFilters.minAmount) return false;
+        if (activeFilters.maxAmount !== null && t.amount > activeFilters.maxAmount) return false;
+
+        // Filtre dates
+        if (activeFilters.dateFrom && t.date < activeFilters.dateFrom) return false;
+        if (activeFilters.dateTo && t.date > activeFilters.dateTo) return false;
+
+        return true;
+    });
+}
+
 function updateSummary() {
     const month = getSelectedMonth();
     const monthTransactions = getTransactionsForMonth(month);
+    const filteredTransactions = applyFilters(monthTransactions);
     
-    const totalIncome = monthTransactions
+    const totalIncome = filteredTransactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
     
-    const totalExpense = monthTransactions
+    const totalExpense = filteredTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
     
@@ -387,15 +423,16 @@ function updateTransactionsTable() {
     const month = getSelectedMonth();
     
     const monthTransactions = getTransactionsForMonth(month);
+    const filteredTransactions = applyFilters(monthTransactions);
 
-    if (monthTransactions.length === 0) {
+    if (filteredTransactions.length === 0) {
         tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucune transaction pour ce mois.</td></tr>';
         countElement.textContent = '0 transactions';
         return;
     }
 
     // Trier les transactions par date (plus récentes d'abord)
-    const sorted = [...monthTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    const sorted = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
 
     let html = '';
     sorted.forEach((transaction, index) => {
@@ -431,12 +468,9 @@ function updateTransactionsTable() {
     });
 
     tableBody.innerHTML = html;
-    countElement.textContent = `${monthTransactions.length} transaction${monthTransactions.length > 1 ? 's' : ''}`;
+    countElement.textContent = `${filteredTransactions.length} transaction${filteredTransactions.length > 1 ? 's' : ''}`;
 }
 
-// ======================
-// FONCTIONS UTILITAIRES
-// ======================
 function formatCurrency(amount) {
     return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
@@ -447,6 +481,85 @@ function formatCurrency(amount) {
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
+}
+
+// ======================
+// GESTION DES FILTRES
+// ======================
+function initializeCategoryFilter() {
+    const filterContainer = document.getElementById('categoryFilter');
+    const allCategories = [...expenseCategories, ...incomeCategories];
+    const uniqueCategories = [...new Set(allCategories)];
+
+    filterContainer.innerHTML = uniqueCategories.map(cat => `
+        <div class="filter-checkbox">
+            <input type="checkbox" id="cat-${cat}" value="${cat}" class="category-checkbox">
+            <label for="cat-${cat}">
+                <i class="fas ${categoryIcons[cat] || 'fa-tag'}"></i> ${cat}
+            </label>
+        </div>
+    `).join('');
+
+    document.querySelectorAll('.category-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateFilters);
+    });
+}
+
+function setupFilterListeners() {
+    // Recherche
+    document.getElementById('searchFilter').addEventListener('input', updateFilters);
+
+    // Montant
+    document.getElementById('minAmount').addEventListener('input', updateFilters);
+    document.getElementById('maxAmount').addEventListener('input', updateFilters);
+
+    // Dates
+    document.getElementById('dateFrom').addEventListener('change', updateFilters);
+    document.getElementById('dateTo').addEventListener('change', updateFilters);
+
+    // Toggle filtres
+    document.getElementById('toggleFiltersBtn').addEventListener('click', () => {
+        const panel = document.getElementById('filtersPanel');
+        panel.classList.toggle('active');
+    });
+
+    // Réinitialiser filtres
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+}
+
+function updateFilters() {
+    activeFilters.search = document.getElementById('searchFilter').value;
+    activeFilters.minAmount = document.getElementById('minAmount').value ? 
+        parseFloat(document.getElementById('minAmount').value) : null;
+    activeFilters.maxAmount = document.getElementById('maxAmount').value ? 
+        parseFloat(document.getElementById('maxAmount').value) : null;
+    activeFilters.dateFrom = document.getElementById('dateFrom').value || null;
+    activeFilters.dateTo = document.getElementById('dateTo').value || null;
+
+    activeFilters.categories = Array.from(document.querySelectorAll('.category-checkbox:checked'))
+        .map(checkbox => checkbox.value);
+
+    updateDashboard();
+}
+
+function resetFilters() {
+    document.getElementById('searchFilter').value = '';
+    document.getElementById('minAmount').value = '';
+    document.getElementById('maxAmount').value = '';
+    document.getElementById('dateFrom').value = '';
+    document.getElementById('dateTo').value = '';
+    document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
+
+    activeFilters = {
+        search: '',
+        categories: [],
+        minAmount: null,
+        maxAmount: null,
+        dateFrom: null,
+        dateTo: null
+    };
+
+    updateDashboard();
 }
 
 // ======================
@@ -462,6 +575,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Configuration des modales et formulaires
     setupModalListeners();
     setupFormListeners();
+    
+    // Initialiser les filtres
+    initializeCategoryFilter();
+    setupFilterListeners();
+
+    // Afficher filtres par défaut sur desktop
+    if (window.innerWidth >= 1024) {
+        document.getElementById('filtersPanel').classList.add('active');
+    }
     
     // Mise à jour initiale du dashboard
     const today = new Date();
