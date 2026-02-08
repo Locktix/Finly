@@ -378,14 +378,19 @@ function updateSummary() {
 }
 
 function updateTransactionsTable() {
-    const tableBody = document.getElementById('transactionsBody');
+    const cardsContainer = document.getElementById('transactionsCards');
     const countElement = document.getElementById('transactionCount');
     const month = getSelectedMonth();
     
     const monthTransactions = getTransactionsForMonth(month);
 
     if (monthTransactions.length === 0) {
-        tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucune transaction pour ce mois.</td></tr>';
+        cardsContainer.innerHTML = `
+            <div class="empty-card">
+                <i class="fas fa-inbox"></i>
+                <p>Aucune transaction pour ce mois.</p>
+            </div>
+        `;
         countElement.textContent = '0 transactions';
         return;
     }
@@ -403,30 +408,48 @@ function updateTransactionsTable() {
         const typeLabel = transaction.type === 'income' ? 'Recette' : 'Dépense';
 
         html += `
-            <tr>
-                <td>${formattedDate}</td>
-                <td><strong>${transaction.description}</strong></td>
-                <td>
-                    <i class="fas ${icon}" style="margin-right: 0.5rem;"></i>
-                    ${transaction.category}
-                </td>
-                <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
-                <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn-edit" onclick="openEditModal(${originalIndex})">
-                            <i class="fas fa-edit"></i> Modifier
-                        </button>
-                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
-                            <i class="fas fa-trash-alt"></i> Supprimer
-                        </button>
+            <div class="transaction-card ${typeClass}">
+                <div class="transaction-card-icon">
+                    <i class="fas ${icon}"></i>
+                </div>
+                
+                <div class="transaction-card-content">
+                    <div class="transaction-card-item">
+                        <span class="transaction-card-label">Description</span>
+                        <span class="transaction-card-value">${transaction.description}</span>
                     </div>
-                </td>
-            </tr>
+                    <div class="transaction-card-item">
+                        <span class="transaction-card-label">Catégorie</span>
+                        <span class="transaction-card-value">${transaction.category}</span>
+                    </div>
+                    <div class="transaction-card-item">
+                        <span class="transaction-card-label">Date</span>
+                        <span class="transaction-card-value">${formattedDate}</span>
+                    </div>
+                    <div class="transaction-card-item">
+                        <span class="transaction-card-label">Type</span>
+                        <span class="transaction-card-value">${typeLabel}</span>
+                    </div>
+                </div>
+                
+                <div class="transaction-card-item">
+                    <span class="transaction-card-label">Montant</span>
+                    <span class="transaction-card-amount">${formattedAmount}</span>
+                </div>
+                
+                <div class="transaction-card-actions">
+                    <button class="btn-edit" onclick="openEditModal(${originalIndex})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
         `;
     });
 
-    tableBody.innerHTML = html;
+    cardsContainer.innerHTML = html;
     countElement.textContent = `${monthTransactions.length} transaction${monthTransactions.length > 1 ? 's' : ''}`;
 }
 
