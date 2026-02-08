@@ -172,6 +172,20 @@
         </section>
     </main>
 
+    <!-- Graphiques Section -->
+    <section class="charts-section">
+        <div class="charts-container">
+            <div class="chart-card">
+                <h3>Dépenses par Catégorie</h3>
+                <canvas id="expensesChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Revenus vs Dépenses (12 derniers mois)</h3>
+                <canvas id="incomeExpenseChart"></canvas>
+            </div>
+        </div>
+    </section>
+
     <!-- Modal Modifier Dépense/Recette -->
     <div class="modal" id="editModal">
         <div class="modal-content">
@@ -292,6 +306,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
     <!-- Application Script -->
     <script src="script.js"></script>
