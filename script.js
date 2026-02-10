@@ -213,11 +213,13 @@ let transactions = [];
 let selectedMonth = null; // Format: "YYYY-MM"
 let activeFilters = {
     search: '',
-    categories: [],
-    minAmount: null,
-    maxAmount: null,
-    dateFrom: null,
-    dateTo: null
+    categories: []
+};
+
+// État du tri
+let currentSort = {
+    field: null,
+    direction: 'asc' // 'asc' ou 'desc'
 };
 
 function getSelectedMonth() {
@@ -375,14 +377,6 @@ function applyFilters(transactionsList) {
             if (!activeFilters.categories.includes(t.category)) return false;
         }
 
-        // Filtre montant
-        if (activeFilters.minAmount !== null && t.amount < activeFilters.minAmount) return false;
-        if (activeFilters.maxAmount !== null && t.amount > activeFilters.maxAmount) return false;
-
-        // Filtre dates
-        if (activeFilters.dateFrom && t.date < activeFilters.dateFrom) return false;
-        if (activeFilters.dateTo && t.date > activeFilters.dateTo) return false;
-
         return true;
     });
 }
@@ -436,8 +430,8 @@ function updateTransactionsTable() {
         return;
     }
 
-    // Trier les transactions par date (plus récentes d'abord)
-    const sorted = [...filteredTransactions].sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Appliquer le tri personnalisé
+    const sorted = sortTransactions(filteredTransactions);
 
     let html = '';
     sorted.forEach((transaction, index) => {
@@ -514,14 +508,6 @@ function setupFilterListeners() {
     // Recherche
     document.getElementById('searchFilter').addEventListener('input', updateFilters);
 
-    // Montant
-    document.getElementById('minAmount').addEventListener('input', updateFilters);
-    document.getElementById('maxAmount').addEventListener('input', updateFilters);
-
-    // Dates
-    document.getElementById('dateFrom').addEventListener('change', updateFilters);
-    document.getElementById('dateTo').addEventListener('change', updateFilters);
-
     // Toggle filtres
     document.getElementById('toggleFiltersBtn').addEventListener('click', () => {
         const panel = document.getElementById('filtersPanel');
@@ -530,16 +516,76 @@ function setupFilterListeners() {
 
     // Réinitialiser filtres
     document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+
+    // Event listeners pour le tri
+    document.querySelectorAll('.sort-header').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const sortField = e.currentTarget.dataset.sort;
+            handleSort(sortField);
+        });
+    });
 }
+
+function handleSort(field) {
+    // Si on clique sur le même champ, inverser la direction
+    if (currentSort.field === field) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        // Sinon, passer au nouveau champ en order ascendant
+        currentSort.field = field;
+        currentSort.direction = 'asc';
+    }
+    
+    // Mettre à jour les visuels des boutons
+    updateSortButtonsUI();
+    
+    // Mettre à jour le tableau
+    updateDashboard();
+}
+
+function updateSortButtonsUI() {
+    document.querySelectorAll('.sort-header').forEach(button => {
+        button.classList.remove('active-up', 'active-down');
+        
+        if (button.dataset.sort === currentSort.field) {
+            if (currentSort.direction === 'asc') {
+                button.classList.add('active-up');
+            } else {
+                button.classList.add('active-down');
+            }
+        }
+    });
+}
+
+function sortTransactions(transactionsList) {
+    if (!currentSort.field) return transactionsList;
+    
+    const sorted = [...transactionsList].sort((a, b) => {
+        let valueA = a[currentSort.field];
+        let valueB = b[currentSort.field];
+        
+        // Gestion des différents types de données
+        if (typeof valueA === 'string') {
+            valueA = valueA.toLowerCase();
+            valueB = valueB.toLowerCase();
+            return currentSort.direction === 'asc' 
+                ? valueA.localeCompare(valueB)
+                : valueB.localeCompare(valueA);
+        } else if (typeof valueA === 'number') {
+            return currentSort.direction === 'asc'
+                ? valueA - valueB
+                : valueB - valueA;
+        }
+        
+        return 0;
+    });
+    
+    return sorted;
+}
+
 
 function updateFilters() {
     activeFilters.search = document.getElementById('searchFilter').value;
-    activeFilters.minAmount = document.getElementById('minAmount').value ? 
-        parseFloat(document.getElementById('minAmount').value) : null;
-    activeFilters.maxAmount = document.getElementById('maxAmount').value ? 
-        parseFloat(document.getElementById('maxAmount').value) : null;
-    activeFilters.dateFrom = document.getElementById('dateFrom').value || null;
-    activeFilters.dateTo = document.getElementById('dateTo').value || null;
 
     activeFilters.categories = Array.from(document.querySelectorAll('.category-checkbox:checked'))
         .map(checkbox => checkbox.value);
@@ -549,19 +595,11 @@ function updateFilters() {
 
 function resetFilters() {
     document.getElementById('searchFilter').value = '';
-    document.getElementById('minAmount').value = '';
-    document.getElementById('maxAmount').value = '';
-    document.getElementById('dateFrom').value = '';
-    document.getElementById('dateTo').value = '';
     document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
 
     activeFilters = {
         search: '',
-        categories: [],
-        minAmount: null,
-        maxAmount: null,
-        dateFrom: null,
-        dateTo: null
+        categories: []
     };
 
     updateDashboard();
@@ -653,7 +691,8 @@ function updateIncomeExpenseChart() {
     const today = new Date();
     for (let i = 11; i >= 0; i--) {
         const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        const monthKey = date.toISOString().slice(0, 7);
+        // Créer monthKey au format YYYY-MM sans utiliser toISOString() pour éviter les décalages de fuseau horaire
+        const monthKey = date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
         months.push(date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }));
 
         const monthTransactions = transactions.filter(t => t.date.startsWith(monthKey));
@@ -770,11 +809,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeCategoryFilter();
     setupFilterListeners();
 
-    // Afficher filtres par défaut sur desktop
-    if (window.innerWidth >= 1024) {
-        document.getElementById('filtersPanel').classList.add('active');
-    }
-    
     // Mise à jour initiale du dashboard
     const today = new Date();
     const currentMonth = today.toISOString().slice(0, 7);

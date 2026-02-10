@@ -368,7 +368,7 @@ body {
     padding: var(--spacing-lg);
     margin-top: var(--spacing-md);
     animation: slideDown var(--transition-base);
-    max-height: 500px;
+    max-height: 0;
     overflow: hidden;
     transition: all var(--transition-base);
 }
@@ -384,6 +384,9 @@ body {
 .filters-panel.active {
     display: grid;
     max-height: 500px;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--color-border);
+    margin-top: var(--spacing-md);
 }
 
 @keyframes slideDown {
@@ -535,6 +538,40 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     font-size: var(--font-size-xs);
+}
+
+.sort-header {
+    background: none;
+    border: none;
+    padding: 0;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: var(--font-size-xs);
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    transition: color var(--transition-fast);
+}
+
+.sort-header:hover {
+    color: var(--color-primary);
+}
+
+.sort-header i {
+    font-size: var(--font-size-sm);
+    transition: transform var(--transition-fast);
+}
+
+.sort-header.active-up i::before {
+    content: '\f062';
+}
+
+.sort-header.active-down i::before {
+    content: '\f063';
 }
 
 .transactions-table td {
