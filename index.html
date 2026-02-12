@@ -13,8 +13,111 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Page de Connexion/Inscription -->
+    <div id="authPage" class="auth-page">
+        <div class="auth-container">
+            <div class="auth-box">
+                <div class="auth-logo">
+                    <i class="fas fa-wallet"></i>
+                    <h1>Finly</h1>
+                    <p>Gestion de Budget Personnel</p>
+                </div>
+
+                <!-- Formulaire Connexion -->
+                <form id="loginForm" class="auth-form active">
+                    <h2>Connexion</h2>
+                    <div class="form-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" placeholder="votre@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Mot de passe</label>
+                        <input type="password" id="loginPassword" placeholder="••••••••" required>
+                        <button type="button" id="forgotPasswordBtn" class="forgot-password-btn">Mot de passe oublié?</button>
+                    </div>
+                    <button type="submit" class="btn-primary">Se Connecter</button>
+                    <div class="auth-error" id="loginError"></div>
+                </form>
+
+                <!-- Formulaire Inscription -->
+                <form id="signupForm" class="auth-form">
+                    <h2>Inscription</h2>
+                    <div class="form-group">
+                        <label for="signupName">Nom Complet</label>
+                        <input type="text" id="signupName" placeholder="Votre Nom" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupEmail">Email</label>
+                        <input type="email" id="signupEmail" placeholder="votre@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupPassword">Mot de passe</label>
+                        <input type="password" id="signupPassword" placeholder="••••••••" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="signupConfirmPassword">Confirmer le mot de passe</label>
+                        <input type="password" id="signupConfirmPassword" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn-primary">S'Inscrire</button>
+                    <div class="auth-error" id="signupError"></div>
+                </form>
+
+                <!-- Toggle entre Connexion/Inscription -->
+                <div class="auth-toggle">
+                    <p id="toggleText">Pas encore de compte? <button type="button" id="toggleAuthBtn" class="toggle-btn">S'inscrire</button></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mot de passe oublié -->
+    <div class="modal" id="forgotPasswordModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeForgotPassword">&times;</button>
+            <h2>Réinitialiser le Mot de Passe</h2>
+            <form id="forgotPasswordForm">
+                <div class="form-group">
+                    <label for="forgotPasswordEmail">Email</label>
+                    <input type="email" id="forgotPasswordEmail" placeholder="votre@email.com" required>
+                </div>
+                <p class="auth-info">Un lien de réinitialisation sera envoyé à votre adresse email.</p>
+                <button type="submit" class="btn-primary">Envoyer le Lien</button>
+                <div class="auth-error" id="forgotPasswordError"></div>
+                <div class="auth-success" id="forgotPasswordSuccess" style="display: none; color: #10b981; background-color: rgba(16, 185, 129, 0.1); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-top: var(--spacing-sm);"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Profil Utilisateur -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeProfile">&times;</button>
+            <h2>Mon Profil</h2>
+            <form id="profileForm">
+                <div class="form-group">
+                    <label for="profileName">Nom Complet</label>
+                    <input type="text" id="profileName" placeholder="Votre Nom" required>
+                </div>
+                <div class="form-group">
+                    <label for="profileEmail">Email</label>
+                    <input type="email" id="profileEmail" placeholder="votre@email.com" readonly>
+                    <small style="color: var(--color-text-tertiary); margin-top: var(--spacing-xs); display: block;">L'email ne peut pas être modifié directement</small>
+                </div>
+                <div class="form-group">
+                    <label for="profilePassword">Nouveau Mot de Passe (optionnel)</label>
+                    <input type="password" id="profilePassword" placeholder="Laisser vide pour ne pas modifier">
+                    <small style="color: var(--color-text-tertiary); margin-top: var(--spacing-xs); display: block;">Minimum 6 caractères</small>
+                </div>
+                <button type="submit" class="btn-primary">Sauvegarder les Modifications</button>
+                <div class="auth-error" id="profileError"></div>
+                <div class="auth-success" id="profileSuccess" style="display: none; color: #10b981; background-color: rgba(16, 185, 129, 0.1); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-top: var(--spacing-sm);"></div>
+            </form>
+        </div>
+
+    </div>
+
     <!-- Header -->
-    <header class="header">
+    <header class="header" id="mainHeader" style="display: none;">
         <div class="header-container">
             <div class="logo">
                 <i class="fas fa-wallet"></i>
@@ -25,9 +128,19 @@
                     <i class="fas fa-moon"></i>
                 </button>
                 <div class="header-divider"></div>
+                <button class="config-btn" id="profileBtn" title="Profil">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profil</span>
+                </button>
+                <div class="header-divider"></div>
                 <button class="config-btn" id="configBtn" title="Configuration">
                     <i class="fas fa-gear"></i>
                     <span>Configuration</span>
+                </button>
+                <div class="header-divider"></div>
+                <button class="config-btn logout-btn" id="logoutBtn" title="Déconnexion">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Déconnexion</span>
                 </button>
             </div>
         </div>
@@ -39,16 +152,16 @@
             <button class="modal-close" id="closeConfigBtn">&times;</button>
             <h2>À propos de la Configuration</h2>
             <p class="config-info">Firebase est déjà configuré et connecté à votre base de données Firestore. Toutes vos transactions seront synchronisées en temps réel.</p>
-            <div style="background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                <p style="font-size: 0.875rem; color: #6b7280;"><strong>Projet:</strong> finly-f82be</p>
-                <p style="font-size: 0.875rem; color: #6b7280; margin-top: 0.5rem;"><strong>Statut:</strong> <span style="color: #10b981;">✓ Connecté</span></p>
+            <div class="config-box">
+                <p class="config-text"><strong>Projet:</strong> finly-f82be</p>
+                <p class="config-text"><strong>Statut:</strong> <span style="color: #10b981;">✓ Connecté</span></p>
             </div>
             <button type="button" class="btn-primary" id="closeConfigBtn2">Fermer</button>
         </div>
     </div>
 
     <!-- Main Container -->
-    <main class="main-container">
+    <main class="main-container" id="mainContainer" style="display: none;">
         <!-- Summary Cards -->
         <section class="summary-section">
             <div class="summary-card income">
@@ -156,7 +269,7 @@
     </main>
 
     <!-- Graphiques Section -->
-    <section class="charts-section">
+    <section class="charts-section" id="chartsSection" style="display: none;">
         <div class="charts-container">
             <div class="chart-card">
                 <h3>Dépenses par Catégorie</h3>
@@ -281,7 +394,7 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
+    <footer class="footer" id="mainFooter" style="display: none;">
         <p>&copy; 2026 Finly - Gestion de Budget Personnel. Tous droits réservés.</p>
     </footer>
 

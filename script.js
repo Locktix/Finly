@@ -1,4 +1,265 @@
 // ======================
+// GESTION DE L'AUTHENTIFICATION
+// ======================
+let currentUser = null;
+
+function setupAuthListeners() {
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
+    document.getElementById('signupForm').addEventListener('submit', handleSignup);
+    document.getElementById('toggleAuthBtn').addEventListener('click', toggleAuthForm);
+    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    
+    // Event listeners pour les modales d'authentification
+    document.getElementById('forgotPasswordBtn').addEventListener('click', () => {
+        openModal('forgotPasswordModal');
+    });
+
+    document.getElementById('closeForgotPassword').addEventListener('click', () => {
+        closeModal('forgotPasswordModal');
+    });
+
+    document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
+}
+
+function toggleAuthForm() {
+    document.getElementById('loginForm').classList.toggle('active');
+    document.getElementById('signupForm').classList.toggle('active');
+    
+    const toggleBtn = document.getElementById('toggleAuthBtn');
+    const toggleText = document.getElementById('toggleText');
+    
+    if (document.getElementById('loginForm').classList.contains('active')) {
+        toggleText.innerHTML = 'Pas encore de compte? <button type="button" id="toggleAuthBtn" class="toggle-btn">S\'inscrire</button>';
+    } else {
+        toggleText.innerHTML = 'Vous avez un compte? <button type="button" id="toggleAuthBtn" class="toggle-btn">Se connecter</button>';
+    }
+    
+    document.getElementById('toggleAuthBtn').addEventListener('click', toggleAuthForm);
+    clearAuthErrors();
+}
+
+function clearAuthErrors() {
+    document.getElementById('loginError').textContent = '';
+    document.getElementById('signupError').textContent = '';
+    document.getElementById('loginError').classList.remove('show');
+    document.getElementById('signupError').classList.remove('show');
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorEl = document.getElementById('loginError');
+    
+    try {
+        errorEl.classList.remove('show');
+        const result = await firebase.auth().signInWithEmailAndPassword(email, password);
+        currentUser = result.user;
+        showDashboard();
+    } catch (error) {
+        errorEl.textContent = getErrorMessage(error.code);
+        errorEl.classList.add('show');
+    }
+}
+
+async function handleSignup(e) {
+    e.preventDefault();
+    const name = document.getElementById('signupName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const confirmPassword = document.getElementById('signupConfirmPassword').value;
+    const errorEl = document.getElementById('signupError');
+    
+    try {
+        errorEl.classList.remove('show');
+        
+        if (password !== confirmPassword) {
+            errorEl.textContent = 'Les mots de passe ne correspondent pas';
+            errorEl.classList.add('show');
+            return;
+        }
+        
+        if (password.length < 6) {
+            errorEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+            errorEl.classList.add('show');
+            return;
+        }
+        
+        const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        currentUser = result.user;
+        
+        // Mettre à jour le profil avec le nom
+        await currentUser.updateProfile({
+            displayName: name
+        });
+        
+        showDashboard();
+    } catch (error) {
+        errorEl.textContent = getErrorMessage(error.code);
+        errorEl.classList.add('show');
+    }
+}
+
+async function handleLogout() {
+    try {
+        await firebase.auth().signOut();
+        currentUser = null;
+        transactions = []; // Vider les transactions
+        showAuthPage();
+    } catch (error) {
+        console.error('Erreur de déconnexion:', error);
+    }
+}
+
+function getErrorMessage(code) {
+    const messages = {
+        'auth/email-already-in-use': 'Cet email est déjà utilisé',
+        'auth/invalid-email': 'Adresse email invalide',
+        'auth/operation-not-allowed': 'Opération non autorisée',
+        'auth/weak-password': 'Le mot de passe est trop faible',
+        'auth/user-not-found': 'Utilisateur non trouvé',
+        'auth/wrong-password': 'Mot de passe incorrect',
+        'auth/invalid-credential': 'Email ou mot de passe incorrect',
+    };
+    return messages[code] || 'Une erreur est survenue. Réessayez.';
+}
+
+// ======================
+// GESTION MOT DE PASSE OUBLIÉ
+// ======================
+async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotPasswordEmail').value;
+    const errorEl = document.getElementById('forgotPasswordError');
+    const successEl = document.getElementById('forgotPasswordSuccess');
+    
+    try {
+        errorEl.textContent = '';
+        successEl.style.display = 'none';
+        
+        await firebase.auth().sendPasswordResetEmail(email);
+        
+        successEl.textContent = 'Email de réinitialisation envoyé. Vérifiez votre boîte mail.';
+        successEl.style.display = 'block';
+        
+        // Vider le formulaire
+        document.getElementById('forgotPasswordEmail').value = '';
+        
+        // Fermer la modale après 3 secondes
+        setTimeout(() => {
+            closeModal('forgotPasswordModal');
+            successEl.style.display = 'none';
+        }, 3000);
+    } catch (error) {
+        errorEl.textContent = getErrorMessage(error.code);
+        errorEl.classList.add('show');
+    }
+}
+
+// ======================
+// GESTION PROFIL UTILISATEUR
+// ======================
+function loadProfileData() {
+    if (currentUser) {
+        document.getElementById('profileName').value = currentUser.displayName || '';
+        document.getElementById('profileEmail').value = currentUser.email || '';
+        document.getElementById('profilePassword').value = '';
+        document.getElementById('profileError').textContent = '';
+        document.getElementById('profileSuccess').style.display = 'none';
+    }
+}
+
+async function handleProfileUpdate(e) {
+    e.preventDefault();
+    const name = document.getElementById('profileName').value;
+    const password = document.getElementById('profilePassword').value;
+    const errorEl = document.getElementById('profileError');
+    const successEl = document.getElementById('profileSuccess');
+    
+    try {
+        errorEl.textContent = '';
+        successEl.style.display = 'none';
+        
+        let updatesMade = false;
+        
+        // Mettre à jour le nom si modifié
+        if (name && name !== currentUser.displayName) {
+            await currentUser.updateProfile({
+                displayName: name
+            });
+            updatesMade = true;
+        }
+        
+        // Mettre à jour le mot de passe si fourni
+        if (password && password.length >= 6) {
+            await currentUser.updatePassword(password);
+            updatesMade = true;
+        } else if (password && password.length < 6) {
+            errorEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
+            errorEl.classList.add('show');
+            return;
+        }
+        
+        if (updatesMade) {
+            successEl.textContent = 'Profil mis à jour avec succès';
+            successEl.style.display = 'block';
+            
+            // Vider le champ mot de passe
+            document.getElementById('profilePassword').value = '';
+            
+            // Fermer la modale après 2 secondes
+            setTimeout(() => {
+                closeModal('profileModal');
+                successEl.style.display = 'none';
+            }, 2000);
+        } else {
+            errorEl.textContent = 'Aucune modification à appliquer';
+            errorEl.classList.add('show');
+        }
+    } catch (error) {
+        errorEl.textContent = getErrorMessage(error.code);
+        errorEl.classList.add('show');
+    }
+}
+
+function showAuthPage() {
+    document.getElementById('authPage').style.display = 'flex';
+    document.getElementById('mainHeader').style.display = 'none';
+    document.getElementById('mainContainer').style.display = 'none';
+    document.getElementById('mainFooter').style.display = 'none';
+    document.getElementById('chartsSection').style.display = 'none';
+}
+
+function showDashboard() {
+    document.getElementById('authPage').style.display = 'none';
+    document.getElementById('mainHeader').style.display = 'block';
+    document.getElementById('mainContainer').style.display = 'block';
+    document.getElementById('mainFooter').style.display = 'block';
+    document.getElementById('chartsSection').style.display = 'block';
+    // Charger les transactions de l'utilisateur
+    if (db) {
+        loadTransactionsFromFirebase();
+    } else {
+        loadTransactionsFromLocal();
+        updateDashboard();
+    }
+}
+
+function checkAuthState() {
+    return new Promise((resolve) => {
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                showDashboard();
+            } else {
+                showAuthPage();
+            }
+            resolve();
+        });
+    });
+}
+
+// ======================
 // GESTION DU THÈME
 // ======================
 
@@ -22,6 +283,8 @@ function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
+    // Mettre à jour le dashboard pour les couleurs dynamiques
+    updateDashboard();
 }
 
 // ======================
@@ -72,28 +335,15 @@ let incomeExpenseChartInstance = null;
 async function initializeFirebase() {
     try {
         firebaseApp = firebase.initializeApp(firebaseConfig);
-        
-        // Authentification anonyme
-        await firebase.auth().signInAnonymously();
-        console.log('Authentification anonyme réussie');
-        
         db = firebase.firestore();
-        
         console.log('Firebase initialisé avec succès');
-        loadTransactionsFromFirebase();
     } catch (error) {
         if (error.code === 'app/duplicate-app') {
             try {
-                // Si l'app existe déjà, essayer de se connecter anonymement
-                const user = firebase.auth().currentUser;
-                if (!user) {
-                    await firebase.auth().signInAnonymously();
-                }
                 db = firebase.firestore();
                 console.log('Utilisation de l\'instance Firebase existante');
-                loadTransactionsFromFirebase();
             } catch (authError) {
-                console.error('Erreur lors de l\'authentification:', authError);
+                console.error('Erreur lors de l\'initialisation:', authError);
                 useLocalStorage();
             }
         } else {
@@ -166,6 +416,18 @@ function setupModalListeners() {
     document.getElementById('closeConfigBtn2').addEventListener('click', () => {
         closeModal('configModal');
     });
+
+    // Modal Profil
+    document.getElementById('profileBtn').addEventListener('click', () => {
+        loadProfileData();
+        openModal('profileModal');
+    });
+
+    document.getElementById('closeProfile').addEventListener('click', () => {
+        closeModal('profileModal');
+    });
+
+    document.getElementById('profileForm').addEventListener('submit', handleProfileUpdate);
 
     // Fermer modales en cliquant en dehors
     document.querySelectorAll('.modal').forEach(modal => {
@@ -256,6 +518,8 @@ function getSelectedMonth() {
 }
 
 async function addTransaction(transaction) {
+    // Ajouter l'ID de l'utilisateur à la transaction
+    transaction.userId = currentUser.uid;
     transactions.push(transaction);
     
     if (db) {
@@ -353,14 +617,17 @@ function openEditModal(index) {
 
 async function loadTransactionsFromFirebase() {
     try {
-        const querySnapshot = await db.collection('transactions').get();
+        // Charger seulement les transactions de l'utilisateur connecté
+        const querySnapshot = await db.collection('transactions')
+            .where('userId', '==', currentUser.uid)
+            .get();
         transactions = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             data.firebaseId = doc.id;
             transactions.push(data);
         });
-        console.log(`${transactions.length} transactions chargées depuis Firebase`);
+        console.log(`${transactions.length} transactions chargées depuis Firebase pour l'utilisateur ${currentUser.uid}`);
         updateDashboard();
     } catch (error) {
         console.error('Erreur lors de la récupération:', error);
@@ -432,6 +699,7 @@ function updateSummary() {
     // Couleur dynamique du solde
     const balanceElement = document.getElementById('totalBalance');
     const balanceCard = balanceElement.closest('.summary-card');
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     
     if (balance < 0) {
         balanceCard.style.borderLeftColor = '#ef4444';
@@ -441,7 +709,7 @@ function updateSummary() {
         balanceElement.style.color = '#10b981';
     } else {
         balanceCard.style.borderLeftColor = '#3b82f6';
-        balanceElement.style.color = '#111827';
+        balanceElement.style.color = isDark ? '#f9fafb' : '#111827';
     }
 }
 
@@ -827,38 +1095,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Initialiser le thème
     initializeTheme();
     
-    // Charger les transactions locales d'abord
-    loadTransactionsFromLocal();
-    
     // Initialiser Firebase
     await initializeFirebase();
     
-    // Configuration des modales et formulaires
-    setupModalListeners();
-    setupFormListeners();
+    // Configuration des écouteurs d'authentification
+    setupAuthListeners();
     
-    // Initialiser les filtres
-    initializeCategoryFilter();
-    setupFilterListeners();
+    // Vérifier l'état de l'authentification
+    await checkAuthState();
+    
+    // Configuration des modales et formulaires (seulement si connecté)
+    if (currentUser) {
+        // Charger les transactions depuis Firebase ou localStorage
+        if (db) {
+            await loadTransactionsFromFirebase();
+        } else {
+            loadTransactionsFromLocal();
+        }
+        
+        setupModalListeners();
+        setupFormListeners();
+        
+        // Initialiser les filtres
+        initializeCategoryFilter();
+        setupFilterListeners();
 
-    // Mise à jour initiale du dashboard
-    const today = new Date();
-    const currentMonth = today.toISOString().slice(0, 7);
-    selectedMonth = currentMonth;
-    document.getElementById('monthFilter').value = currentMonth;
-    
-    updateDashboard();
-
-    // Ajouter les valeurs par défaut aux champs de date
-    const todayStr = today.toISOString().split('T')[0];
-    document.getElementById('expenseDate').value = todayStr;
-    document.getElementById('incomeDate').value = todayStr;
-    
-    // Listener pour le changement de mois
-    document.getElementById('monthFilter').addEventListener('change', (e) => {
-        selectedMonth = e.target.value;
+        // Mise à jour initiale du dashboard
+        const today = new Date();
+        const currentMonth = today.toISOString().slice(0, 7);
+        selectedMonth = currentMonth;
+        document.getElementById('monthFilter').value = currentMonth;
+        
         updateDashboard();
-    });
+
+        // Ajouter les valeurs par défaut aux champs de date
+        const todayStr = today.toISOString().split('T')[0];
+        document.getElementById('expenseDate').value = todayStr;
+        document.getElementById('incomeDate').value = todayStr;
+        
+        // Listener pour le changement de mois
+        document.getElementById('monthFilter').addEventListener('change', (e) => {
+            selectedMonth = e.target.value;
+            updateDashboard();
+        });
+    }
 });
 
 // Sauvegarder automatiquement les transactions locales quand elles changent
