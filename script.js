@@ -1,4 +1,30 @@
 // ======================
+// GESTION DU THÈME
+// ======================
+
+function initializeTheme() {
+    // Charger la préférence de thème sauvegardée
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+}
+
+function setTheme(theme) {
+    if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+}
+
+// ======================
 // CONFIGURATION FIREBASE
 // ======================
 let firebaseApp = null;
@@ -124,6 +150,9 @@ function setupModalListeners() {
     document.getElementById('closeEditBtn').addEventListener('click', () => {
         closeModal('editModal');
     });
+
+    // Toggle Thème
+    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
     // Modal Configuration
     document.getElementById('configBtn').addEventListener('click', () => {
@@ -795,6 +824,9 @@ function updateIncomeExpenseChart() {
 // INITIALISATION AU CHARGEMENT
 // ======================
 document.addEventListener('DOMContentLoaded', async () => {
+    // Initialiser le thème
+    initializeTheme();
+    
     // Charger les transactions locales d'abord
     loadTransactionsFromLocal();
     

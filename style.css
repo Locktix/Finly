@@ -57,6 +57,29 @@
     --radius-xl: 1rem;
 }
 
+/* Thème Sombre */
+:root[data-theme="dark"] {
+    /* Couleurs de fond */
+    --color-bg-primary: #1f2937;
+    --color-bg-secondary: #111827;
+    --color-bg-tertiary: #374151;
+    
+    /* Couleurs de texte */
+    --color-text-primary: #f9fafb;
+    --color-text-secondary: #d1d5db;
+    --color-text-tertiary: #9ca3af;
+    
+    /* Couleurs des bordures */
+    --color-border: #374151;
+    --color-border-light: #4b5563;
+    
+    /* Ombres adaptées au thème sombre */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
 /* ======================
    RÉINITIALISATION
    ====================== */
@@ -132,6 +155,38 @@ body {
 .config-btn:hover {
     background-color: var(--color-border);
     transform: translateY(-1px);
+}
+
+.theme-toggle {
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-size: var(--font-size-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    transition: all var(--transition-fast);
+}
+
+.theme-toggle:hover {
+    background-color: var(--color-border);
+    transform: rotate(20deg);
+}
+
+.theme-toggle i {
+    font-size: var(--font-size-base);
+}
+
+/* Icône du thème en mode sombre */
+:root[data-theme="dark"] .theme-toggle i::before {
+    content: "\f185"; /* Icône soleil */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
 }
 
 /* ======================
