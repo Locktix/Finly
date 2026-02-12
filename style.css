@@ -153,33 +153,81 @@ body {
 }
 
 .config-btn:hover {
+    background-color: var(--color-primary);
+    color: white;
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.config-btn span {
+    font-weight: 500;
+}
+
+.header-buttons {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.header-divider {
+    width: 1px;
+    height: 24px;
     background-color: var(--color-border);
-    transform: translateY(-1px);
+    border-radius: 1px;
+    opacity: 0.5;
 }
 
 .theme-toggle {
-    background-color: var(--color-bg-tertiary);
-    border: 1px solid var(--color-border);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+    border: 1.5px solid var(--color-border);
     color: var(--color-text-primary);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-xs);
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
     display: flex;
     align-items: center;
     justify-content: center;
     width: 40px;
     height: 40px;
-    transition: all var(--transition-fast);
+    transition: all var(--transition-base);
+    position: relative;
+    overflow: hidden;
+}
+
+.theme-toggle::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.1) 100%);
+    transition: left var(--transition-base);
+    border-radius: var(--radius-md);
+    z-index: 0;
+}
+
+.theme-toggle:hover::before {
+    left: 0;
 }
 
 .theme-toggle:hover {
-    background-color: var(--color-border);
-    transform: rotate(20deg);
+    border-color: var(--color-primary);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    transform: translateY(-2px);
 }
 
 .theme-toggle i {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-lg);
+    transition: transform var(--transition-base);
+    position: relative;
+    z-index: 1;
+}
+
+.theme-toggle:hover i {
+    transform: rotate(20deg) scale(1.1);
 }
 
 /* Icône du thème en mode sombre */
