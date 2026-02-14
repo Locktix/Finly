@@ -518,13 +518,11 @@ function getSelectedMonth() {
 }
 
 async function addTransaction(transaction) {
-    // Ajouter l'ID de l'utilisateur à la transaction
-    transaction.userId = currentUser.uid;
     transactions.push(transaction);
     
     if (db) {
         try {
-            await db.collection('transactions').add(transaction);
+            await db.collection('users').doc(currentUser.uid).collection('transactions').add(transaction);
             console.log('Transaction ajoutée à Firebase');
         } catch (error) {
             console.error('Erreur lors de l\'ajout à Firebase:', error);
@@ -547,7 +545,7 @@ async function deleteTransaction(index) {
     
     if (db && transaction.firebaseId) {
         try {
-            await db.collection('transactions').doc(transaction.firebaseId).delete();
+            await db.collection('users').doc(currentUser.uid).collection('transactions').doc(transaction.firebaseId).delete();
             console.log('Transaction supprimée de Firebase');
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
@@ -565,7 +563,7 @@ async function updateTransaction(index, updatedTransaction) {
     
     if (db && oldTransaction.firebaseId) {
         try {
-            await db.collection('transactions').doc(oldTransaction.firebaseId).update(updatedTransaction);
+            await db.collection('users').doc(currentUser.uid).collection('transactions').doc(oldTransaction.firebaseId).update(updatedTransaction);
             console.log('Transaction mise à jour sur Firebase');
         } catch (error) {
             console.error('Erreur lors de la mise à jour:', error);
@@ -617,9 +615,10 @@ function openEditModal(index) {
 
 async function loadTransactionsFromFirebase() {
     try {
-        // Charger seulement les transactions de l'utilisateur connecté
-        const querySnapshot = await db.collection('transactions')
-            .where('userId', '==', currentUser.uid)
+        // Charger les transactions de l'utilisateur connecté
+        const querySnapshot = await db.collection('users')
+            .doc(currentUser.uid)
+            .collection('transactions')
             .get();
         transactions = [];
         querySnapshot.forEach((doc) => {
