@@ -2077,12 +2077,13 @@ body {
     /* Footer Responsive */
     .footer-container {
         flex-direction: column;
+        justify-content: center;
+        align-items: center;
         text-align: center;
     }
 
     .footer-links {
-        flex-direction: column;
-        gap: var(--spacing-md);
+        justify-content: center;
     }
 }
 
