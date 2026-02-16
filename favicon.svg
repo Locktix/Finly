@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Background -->
+  <rect width="256" height="256" fill="#3b82f6" rx="40"/>
+
+  <!-- Wallet Icon -->
+  <g transform="translate(128, 128)">
+    <!-- Wallet base -->
+    <path d="M -60 -30 L -60 30 Q -60 40 -50 40 L 60 40 Q 70 40 70 30 L 70 -30 Q 70 -40 60 -40 L -50 -40 Q -60 -40 -60 -30 Z"
+          fill="none" stroke="white" stroke-width="8" stroke-linejoin="round" stroke-linecap="round"/>
+
+    <!-- Wallet flap -->
+    <path d="M -60 -8 L 70 -8" stroke="white" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- Coin slot -->
+    <circle cx="40" cy="15" r="12" fill="none" stroke="white" stroke-width="8"/>
+  </g>
+</svg>
