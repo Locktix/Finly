@@ -1735,11 +1735,29 @@ body {
 
 /* BREAKPOINT: Tablet (768px and down) */
 @media (max-width: 768px) {
+    .header-container {
+        padding: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .logo span {
+        display: block;
+    }
+
     .sync-indicator {
-        margin-left: var(--spacing-md);
-        margin-right: var(--spacing-md);
-        font-size: var(--font-size-xs);
-        padding: var(--spacing-sm);
+        display: none;
+    }
+
+    .header-buttons {
+        display: none;
     }
 
     .summary-card {
@@ -1889,21 +1907,24 @@ body {
 
     .header-container {
         padding: var(--spacing-md);
-        display: grid;
-        grid-template-columns: auto 1fr auto;
-        gap: var(--spacing-md);
+        display: flex;
+        justify-content: space-between;
         align-items: center;
+        gap: var(--spacing-md);
     }
 
     .logo {
-        order: 1;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+    }
+
+    .logo span {
+        display: block;
     }
 
     .sync-indicator {
-        order: 2;
-        margin: 0;
-        min-width: 0;
-        flex-shrink: 1;
+        display: none;
     }
 
     .sync-indicator span {
@@ -1911,14 +1932,15 @@ body {
     }
 
     .header-buttons {
-        order: 3;
-        gap: var(--spacing-xs);
-        flex-wrap: nowrap;
+        display: none;
     }
 
     .mobile-nav-toggle {
-        display: block;
-        order: 4;
+        display: none;
+    }
+
+    .settings-menu-wrapper {
+        margin-left: auto;
     }
 
     .main-container {
@@ -2114,12 +2136,17 @@ body {
 
 /* BREAKPOINT: Small Mobile (320px and down) */
 @media (max-width: 360px) {
-    .logo span {
-        display: none;
+    .logo {
+        gap: var(--spacing-xs);
     }
 
-    .header-buttons {
-        gap: var(--spacing-xs);
+    .logo i {
+        font-size: var(--font-size-2xl);
+    }
+
+    .logo span {
+        font-size: var(--font-size-lg);
+        display: block;
     }
 
     .summary-value {
