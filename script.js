@@ -447,6 +447,13 @@ function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
+
+    // Mettre à jour le label du thème dans le menu paramètres
+    const themeLabel = document.getElementById('themeLabel');
+    if (themeLabel) {
+        themeLabel.textContent = newTheme === 'dark' ? 'Mode Clair' : 'Mode Sombre';
+    }
+
     // Mettre à jour le dashboard pour les couleurs dynamiques
     updateDashboard();
 }
@@ -531,6 +538,13 @@ function setupKeyboardListeners() {
     document.addEventListener('keydown', (e) => {
         // Fermer les modales avec ESC
         if (e.key === 'Escape') {
+            // Fermer le menu paramètres
+            const settingsDropdown = document.getElementById('settingsDropdown');
+            if (settingsDropdown && settingsDropdown.classList.contains('active')) {
+                settingsDropdown.classList.remove('active');
+                return;
+            }
+
             // Trouver et fermer la modale active
             const activeModals = document.querySelectorAll('.modal.active');
             if (activeModals.length > 0) {
@@ -544,6 +558,42 @@ function setupKeyboardListeners() {
             if (advancedFilters && advancedFilters.classList.contains('active')) {
                 advancedFilters.classList.remove('active');
             }
+        }
+    });
+}
+
+// ======================
+// SETTINGS MENU
+// ======================
+function setupSettingsMenu() {
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsDropdown = document.getElementById('settingsDropdown');
+
+    if (!settingsBtn || !settingsDropdown) return;
+
+    // Toggle menu on button click
+    settingsBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsDropdown.classList.toggle('active');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!settingsBtn.contains(e.target) && !settingsDropdown.contains(e.target)) {
+            settingsDropdown.classList.remove('active');
+        }
+    });
+
+    // Close menu when clicking on a menu item (except for toggle buttons)
+    const settingsItems = settingsDropdown.querySelectorAll('.settings-item');
+    settingsItems.forEach(item => {
+        // Ne pas fermer si c'est le thème toggle (il est cliquable)
+        if (!item.id.includes('theme')) {
+            item.addEventListener('click', () => {
+                setTimeout(() => {
+                    settingsDropdown.classList.remove('active');
+                }, 100);
+            });
         }
     });
 }
@@ -1393,7 +1443,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Configuration des écouteurs d'authentification
     setupAuthListeners();
-    
+
+    // Configuration du menu paramètres
+    setupSettingsMenu();
+
     // Vérifier l'état de l'authentification
     await checkAuthState();
     
