@@ -1,0 +1,353 @@
+# FINLY - TODO & AMÉLIORATION PRIORITAIRE
+
+## 🎯 ROADMAP GLOBAL
+
+### PHASE 1: NOTIFICATIONS & UX (Semaine 1)
+**PRIORITÉ: 🔴 CRITIQUE** - Améliore imédiatement l'expérience utilisateur
+
+#### P1.1 - Système de Toast Notifications
+- [ ] Créer module `notifications.js` avec classe `Toast`
+  - [ ] Affichage toast success (vert)
+  - [ ] Affichage toast error (rouge)
+  - [ ] Affichage toast info (bleu)
+  - [ ] Auto-masquage après 3-5s
+  - [ ] Animation fade in/out
+- [ ] Intégrer toasts dans toutes les opérations Firebase
+  - [ ] Ajout transaction → "Transaction ajoutée ✓"
+  - [ ] Modification → "Transaction modifiée ✓"
+  - [ ] Suppression → "Transaction supprimée ✓"
+  - [ ] Erreur → "Erreur: [message]"
+  - [ ] Login/Signup success/error
+  - [ ] Sauvegarde profil
+
+#### P1.2 - Indicateurs de Chargement
+- [ ] Créer spinners CSS (3 styles différents)
+- [ ] Ajouter spinner sur boutons pendant opération
+  - [ ] Bouton "Ajouter" ➜ désactiver + spinner
+  - [ ] Bouton "Modifier" ➜ même traitement
+  - [ ] Bouton "Supprimer" ➜ même traitement
+  - [ ] Bouton "Connexion" ➜ même traitement
+- [ ] Afficher overlay de chargement au démarrage (data fetch initiale)
+
+#### P1.3 - Fermeture des Modales par ESC
+- [ ] Ajouter eventListener 'keydown' global
+  - [ ] ESC ferme modale active
+  - [ ] ESC ferme panel filtres avancés
+- [ ] Ajouter bouton "×" en haut à droite de chaque modale (optionnel)
+
+#### P1.4 - Feedback Visuel des Opérations
+- [ ] Désactiver boutons pendant opération (évite double-clic)
+- [ ] Afficher état "Sauvegarde en cours..." sur boutons
+- [ ] Afficher dernière synchronisation (ex: "Synchro: il y a 2s")
+
+---
+
+### PHASE 2: DESIGN RESPONSIVE (Semaine 2)
+**PRIORITÉ: 🔴 HAUTE** - Rendre utilisable sur tous les appareils
+
+#### P2.1 - Layout Mobile (<768px)
+- [ ] Ajouter viewport meta tag si absent
+- [ ] Créer breakpoints CSS (max-width)
+  - [ ] Mobile: < 480px
+  - [ ] Tablet: 480px - 768px
+  - [ ] Desktop: > 768px
+- [ ] Adapter header pour mobile
+  - [ ] Logo plus petit ou hidden
+  - [ ] Menu hamburger au lieu de liens
+  - [ ] Dropdown menu coulissant
+
+#### P2.2 - Tableau Responsive
+- [ ] Sur mobile: transformer tableau en cards
+  - [ ] Chaque transaction = 1 card
+  - [ ] Afficher: Date | Catégorie | Montant | Description
+  - [ ] Boutons Modifier/Supprimer toujours visibles
+- [ ] Sur tablet: afficher 2-3 colonnes au lieu de toutes
+  - [ ] Priorité: Date, Montant, Type, Actions
+  - [ ] Cacher: Catégorie, Description (show on click)
+- [ ] Sur desktop: tableau complet comme actuellement
+
+#### P2.3 - Modales Responsive
+- [ ] Modale "Ajouter transaction"
+  - [ ] Largeur 100% sur mobile (padding 16px)
+  - [ ] Max-width 400px sur tablet
+  - [ ] Max-width 500px sur desktop
+- [ ] Modale "Modifier profil"
+  - [ ] Même responsive que "Ajouter"
+- [ ] Modale "Supprimer" (confirmation)
+  - [ ] Rester lisible en petit écran
+
+#### P2.4 - Graphiques Responsive
+- [ ] Pie chart (dépenses par catégorie)
+  - [ ] Sur mobile: réduire de 300x300 à 250x250
+  - [ ] Masquer légende sur petit écran (ajouter toggle)
+- [ ] Bar chart (revenus vs dépenses)
+  - [ ] Sur mobile: réduire hauteur à 250px
+  - [ ] Sur mobile: afficher labels horizontaux (90deg rotation)
+
+#### P2.5 - Cartes KPI Responsive
+- [ ] Passer à grid auto-fit au lieu de 3 colonnes fixes
+  - [ ] Mobile: 1 colonne
+  - [ ] Tablet: 2-3 colonnes
+  - [ ] Augmenter padding sur mobile
+
+#### P2.6 - Formulaires Responsive
+- [ ] Input date/number/text
+  - [ ] Size: 100% sur mobile
+  - [ ] Padding: 12px au lieu de 8px (plus facile au toucher)
+  - [ ] Font-size: 16px (évite zoom auto iOS)
+- [ ] Checkboxes filtres
+  - [ ] Rendre plus grande au toucher (40px min)
+  - [ ] Grid 2 colonnes sur mobile au lieu de 4
+
+#### P2.7 - Navigation Filtres
+- [ ] Le sélecteur mois + bouton filtres avancés
+  - [ ] Sur mobile: mettre "Filtres avancés" sous le mois
+  - [ ] Bouton moins transparent (plus visible)
+
+---
+
+### PHASE 3: GESTION ROBUSTE DES ERREURS (Semaine 2-3)
+**PRIORITÉ: 🔴 HAUTE** - Éviter la perte de données
+
+#### P3.1 - Try-Catch sur Toutes Opérations Firebase
+- [ ] `addTransaction()`
+  - [ ] Catch error ➜ Toast error
+  - [ ] Optionnel: retry auto avec backoff exponentiel
+- [ ] `updateTransaction()`
+  - [ ] Catch error ➜ Toast error
+  - [ ] Revert UI change si échec
+- [ ] `deleteTransaction()`
+  - [ ] Catch error ➜ Toast error
+  - [ ] Revert DOM si échoue
+- [ ] `fetchTransactions()`
+  - [ ] Catch error ➜ Fallback localStorage
+  - [ ] Afficher notification "Mode hors ligne"
+- [ ] `updateProfile()`
+  - [ ] Catch error ➜ Toast error
+  - [ ] Afficher message d'erreur spécifique (mot de passe faible, etc.)
+- [ ] `signIn()` / `signUp()`
+  - [ ] Catch error ➜ Toast error
+  - [ ] Messages clairs (email existe déjà, mot de passe faible, etc.)
+- [ ] `resetPassword()`
+  - [ ] Afficher toast confirmation (email envoyé)
+  - [ ] Catch error ➜ Toast error (email invalide)
+
+#### P3.2 - Fallback localStorage Explicite
+- [ ] Quand Firebase indisponible
+  - [ ] Afficher banner jaune "Mode hors ligne - données non synchronisées"
+  - [ ] Afficher badge "📡 Hors ligne" sur transactions locales
+- [ ] Quand connexion rétablie
+  - [ ] Toast "Synchronisation en cours..."
+  - [ ] Synchroniser transactions locales vers Firebase
+  - [ ] Masquer banner et badge
+
+#### P3.3 - Race Conditions
+- [ ] Problème: Ajouter en array local PUIS Firebase
+  - [ ] Solution: Ajouter optimistic update avec ID temporaire
+  - [ ] Remplacer ID temp par ID Firebase quand confirmé
+  - [ ] Si erreur: annuler affichage local + toast error
+- [ ] Même pour update et delete
+
+#### P3.4 - Problèmes Réseau
+- [ ] Timeout sur fetchTransactions (> 10s)
+  - [ ] Afficher toast warning "Chargement lent, utilisation cache..."
+  - [ ] Ajouter bouton "Réessayer"
+- [ ] Retry logic avec backoff
+  - [ ] 1er essai: immédiat
+  - [ ] 2e essai: +2s
+  - [ ] 3e essai: +4s
+  - [ ] Abandonner après 3 essais
+
+#### P3.5 - Validation Côté Client
+- [ ] Avant envoyer à Firebase
+  - [ ] Montant > 0 ET <= 999999
+  - [ ] Date valide
+  - [ ] Description non-vide (si applicable)
+  - [ ] Catégorie sélectionnée
+  - [ ] Afficher tooltip d'erreur in-line (pas toast)
+
+---
+
+### PHASE 4: REFACTORING MODULAIRE (Semaine 3-4)
+**PRIORITÉ: 🟡 MOYEN** - Fondamental mais moins urgent (MVP ok)
+
+#### P4.1 - Structure Modulaire
+```
+script/
+  ├── firebase.js         (initialisation, config)
+  ├── auth.js            (login, signup, reset password)
+  ├── transactions.js    (CRUD operations)
+  ├── ui.js              (render UI, update DOM)
+  ├── filters.js         (appliquer filtres, trier)
+  ├── charts.js          (Chart.js intégration)
+  ├── notifications.js   (toast system)
+  ├── storage.js         (localStorage fallback)
+  └── index.js           (point d'entrée)
+```
+
+#### P4.2 - Découpling Auth
+- [ ] Créer `firebase.js`
+  - [ ] Exporter `initializeFirebase()`
+  - [ ] Exporter `DATABASE` (référence Firestore)
+  - [ ] Une seule source de vérité pour config Firebase
+- [ ] Créer `auth.js`
+  - [ ] `signUp(email, password, name)`
+  - [ ] `signIn(email, password)`
+  - [ ] `signOut()`
+  - [ ] `resetPassword(email)`
+  - [ ] `updateProfile(name, newPassword?)`
+  - [ ] `getCurrentUser()`
+  - [ ] Tous les erreurs → Toast via `notifications.js`
+
+#### P4.3 - Découpling Transactions
+- [ ] Créer `transactions.js`
+  - [ ] `addTransaction(data)` → Promise<id>
+  - [ ] `updateTransaction(id, data)` → Promise
+  - [ ] `deleteTransaction(id)` → Promise
+  - [ ] `getTransactions(uid)` → Promise<array>
+  - [ ] Fallback localStorage pour offline
+  - [ ] Retry logic intégré
+
+#### P4.4 - Découpling UI
+- [ ] Créer `ui.js`
+  - [ ] `renderTransactions(array)`
+  - [ ] `openAddModal()`
+  - [ ] `closeModal(name)`
+  - [ ] `updateKPICards(stats)`
+  - [ ] `updateCharts(data)`
+  - [ ] `updateTheme(isDark)`
+  - [ ] Zéro logique métier, juste de la mise à jour DOM
+
+#### P4.5 - Découpling Filtres
+- [ ] Créer `filters.js`
+  - [ ] `applyFilters(transactions, activeFilters)` → array
+  - [ ] `applySorting(transactions, sortConfig)` → array
+  - [ ] `getFilteredStats(transactions)` → {totalIncome, totalExpense, balance}
+  - [ ] Pure functions, aucun side-effect
+
+#### P4.6 - Découpling Notifications
+- [ ] Créer `notifications.js`
+  - [ ] Classe `Toast`
+  - [ ] `showSuccess(message)`
+  - [ ] `showError(message)`
+  - [ ] `showInfo(message)`
+  - [ ] `showLoading(message)` (avec spinner)
+  - [ ] Centralize toutes les notifications
+
+#### P4.7 - Index.js (Orchestration)
+- [ ] Point d'entrée qui lie les modules
+  - [ ] Init Firebase
+  - [ ] Auth listener
+  - [ ] Event listeners UI
+  - [ ] Charger données
+  - [ ] Render UI initiale
+  - [ ] Zéro logique métier
+
+#### P4.8 - Éliminer Variables Globales
+- [ ] Avant:
+  ```javascript
+  let transactions = [];
+  let currentUser = null;
+  let activeFilters = {};
+  ```
+- [ ] Après: State centralisé en objet
+  ```javascript
+  const state = {
+    user: null,
+    transactions: [],
+    filters: {},
+    sort: {},
+    theme: 'light'
+  };
+  ```
+
+---
+
+### PHASE 5: AMÉLIORATIONS ADDITIONNELLES (Semaine 4+)
+**PRIORITÉ: 🟢 FAIBLE** - Bonus après les 4 phases
+
+#### P5.1 - Export de Données
+- [ ] Bouton "Exporter"
+  - [ ] CSV (utiliser library: papaparse.js)
+  - [ ] PDF (utiliser jsPDF)
+  - [ ] JSON (simple JSON.stringify)
+
+#### P5.2 - Pagination
+- [ ] Charger 50 transactions initiales
+- [ ] Ajouter "Voir plus" button ou infinite scroll
+- [ ] Améliore perf si 1000+ transactions
+
+#### P5.3 - Sécurité Firebase
+- [ ] Restrictionner API Key (console Firebase)
+- [ ] Valider données en Firestore Rules
+  - [ ] Montant > 0
+  - [ ] Date ISO valide
+  - [ ] Catégorie dans liste whitelist
+
+#### P5.4 - 2FA
+- [ ] Intégrer Google Authenticator (qrcode.js)
+- [ ] Vérification lors login
+
+#### P5.5 - Multi-devises
+- [ ] Ajouter champ devise à profil utilisateur
+- [ ] Conversion automatique via API (exchangerate-api.com)
+
+#### P5.6 - PWA
+- [ ] Créer manifest.json
+- [ ] Service Worker simple (offline)
+- [ ] Ajouter icon 192x192
+
+#### P5.7 - Budgets & Alertes
+- [ ] Ajouter tableau budgets par catégorie
+- [ ] Tracker dépense vs budget
+- [ ] Toast alert si dépassement
+
+---
+
+## 📊 DÉPENDANCES À AJOUTER (si modulaire)
+
+```json
+{
+  "papaparse": "^5.4.1",        // CSV export
+  "jspdf": "^2.5.1",            // PDF export
+  "qrcode": "^1.5.3",           // 2FA QR codes
+  "fuse.js": "^7.0.0",          // Recherche fuzzy (optionnel)
+  "date-fns": "^2.30.0",        // Manipulation dates (optionnel)
+  "lodash-es": "^4.17.21"       // Utilities (optionnel)
+}
+```
+
+⚠️ NOTER: Rester vanilla JS d'abord, ajouter librairies que si vraiment besoin
+
+---
+
+## 🚀 ORDRE D'EXÉCUTION RECOMMANDÉ
+
+1. **P1.1-P1.4** (Notifications & UX) → 2-3 jours
+2. **P2.1-P2.7** (Responsive) → 2-3 jours
+3. **P3.1-P3.5** (Gestion erreurs) → 1-2 jours
+4. **P4.1-P4.8** (Refactoring) → 3-4 jours
+5. **P5.x** (Bonus) → À la demande
+
+**Total estimé: 2-3 semaines pour avoir une app production-ready** ✨
+
+---
+
+## 📌 NOTES IMPORTANTES
+
+- **Pas de breaking changes** = tester en local d'abord
+- **Backward compat** = exporter + importer dans localStorage si besoin
+- **Tests** = créer `.test.js` pour modules critiques (auth.js, transactions.js)
+- **Git commits** = faire commits après chaque phase (ex: `feat: add toast notifications`)
+- **Deployment** = considérer Vercel/Netlify pour hosting (gratuit)
+
+---
+
+## ✅ CRITÈRES DE SUCCÈS
+
+- [ ] Aucune console.error() non-gérée
+- [ ] Application fonctionne pleinement en mobile
+- [ ] Toutes les opérations show toast (success OU error)
+- [ ] Fallback localStorage fonctionne
+- [ ] Code modulaire et testable
+- [ ] README.md mis à jour avec nouvelles features

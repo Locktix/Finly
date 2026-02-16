@@ -1,4 +1,144 @@
 // ======================
+// TOAST NOTIFICATIONS SYSTEM
+// ======================
+const Toast = {
+    show(type, title, message, duration = 4000) {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+
+        let icon = '';
+        switch(type) {
+            case 'success':
+                icon = '<i class="fas fa-check-circle toast-icon"></i>';
+                break;
+            case 'error':
+                icon = '<i class="fas fa-exclamation-circle toast-icon"></i>';
+                break;
+            case 'info':
+                icon = '<i class="fas fa-info-circle toast-icon"></i>';
+                break;
+            case 'warning':
+                icon = '<i class="fas fa-warning toast-icon"></i>';
+                break;
+            case 'loading':
+                icon = '<div class="toast-spinner"></div>';
+                break;
+        }
+
+        toast.innerHTML = `
+            ${icon}
+            <div class="toast-content">
+                ${title ? `<div class="toast-title">${title}</div>` : ''}
+                ${message ? `<div class="toast-message">${message}</div>` : ''}
+            </div>
+            <button class="toast-close">&times;</button>
+        `;
+
+        container.appendChild(toast);
+
+        // Close button listener
+        toast.querySelector('.toast-close').addEventListener('click', () => {
+            removeToast(toast);
+        });
+
+        // Auto-remove after duration (skip if loading)
+        if (type !== 'loading' && duration > 0) {
+            setTimeout(() => {
+                removeToast(toast);
+            }, duration);
+        }
+
+        return toast;
+    },
+
+    success(title, message = '', duration = 3000) {
+        return this.show('success', title, message, duration);
+    },
+
+    error(title, message = '', duration = 4000) {
+        return this.show('error', title, message, duration);
+    },
+
+    info(title, message = '', duration = 3000) {
+        return this.show('info', title, message, duration);
+    },
+
+    warning(title, message = '', duration = 3500) {
+        return this.show('warning', title, message, duration);
+    },
+
+    loading(title, message = '') {
+        return this.show('loading', title, message, 0);
+    }
+};
+
+function removeToast(toastElement) {
+    toastElement.classList.add('fade-out');
+    setTimeout(() => {
+        toastElement.remove();
+    }, 300);
+}
+
+// ======================
+// LOADING SPINNERS
+// ======================
+function showSpinner(buttonEl, originalText = '') {
+    buttonEl.disabled = true;
+    buttonEl.dataset.originalText = originalText || buttonEl.innerHTML;
+    buttonEl.innerHTML = '<span class="toast-spinner"></span> Chargement...';
+}
+
+function hideSpinner(buttonEl) {
+    buttonEl.disabled = false;
+    buttonEl.innerHTML = buttonEl.dataset.originalText || 'Soumettre';
+}
+
+// ======================
+// SYNC STATUS INDICATOR
+// ======================
+let lastSyncTime = null;
+let syncTimeout = null;
+
+function updateSyncStatus(status = 'synced', message = '') {
+    const indicator = document.getElementById('syncIndicator');
+    const syncText = document.getElementById('syncText');
+
+    if (!indicator) return;
+
+    indicator.classList.remove('syncing', 'error');
+
+    switch(status) {
+        case 'syncing':
+            indicator.classList.add('syncing');
+            syncText.textContent = 'Synchronisation...';
+            break;
+        case 'synced':
+            lastSyncTime = new Date();
+            syncText.textContent = 'Synchronisé';
+            indicator.classList.remove('syncing', 'error');
+            break;
+        case 'error':
+            indicator.classList.add('error');
+            syncText.textContent = message || 'Erreur de sync';
+            break;
+        case 'offline':
+            indicator.classList.add('error');
+            syncText.textContent = 'Mode hors ligne';
+            break;
+    }
+
+    // Auto-reset le statut après 3s
+    if (status === 'synced') {
+        clearTimeout(syncTimeout);
+        syncTimeout = setTimeout(() => {
+            syncText.textContent = 'Synchronisé';
+            indicator.classList.remove('syncing', 'error');
+        }, 3000);
+    }
+}
+
+// ======================
 // GESTION DE L'AUTHENTIFICATION
 // ======================
 let currentUser = null;
@@ -49,16 +189,24 @@ async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
+    const button = e.target.querySelector('button[type="submit"]');
     const errorEl = document.getElementById('loginError');
-    
+
+    showSpinner(button, button.textContent);
+
     try {
         errorEl.classList.remove('show');
         const result = await firebase.auth().signInWithEmailAndPassword(email, password);
         currentUser = result.user;
-        showDashboard();
+        Toast.success('Bienvenue !', `Heureux de vous revoir, ${currentUser.displayName || 'utilisateur'}`);
+        hideSpinner(button);
+        setTimeout(() => showDashboard(), 500);
     } catch (error) {
-        errorEl.textContent = getErrorMessage(error.code);
+        const message = getErrorMessage(error.code);
+        Toast.error('Erreur connexion', message);
+        errorEl.textContent = message;
         errorEl.classList.add('show');
+        hideSpinner(button);
     }
 }
 
@@ -68,35 +216,45 @@ async function handleSignup(e) {
     const email = document.getElementById('signupEmail').value;
     const password = document.getElementById('signupPassword').value;
     const confirmPassword = document.getElementById('signupConfirmPassword').value;
+    const button = e.target.querySelector('button[type="submit"]');
     const errorEl = document.getElementById('signupError');
-    
+
     try {
         errorEl.classList.remove('show');
-        
+
         if (password !== confirmPassword) {
+            Toast.warning('Erreur', 'Les mots de passe ne correspondent pas');
             errorEl.textContent = 'Les mots de passe ne correspondent pas';
             errorEl.classList.add('show');
             return;
         }
-        
+
         if (password.length < 6) {
+            Toast.warning('Mot de passe faible', 'Au moins 6 caractères requis');
             errorEl.textContent = 'Le mot de passe doit contenir au moins 6 caractères';
             errorEl.classList.add('show');
             return;
         }
-        
+
+        showSpinner(button, button.textContent);
+
         const result = await firebase.auth().createUserWithEmailAndPassword(email, password);
         currentUser = result.user;
-        
+
         // Mettre à jour le profil avec le nom
         await currentUser.updateProfile({
             displayName: name
         });
-        
-        showDashboard();
+
+        Toast.success('Inscription réussie !', `Bienvenue ${name} !`);
+        hideSpinner(button);
+        setTimeout(() => showDashboard(), 500);
     } catch (error) {
-        errorEl.textContent = getErrorMessage(error.code);
+        const message = getErrorMessage(error.code);
+        Toast.error('Erreur inscription', message);
+        errorEl.textContent = message;
         errorEl.classList.add('show');
+        if (button) hideSpinner(button);
     }
 }
 
@@ -105,9 +263,11 @@ async function handleLogout() {
         await firebase.auth().signOut();
         currentUser = null;
         transactions = []; // Vider les transactions
+        Toast.info('Déconnexion', 'À bientôt !');
         showAuthPage();
     } catch (error) {
         console.error('Erreur de déconnexion:', error);
+        Toast.error('Erreur', 'Impossible de se déconnecter');
     }
 }
 
@@ -201,23 +361,27 @@ async function handleProfileUpdate(e) {
         }
         
         if (updatesMade) {
+            Toast.success('Profil mis à jour', 'Vos modifications ont été sauvegardées');
             successEl.textContent = 'Profil mis à jour avec succès';
             successEl.style.display = 'block';
-            
+
             // Vider le champ mot de passe
             document.getElementById('profilePassword').value = '';
-            
+
             // Fermer la modale après 2 secondes
             setTimeout(() => {
                 closeModal('profileModal');
                 successEl.style.display = 'none';
             }, 2000);
         } else {
+            Toast.warning('Aucune modification', 'Entrez au moins un champ à modifier');
             errorEl.textContent = 'Aucune modification à appliquer';
             errorEl.classList.add('show');
         }
     } catch (error) {
-        errorEl.textContent = getErrorMessage(error.code);
+        const message = getErrorMessage(error.code);
+        Toast.error('Erreur', message);
+        errorEl.textContent = message;
         errorEl.classList.add('show');
     }
 }
@@ -361,6 +525,30 @@ function useLocalStorage() {
 }
 
 // ======================
+// KEYBOARD SHORTCUTS
+// ======================
+function setupKeyboardListeners() {
+    document.addEventListener('keydown', (e) => {
+        // Fermer les modales avec ESC
+        if (e.key === 'Escape') {
+            // Trouver et fermer la modale active
+            const activeModals = document.querySelectorAll('.modal.active');
+            if (activeModals.length > 0) {
+                // Fermer la dernière modale ouverte
+                const lastModal = activeModals[activeModals.length - 1];
+                closeModal(lastModal.id);
+            }
+
+            // Aussi fermer le panel filtres avancés s'il est ouvert
+            const advancedFilters = document.getElementById('advancedFilters');
+            if (advancedFilters && advancedFilters.classList.contains('active')) {
+                advancedFilters.classList.remove('active');
+            }
+        }
+    });
+}
+
+// ======================
 // GESTION DES MODALES
 // ======================
 function openModal(modalId) {
@@ -444,56 +632,83 @@ function setupModalListeners() {
 // ======================
 function setupFormListeners() {
     // Formulaire Dépense
-    document.getElementById('expenseForm').addEventListener('submit', (e) => {
+    document.getElementById('expenseForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const transaction = {
-            type: 'expense',
-            description: document.getElementById('expenseName').value,
-            category: document.getElementById('expenseCategory').value,
-            amount: parseFloat(document.getElementById('expenseAmount').value),
-            date: document.getElementById('expenseDate').value,
-            timestamp: new Date().toISOString()
-        };
-        addTransaction(transaction);
-        document.getElementById('expenseForm').reset();
-        closeModal('expenseModal');
+        const button = e.target.querySelector('button[type="submit"]');
+        showSpinner(button, button.textContent);
+
+        try {
+            const transaction = {
+                type: 'expense',
+                description: document.getElementById('expenseName').value,
+                category: document.getElementById('expenseCategory').value,
+                amount: parseFloat(document.getElementById('expenseAmount').value),
+                date: document.getElementById('expenseDate').value,
+                timestamp: new Date().toISOString()
+            };
+            await addTransaction(transaction);
+            document.getElementById('expenseForm').reset();
+            closeModal('expenseModal');
+            hideSpinner(button);
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout de dépense:', error);
+            hideSpinner(button);
+        }
     });
 
     // Formulaire Recette
-    document.getElementById('incomeForm').addEventListener('submit', (e) => {
+    document.getElementById('incomeForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const transaction = {
-            type: 'income',
-            description: document.getElementById('incomeName').value,
-            category: document.getElementById('incomeCategory').value,
-            amount: parseFloat(document.getElementById('incomeAmount').value),
-            date: document.getElementById('incomeDate').value,
-            timestamp: new Date().toISOString()
-        };
-        addTransaction(transaction);
-        document.getElementById('incomeForm').reset();
-        closeModal('incomeModal');
+        const button = e.target.querySelector('button[type="submit"]');
+        showSpinner(button, button.textContent);
+
+        try {
+            const transaction = {
+                type: 'income',
+                description: document.getElementById('incomeName').value,
+                category: document.getElementById('incomeCategory').value,
+                amount: parseFloat(document.getElementById('incomeAmount').value),
+                date: document.getElementById('incomeDate').value,
+                timestamp: new Date().toISOString()
+            };
+            await addTransaction(transaction);
+            document.getElementById('incomeForm').reset();
+            closeModal('incomeModal');
+            hideSpinner(button);
+        } catch (error) {
+            console.error('Erreur lors de l\'ajout de recette:', error);
+            hideSpinner(button);
+        }
     });
 
     // Formulaire Modifier
-    document.getElementById('editForm').addEventListener('submit', (e) => {
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
         e.preventDefault();
-        const updatedTransaction = {
-            type: currentEditingType,
-            description: document.getElementById('editName').value,
-            category: document.getElementById('editCategory').value,
-            amount: parseFloat(document.getElementById('editAmount').value),
-            date: document.getElementById('editDate').value,
-            timestamp: transactions[currentEditingIndex].timestamp
-        };
-        
-        if (transactions[currentEditingIndex].firebaseId) {
-            updatedTransaction.firebaseId = transactions[currentEditingIndex].firebaseId;
+        const button = e.target.querySelector('button[type="submit"]');
+        showSpinner(button, button.textContent);
+
+        try {
+            const updatedTransaction = {
+                type: currentEditingType,
+                description: document.getElementById('editName').value,
+                category: document.getElementById('editCategory').value,
+                amount: parseFloat(document.getElementById('editAmount').value),
+                date: document.getElementById('editDate').value,
+                timestamp: transactions[currentEditingIndex].timestamp
+            };
+
+            if (transactions[currentEditingIndex].firebaseId) {
+                updatedTransaction.firebaseId = transactions[currentEditingIndex].firebaseId;
+            }
+
+            await updateTransaction(currentEditingIndex, updatedTransaction);
+            document.getElementById('editForm').reset();
+            closeModal('editModal');
+            hideSpinner(button);
+        } catch (error) {
+            console.error('Erreur lors de la modification:', error);
+            hideSpinner(button);
         }
-        
-        updateTransaction(currentEditingIndex, updatedTransaction);
-        document.getElementById('editForm').reset();
-        closeModal('editModal');
     });
 }
 
@@ -519,19 +734,26 @@ function getSelectedMonth() {
 
 async function addTransaction(transaction) {
     transactions.push(transaction);
-    
+    Toast.success('Transaction ajoutée', `${transaction.description} - ${formatCurrency(transaction.amount)}`);
+    updateSyncStatus('syncing');
+
     if (db) {
         try {
             await db.collection('users').doc(currentUser.uid).collection('transactions').add(transaction);
             console.log('Transaction ajoutée à Firebase');
+            updateSyncStatus('synced');
         } catch (error) {
             console.error('Erreur lors de l\'ajout à Firebase:', error);
+            Toast.error('Sync. échouée', 'Les données seront synchronisées quand la connexion sera rétablie');
+            updateSyncStatus('error', 'Sync échouée');
         }
     } else {
         // Sauvegarde locale
         localStorage.setItem('transactions', JSON.stringify(transactions));
+        Toast.warning('Mode hors ligne', 'Données stockées localement');
+        updateSyncStatus('offline');
     }
-    
+
     updateDashboard();
 }
 
@@ -542,36 +764,48 @@ async function deleteTransaction(index) {
     if (!confirmed) return;
 
     transactions.splice(index, 1);
-    
+    Toast.success('Supprimée', transaction.description);
+    updateSyncStatus('syncing');
+
     if (db && transaction.firebaseId) {
         try {
             await db.collection('users').doc(currentUser.uid).collection('transactions').doc(transaction.firebaseId).delete();
             console.log('Transaction supprimée de Firebase');
+            updateSyncStatus('synced');
         } catch (error) {
             console.error('Erreur lors de la suppression:', error);
+            Toast.error('Erreur', 'La transaction n\'a pas pu être supprimée de la sauvegarde');
+            updateSyncStatus('error', 'Suppression échouée');
         }
     } else {
         localStorage.setItem('transactions', JSON.stringify(transactions));
+        updateSyncStatus('offline');
     }
-    
+
     updateDashboard();
 }
 
 async function updateTransaction(index, updatedTransaction) {
     const oldTransaction = transactions[index];
     transactions[index] = updatedTransaction;
-    
+    Toast.success('Mise à jour', updatedTransaction.description);
+    updateSyncStatus('syncing');
+
     if (db && oldTransaction.firebaseId) {
         try {
             await db.collection('users').doc(currentUser.uid).collection('transactions').doc(oldTransaction.firebaseId).update(updatedTransaction);
             console.log('Transaction mise à jour sur Firebase');
+            updateSyncStatus('synced');
         } catch (error) {
             console.error('Erreur lors de la mise à jour:', error);
+            Toast.error('Erreur', 'La modification n\'a pas pu être synchronisée');
+            updateSyncStatus('error', 'Mise à jour échouée');
         }
     } else {
         localStorage.setItem('transactions', JSON.stringify(transactions));
+        updateSyncStatus('offline');
     }
-    
+
     updateDashboard();
 }
 
@@ -716,13 +950,14 @@ function updateTransactionsTable() {
     const tableBody = document.getElementById('transactionsBody');
     const countElement = document.getElementById('transactionCount');
     const month = getSelectedMonth();
-    
+
     const monthTransactions = getTransactionsForMonth(month);
     const filteredTransactions = applyFilters(monthTransactions);
 
     if (filteredTransactions.length === 0) {
         tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucune transaction pour ce mois.</td></tr>';
         countElement.textContent = '0 transactions';
+        updateTransactionsList(); // Aussi vider les cartes
         return;
     }
 
@@ -764,6 +999,62 @@ function updateTransactionsTable() {
 
     tableBody.innerHTML = html;
     countElement.textContent = `${filteredTransactions.length} transaction${filteredTransactions.length > 1 ? 's' : ''}`;
+    updateTransactionsList(); // Aussi mettre à jour les cartes
+}
+
+// ======================
+// MOBILE CARDS VIEW
+// ======================
+function updateTransactionsList() {
+    const listContainer = document.getElementById('transactionsList');
+    const month = getSelectedMonth();
+
+    const monthTransactions = getTransactionsForMonth(month);
+    const filteredTransactions = applyFilters(monthTransactions);
+
+    if (filteredTransactions.length === 0) {
+        listContainer.innerHTML = '<div style="padding: var(--spacing-lg); text-align: center; color: var(--color-text-secondary);">Aucune transaction pour ce mois.</div>';
+        return;
+    }
+
+    // Appliquer le tri personnalisé
+    const sorted = sortTransactions(filteredTransactions);
+
+    let html = '';
+    sorted.forEach((transaction) => {
+        const originalIndex = transactions.indexOf(transaction);
+        const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
+        const formattedDate = formatDate(transaction.date);
+        const formattedAmount = formatCurrency(transaction.amount);
+        const typeClass = transaction.type === 'income' ? 'income' : 'expense';
+
+        html += `
+            <div class="transaction-card">
+                <div class="transaction-card-content">
+                    <div class="transaction-card-header">
+                        <div>
+                            <div class="transaction-card-description">${transaction.description}</div>
+                            <div class="transaction-card-date">${formattedDate}</div>
+                        </div>
+                        <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
+                    </div>
+                    <div class="transaction-card-category">
+                        <i class="fas ${icon}"></i> ${transaction.category}
+                    </div>
+                </div>
+                <div class="transaction-card-actions">
+                    <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+
+    listContainer.innerHTML = html;
 }
 
 function formatCurrency(amount) {
@@ -1093,7 +1384,10 @@ function updateIncomeExpenseChart() {
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialiser le thème
     initializeTheme();
-    
+
+    // Initialiser les keyboard shortcuts
+    setupKeyboardListeners();
+
     // Initialiser Firebase
     await initializeFirebase();
     
