@@ -1815,7 +1815,7 @@ body {
         display: none;
     }
 
-    /* Tableau → Masquer sur tablet, cards sur mobile */
+    /* Tableau → Masquer sur tablet, cards visible */
     .transactions-table {
         display: none;
     }
@@ -2199,6 +2199,18 @@ body {
     }
 }
 
+/* BREAKPOINT: Desktop (769px+) - Show table, hide cards */
+@media (min-width: 769px) {
+    /* Restore table on desktop */
+    .transactions-table {
+        display: table;
+    }
+
+    .transactions-list {
+        display: none;
+    }
+}
+
 /* BREAKPOINT: Large Screens (1200px+) - Optimizations */
 @media (min-width: 1200px) {
     .main-container {
@@ -2211,14 +2223,5 @@ body {
 
     .charts-section {
         grid-template-columns: 1fr 1fr;
-    }
-
-    /* Restore table on desktop */
-    .transactions-table {
-        display: table;
-    }
-
-    .transactions-list {
-        display: none;
     }
 }
