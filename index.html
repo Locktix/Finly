@@ -231,8 +231,16 @@
                     <span class="transaction-count" id="transactionCount">0 transactions</span>
                 </div>
                 <div class="month-selector">
-                    <label for="monthFilter">Filtrer par mois:</label>
-                    <input type="month" id="monthFilter">
+                    <button class="month-nav-btn" id="prevMonthBtn" title="Mois précédent">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="month-display">
+                        <span id="monthDisplay">Décembre 2024</span>
+                        <input type="month" id="monthFilter" style="display: none;">
+                    </div>
+                    <button class="month-nav-btn" id="nextMonthBtn" title="Mois suivant">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
             </div>
 

@@ -400,6 +400,10 @@ function showDashboard() {
     document.getElementById('mainContainer').style.display = 'block';
     document.getElementById('mainFooter').style.display = 'block';
     document.getElementById('chartsSection').style.display = 'block';
+
+    // Afficher le mois courant
+    updateMonthDisplay();
+
     // Charger les transactions de l'utilisateur
     if (db) {
         loadTransactionsFromFirebase();
@@ -782,6 +786,51 @@ function getSelectedMonth() {
     return selectedMonth || new Date().toISOString().slice(0, 7);
 }
 
+// ======================
+// NAVIGATION MOIS
+// ======================
+function navigateMonth(direction) {
+    const currentMonth = getSelectedMonth();
+    const [year, month] = currentMonth.split('-');
+    let newYear = parseInt(year);
+    let newMonth = parseInt(month) + direction;
+
+    // Gérer le dépassement des mois
+    if (newMonth > 12) {
+        newMonth = 1;
+        newYear++;
+    } else if (newMonth < 1) {
+        newMonth = 12;
+        newYear--;
+    }
+
+    const newMonthStr = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+    selectedMonth = newMonthStr;
+
+    // Mettre à jour l'input month (hidden)
+    document.getElementById('monthFilter').value = newMonthStr;
+
+    // Mettre à jour l'affichage
+    updateMonthDisplay();
+
+    // Mettre à jour les données
+    updateDashboard();
+}
+
+function updateMonthDisplay() {
+    const currentMonth = getSelectedMonth();
+    const [year, month] = currentMonth.split('-');
+
+    const monthNames = [
+        'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+        'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+    ];
+
+    const monthDisplay = document.getElementById('monthDisplay');
+    const monthName = monthNames[parseInt(month) - 1];
+    monthDisplay.textContent = `${monthName} ${year}`;
+}
+
 async function addTransaction(transaction) {
     transactions.push(transaction);
     Toast.success('Transaction ajoutée', `${transaction.description} - ${formatCurrency(transaction.amount)}`);
@@ -1154,6 +1203,15 @@ function setupFilterListeners() {
     // Réinitialiser filtres
     document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
 
+    // Navigation mois
+    document.getElementById('prevMonthBtn').addEventListener('click', () => {
+        navigateMonth(-1);
+    });
+
+    document.getElementById('nextMonthBtn').addEventListener('click', () => {
+        navigateMonth(1);
+    });
+
     // Event listeners pour le tri
     document.querySelectorAll('.sort-header').forEach(button => {
         button.addEventListener('click', (e) => {
@@ -1245,6 +1303,98 @@ function resetFilters() {
 // ======================
 // GESTION DES GRAPHIQUES
 // ======================
+function getChartOptions(type = 'doughnut') {
+    const isMobile = window.innerWidth <= 480;
+    const isTablet = window.innerWidth <= 768;
+
+    const baseOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: isMobile ? 'bottom' : 'bottom',
+                labels: {
+                    font: {
+                        family: "'Inter', sans-serif",
+                        size: isMobile ? 10 : 12
+                    },
+                    color: '#6b7280',
+                    padding: isMobile ? 8 : 15
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                titleFont: { family: "'Inter', sans-serif", size: isMobile ? 10 : 12 },
+                bodyFont: { family: "'Inter', sans-serif", size: isMobile ? 9 : 12 },
+                callbacks: {
+                    label: function(context) {
+                        return formatCurrency(context.parsed);
+                    }
+                }
+            }
+        }
+    };
+
+    if (type === 'doughnut') {
+        return baseOptions;
+    } else if (type === 'bar') {
+        return {
+            responsive: true,
+            maintainAspectRatio: true,
+            indexAxis: 'x',
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            family: "'Inter', sans-serif",
+                            size: isMobile ? 10 : 12
+                        },
+                        color: '#6b7280',
+                        padding: isMobile ? 8 : 15,
+                        usePointStyle: true
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    titleFont: { family: "'Inter', sans-serif", size: isMobile ? 10 : 12 },
+                    bodyFont: { family: "'Inter', sans-serif", size: isMobile ? 9 : 12 },
+                    callbacks: {
+                        label: function(context) {
+                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { size: isMobile ? 8 : 12 },
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return '€' + (value / 1000).toFixed(0) + 'k';
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: isMobile ? 8 : 12 },
+                        color: '#9ca3af'
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        };
+    }
+}
+
 function updateCharts() {
     updateExpensesChart();
     updateIncomeExpenseChart();
@@ -1291,30 +1441,7 @@ function updateExpensesChart() {
                     borderWidth: 2
                 }]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { family: "'Inter', sans-serif", size: 12 },
-                            color: '#6b7280',
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleFont: { family: "'Inter', sans-serif", size: 12 },
-                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
-                        callbacks: {
-                            label: function(context) {
-                                return formatCurrency(context.parsed);
-                            }
-                        }
-                    }
-                }
-            }
+            options: getChartOptions('doughnut')
         });
     }
 }
@@ -1373,57 +1500,7 @@ function updateIncomeExpenseChart() {
                     }
                 ]
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                indexAxis: 'x',
-                plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: {
-                            font: { family: "'Inter', sans-serif", size: 12 },
-                            color: '#6b7280',
-                            padding: 15,
-                            usePointStyle: true
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        titleFont: { family: "'Inter', sans-serif", size: 12 },
-                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            font: { family: "'Inter', sans-serif", size: 12 },
-                            color: '#9ca3af',
-                            callback: function(value) {
-                                return '€' + (value / 1000).toFixed(0) + 'k';
-                            }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)',
-                            drawBorder: false
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: { family: "'Inter', sans-serif", size: 12 },
-                            color: '#9ca3af'
-                        },
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
+            options: getChartOptions('bar')
         });
     }
 }
