@@ -1815,6 +1815,12 @@ body {
         display: none;
     }
 
+    /* Month Selector - Center on tablet/mobile */
+    .month-selector {
+        justify-content: center;
+        width: 100%;
+    }
+
     /* Tableau → Masquer sur tablet, cards visible */
     .transactions-table {
         display: none;
@@ -1829,58 +1835,95 @@ body {
     .transaction-card {
         background-color: var(--color-bg-primary);
         border-radius: var(--radius-md);
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm);
         border: 1px solid var(--color-border);
         display: grid;
-        grid-template-columns: 1fr auto;
-        gap: var(--spacing-md);
-        align-items: start;
-    }
-
-    .transaction-card-content {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-sm);
-    }
-
-    .transaction-card-header {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        gap: var(--spacing-md);
-        align-items: baseline;
+        grid-template-columns: 1fr auto auto;
+        gap: var(--spacing-xs);
+        row-gap: var(--spacing-xs);
     }
 
     .transaction-card-description {
+        grid-column: 1;
+        grid-row: 1;
+        font-size: var(--font-size-sm);
         font-weight: 600;
         color: var(--color-text-primary);
+        margin: 0;
+        text-align: left;
     }
 
-    .transaction-card-date {
-        font-size: var(--font-size-xs);
-        color: var(--color-text-secondary);
+    .transaction-card-amount {
+        grid-column: 2;
+        grid-row: 1;
+        text-align: right;
+        font-weight: 700;
+        font-size: var(--font-size-sm);
+    }
+
+    .transaction-card-amount.income {
+        color: var(--color-income);
+    }
+
+    .transaction-card-amount.expense {
+        color: var(--color-expense);
     }
 
     .transaction-card-category {
-        font-size: var(--font-size-sm);
+        grid-column: 1;
+        grid-row: 2;
+        font-size: var(--font-size-xs);
         color: var(--color-text-secondary);
         display: inline-block;
         background-color: var(--color-bg-tertiary);
         padding: var(--spacing-xs) var(--spacing-sm);
         border-radius: var(--radius-sm);
+        margin: 0;
+        text-align: left;
     }
 
-    .transaction-card-amount {
+    .transaction-card-date {
+        grid-column: 2;
+        grid-row: 2;
+        font-size: var(--font-size-xs);
+        color: var(--color-text-secondary);
         text-align: right;
-        font-weight: 600;
-        font-size: var(--font-size-base);
+    }
+
+    .btn-edit {
+        grid-column: 3;
+        grid-row: 1;
+        padding: var(--spacing-xs) var(--spacing-xs);
+        font-size: var(--font-size-sm);
+        min-width: 28px;
+        min-height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn-delete {
+        grid-column: 3;
+        grid-row: 2;
+        padding: var(--spacing-xs) var(--spacing-xs);
+        font-size: var(--font-size-sm);
+        min-width: 28px;
+        min-height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .transaction-card-content {
+        display: none;
+    }
+
+    .transaction-card-header {
+        display: none;
     }
 
     .transaction-card-actions {
-        display: flex;
-        flex-direction: column;
-        gap: var(--spacing-xs);
-        grid-column: 2;
-        grid-row: 1 / -1;
+        display: none;
     }
 
     /* Charts responsif */
@@ -2067,28 +2110,6 @@ body {
 
     .category-checkboxes {
         grid-template-columns: 1fr;
-    }
-
-    /* Transaction Card Responsive */
-    .transaction-card {
-        grid-template-columns: 1fr;
-        gap: var(--spacing-sm);
-    }
-
-    .transaction-card-header {
-        grid-template-columns: 1fr;
-    }
-
-    .transaction-card-actions {
-        grid-column: 1;
-        grid-row: auto;
-        flex-direction: row;
-        width: 100%;
-    }
-
-    .btn-edit,
-    .btn-delete {
-        flex: 1;
     }
 
     /* Forms Mobile */

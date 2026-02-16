@@ -1129,26 +1129,19 @@ function updateTransactionsList() {
 
         html += `
             <div class="transaction-card">
-                <div class="transaction-card-content">
-                    <div class="transaction-card-header">
-                        <div>
-                            <div class="transaction-card-description">${transaction.description}</div>
-                            <div class="transaction-card-date">${formattedDate}</div>
-                        </div>
-                        <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
-                    </div>
-                    <div class="transaction-card-category">
-                        <i class="fas ${icon}"></i> ${transaction.category}
-                    </div>
+                <div class="transaction-card-description">${transaction.description}</div>
+                <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
+                <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
+                    <i class="fas fa-edit"></i>
+                </button>
+
+                <div class="transaction-card-category">
+                    <i class="fas ${icon}"></i> ${transaction.category}
                 </div>
-                <div class="transaction-card-actions">
-                    <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
+                <div class="transaction-card-date">${formattedDate}</div>
+                <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
             </div>
         `;
     });
