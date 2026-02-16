@@ -1,0 +1,46 @@
+{
+  "versions": [
+    {
+      "version": "1.0.0",
+      "date": "2026-02-16",
+      "title": "Release Initial - Finly MVP",
+      "changes": [
+        "✨ Système complet de gestion de budget",
+        "✨ Notifications toast (success, error, info, warning, loading)",
+        "✨ Design responsive (mobile, tablet, desktop)",
+        "✨ Thème clair et sombre",
+        "✨ Sélecteur de mois avec navigation",
+        "✨ Graphiques responsifs (doughnut & bar charts)",
+        "✨ Filtrage et tri des transactions",
+        "✨ Cards transactions optimisées pour mobile",
+        "✨ Indicateur de synchronisation Firebase",
+        "✨ Menu de paramètres avec profil & déconnexion",
+        "✨ Favicon SVG personnalisé"
+      ]
+    },
+    {
+      "version": "0.9.0",
+      "date": "2026-02-10",
+      "title": "Phase 2 - Design Responsive",
+      "changes": [
+        "🎨 Implémentation des breakpoints (768px, 480px, 360px, 1200px+)",
+        "🎨 Layout mobile-first avec cards pour transactions",
+        "🎨 Graphiques adaptatifs à la taille de l'écran",
+        "🎨 Formulaires optimisés pour le toucher mobile",
+        "🎨 Modales responsives sur tous les appareils"
+      ]
+    },
+    {
+      "version": "0.8.0",
+      "date": "2026-02-05",
+      "title": "Phase 1 - Notifications & UX",
+      "changes": [
+        "🔔 Système de Toast Notifications personnalisé",
+        "⏳ Spinners de chargement sur les boutons",
+        "⌨️ Fermeture des modales avec touche ESC",
+        "🔄 Indicateur de synchronisation en temps réel",
+        "✏️ Feedback visuel des opérations asynchrones"
+      ]
+    }
+  ]
+}

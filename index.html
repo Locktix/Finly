@@ -429,9 +429,30 @@
         </div>
     </div>
 
+    <!-- Modal Changelogs -->
+    <div class="modal" id="changelogsModal">
+        <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <button class="modal-close" id="closeChangelogs">&times;</button>
+            <h2>Changelogs</h2>
+            <div id="changelogsContainer" style="margin-top: var(--spacing-lg);">
+                <!-- Changelogs loaded from JSON -->
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="footer" id="mainFooter" style="display: none;">
-        <p>&copy; 2026 Finly - Gestion de Budget Personnel. Tous droits réservés.</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-lg);">
+            <p style="margin: 0;">&copy; 2026 Finly - Gestion de Budget Personnel. Tous droits réservés.</p>
+            <div style="display: flex; gap: var(--spacing-lg); align-items: center;">
+                <a href="https://github.com/Locktix" target="_blank" rel="noopener noreferrer" style="color: var(--color-text-secondary); text-decoration: none; display: flex; align-items: center; gap: var(--spacing-sm); transition: color var(--transition-fast);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-secondary)'">
+                    <i class="fab fa-github"></i> GitHub
+                </a>
+                <button id="changelogs-btn" style="background: none; border: none; color: var(--color-text-secondary); cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: var(--spacing-sm); font-family: inherit; font-size: inherit; transition: color var(--transition-fast);" onmouseover="this.style.color='var(--color-primary)'" onmouseout="this.style.color='var(--color-text-secondary)'">
+                    <i class="fas fa-history"></i> Changelogs
+                </button>
+            </div>
+        </div>
     </footer>
 
     <!-- Firebase SDK (Compat version) -->

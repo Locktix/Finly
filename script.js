@@ -682,6 +682,53 @@ function setupModalListeners() {
 }
 
 // ======================
+// GESTION DES CHANGELOGS
+// ======================
+function loadChangelogs() {
+    fetch('changelogs.json')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('changelogsContainer');
+            container.innerHTML = '';
+
+            data.versions.forEach(version => {
+                const changelogItem = document.createElement('div');
+                changelogItem.className = 'changelog-item';
+
+                changelogItem.innerHTML = `
+                    <div class="changelog-header">
+                        <span class="changelog-version">v${version.version}</span>
+                        <span class="changelog-date">${new Date(version.date).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    <h3 class="changelog-title">${version.title}</h3>
+                    <ul class="changelog-changes">
+                        ${version.changes.map(change => `<li>${change}</li>`).join('')}
+                    </ul>
+                `;
+
+                container.appendChild(changelogItem);
+            });
+        })
+        .catch(error => console.error('Erreur lors du chargement des changelogs:', error));
+
+    // Événements pour le modal changelogs
+    document.getElementById('changelogs-btn').addEventListener('click', () => {
+        openModal('changelogsModal');
+    });
+
+    document.getElementById('closeChangelogs').addEventListener('click', () => {
+        closeModal('changelogsModal');
+    });
+
+    // Fermer modal changelogs en cliquant en dehors
+    document.getElementById('changelogsModal').addEventListener('click', (e) => {
+        if (e.target.id === 'changelogsModal') {
+            closeModal('changelogsModal');
+        }
+    });
+}
+
+// ======================
 // GESTION DES FORMULAIRES
 // ======================
 function setupFormListeners() {
@@ -1516,6 +1563,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Configuration du menu paramètres
     setupSettingsMenu();
+
+    // Charger les changelogs
+    loadChangelogs();
 
     // Vérifier l'état de l'authentification
     await checkAuthState();

@@ -1196,10 +1196,69 @@ body {
     background-color: var(--color-bg-primary);
     border-top: 1px solid var(--color-border);
     padding: var(--spacing-lg);
-    text-align: center;
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
     margin-top: var(--spacing-2xl);
+}
+
+.footer a,
+.footer button {
+    transition: color var(--transition-fast);
+}
+
+.footer a:hover,
+.footer button:hover {
+    color: var(--color-primary);
+}
+
+/* Changelog Modal */
+.changelog-item {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--color-border);
+}
+
+.changelog-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.changelog-header {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.changelog-version {
+    font-size: var(--font-size-lg);
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.changelog-date {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+}
+
+.changelog-title {
+    font-size: var(--font-size-base);
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.changelog-changes {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.changelog-changes li {
+    padding: var(--spacing-xs) 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
 }
 
 /* ======================
@@ -1981,6 +2040,25 @@ body {
     .btn-delete {
         flex: 1;
         padding: var(--spacing-sm);
+    }
+
+    /* Footer Responsive */
+    .footer {
+        padding: var(--spacing-md);
+    }
+
+    .footer > div {
+        flex-direction: column;
+        align-items: center !important;
+        text-align: center;
+    }
+
+    .footer > div > p {
+        order: 1;
+    }
+
+    .footer > div > div {
+        order: 2;
     }
 }
 
