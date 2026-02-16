@@ -1859,6 +1859,7 @@ body {
         text-align: right;
         font-weight: 700;
         font-size: var(--font-size-sm);
+        align-self: center;
     }
 
     .transaction-card-amount.income {
@@ -1888,6 +1889,7 @@ body {
         font-size: var(--font-size-xs);
         color: var(--color-text-secondary);
         text-align: right;
+        align-self: center;
     }
 
     .btn-edit {
