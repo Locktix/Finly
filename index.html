@@ -99,6 +99,10 @@
             <h2>Mon Profil</h2>
             <form id="profileForm">
                 <div class="form-group">
+                    <label for="profileRole">Rôle</label>
+                    <input type="text" id="profileRole" placeholder="Rôle" readonly>
+                </div>
+                <div class="form-group">
                     <label for="profileName">Nom Complet</label>
                     <input type="text" id="profileName" placeholder="Votre Nom" required>
                 </div>
@@ -106,6 +110,10 @@
                     <label for="profileEmail">Email</label>
                     <input type="email" id="profileEmail" placeholder="votre@email.com" readonly>
                     <small style="color: var(--color-text-tertiary); margin-top: var(--spacing-xs); display: block;">L'email ne peut pas être modifié directement</small>
+                </div>
+                <div class="form-group">
+                    <label for="profileCreatedAt">Date de Création</label>
+                    <input type="text" id="profileCreatedAt" placeholder="N/A" readonly>
                 </div>
                 <div class="form-group">
                     <label for="profilePassword">Nouveau Mot de Passe (optionnel)</label>
@@ -153,10 +161,28 @@
                         <span id="themeLabel">Mode Sombre</span>
                     </button>
 
+                    <!-- Time Grouping Toggle -->
+                    <button class="settings-item" id="timeGroupingToggle">
+                        <i class="fas fa-clock"></i>
+                        <span id="timeGroupingLabel">Regroupement Temporel</span>
+                    </button>
+
                     <!-- Config Button -->
                     <button class="settings-item" id="configBtn">
                         <i class="fas fa-info-circle"></i>
                         <span>À Propos</span>
+                    </button>
+
+                    <!-- Admin Panel Button -->
+                    <button class="settings-item" id="adminPanelBtn" style="display: none;">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Admin Panel</span>
+                    </button>
+
+                    <!-- Tester Panel Button -->
+                    <button class="settings-item" id="testerPanelBtn" style="display: none;">
+                        <i class="fas fa-flask"></i>
+                        <span>Tester Panel</span>
                     </button>
 
                     <div class="settings-divider"></div>
@@ -180,8 +206,69 @@
             <div class="config-box">
                 <p class="config-text"><strong>Projet:</strong> finly-f82be</p>
                 <p class="config-text"><strong>Statut:</strong> <span style="color: #10b981;">✓ Connecté</span></p>
+                <p class="config-text"><strong>UID:</strong> <span id="configUid">N/A</span></p>
             </div>
             <button type="button" class="btn-primary" id="closeConfigBtn2">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modal Admin Panel -->
+    <div class="modal" id="adminPanelModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeAdminPanel">&times;</button>
+            <h2>Admin Panel</h2>
+            <p class="config-info">Gestion des utilisateurs et des rôles.</p>
+            <div class="admin-panel-toolbar">
+                <input type="text" id="adminUserSearch" class="admin-search" placeholder="Rechercher par nom, email, UID, role">
+            </div>
+            <div class="config-box">
+                <div id="adminUsersList" class="admin-users-list">
+                    <p class="config-text">Chargement des utilisateurs...</p>
+                </div>
+            </div>
+            <button type="button" class="btn-primary" id="closeAdminPanel2">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modal Tester Panel -->
+    <div class="modal" id="testerPanelModal">
+        <div class="modal-content">
+            <button class="modal-close" id="closeTesterPanel">&times;</button>
+            <h2>Tester Panel</h2>
+            <p class="config-info">Outils de test et debug.</p>
+            <div class="tester-tools">
+                <div class="tester-section">
+                    <h3>Notifications Toast</h3>
+                    <button class="tester-btn" id="testToastSuccess">Success</button>
+                    <button class="tester-btn" id="testToastError">Error</button>
+                    <button class="tester-btn" id="testToastInfo">Info</button>
+                    <button class="tester-btn" id="testToastWarning">Warning</button>
+                    <button class="tester-btn" id="testToastLoading">Loading</button>
+                </div>
+                <div class="tester-section">
+                    <h3>Données Utilisateur</h3>
+                    <button class="tester-btn" id="testLogUserData">Log User Data</button>
+                    <button class="tester-btn" id="testLogUsersCount">Log Users Count</button>
+                    <button class="tester-btn" id="testLogTransactions">Log Transactions</button>
+                </div>
+                <div class="tester-section">
+                    <h3>LocalStorage</h3>
+                    <button class="tester-btn" id="testClearStorage">Clear Storage</button>
+                    <button class="tester-btn" id="testLogStorage">Log Storage</button>
+                </div>
+                <div class="tester-section">
+                    <h3>Performances</h3>
+                    <button class="tester-btn" id="testReloadTransactions">Reload Transactions</button>
+                    <button class="tester-btn" id="testUpdateDashboard">Update Dashboard</button>
+                </div>
+                <div class="tester-section">
+                    <h3>Données de Test</h3>
+                    <button class="tester-btn" id="testAddFakeData">Ajouter des fausses données</button>
+                    <button class="tester-btn" id="testClearAllTransactions">Effacer toutes les transactions</button>
+                </div>
+                <div id="testerOutput" class="tester-output"></div>
+            </div>
+            <button type="button" class="btn-primary" id="closeTesterPanel2">Fermer</button>
         </div>
     </div>
 

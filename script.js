@@ -142,6 +142,11 @@ function updateSyncStatus(status = 'synced', message = '') {
 // GESTION DE L'AUTHENTIFICATION
 // ======================
 let currentUser = null;
+let currentUserRole = 'membre';
+const ADMIN_UID = '6aqDFLL8obNSdUKoAmdnm9kgMEg2';
+const ROLE_OPTIONS = ['Administrateur', 'testeur', 'membre'];
+let adminUsersCache = [];
+let testerOutputBuffer = [];
 
 function setupAuthListeners() {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
@@ -246,6 +251,9 @@ async function handleSignup(e) {
             displayName: name
         });
 
+        await ensureUserProfile(currentUser);
+        await loadUserRole(currentUser);
+
         Toast.success('Inscription réussie !', `Bienvenue ${name} !`);
         hideSpinner(button);
         setTimeout(() => showDashboard(), 500);
@@ -262,6 +270,9 @@ async function handleLogout() {
     try {
         await firebase.auth().signOut();
         currentUser = null;
+        currentUserRole = 'membre';
+        const adminBtn = document.getElementById('adminPanelBtn');
+        if (adminBtn) adminBtn.style.display = 'none';
         transactions = []; // Vider les transactions
         Toast.info('Déconnexion', 'À bientôt !');
         showAuthPage();
@@ -319,14 +330,349 @@ async function handleForgotPassword(e) {
 // ======================
 // GESTION PROFIL UTILISATEUR
 // ======================
-function loadProfileData() {
+async function loadProfileData() {
     if (currentUser) {
+        const roleField = document.getElementById('profileRole');
+        if (roleField) {
+            roleField.value = currentUserRole || 'membre';
+        }
         document.getElementById('profileName').value = currentUser.displayName || '';
         document.getElementById('profileEmail').value = currentUser.email || '';
         document.getElementById('profilePassword').value = '';
         document.getElementById('profileError').textContent = '';
         document.getElementById('profileSuccess').style.display = 'none';
+        
+        // Charger la date de création depuis Firestore
+        if (db) {
+            try {
+                const userDoc = await db.collection('users').doc(currentUser.uid).get();
+                if (userDoc.exists && userDoc.data().createdAt) {
+                    const createdAt = new Date(userDoc.data().createdAt);
+                    const formattedDate = createdAt.toLocaleDateString('fr-FR', {
+                        year: 'numeric',
+                        month: '2-digit',
+                        day: '2-digit',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    document.getElementById('profileCreatedAt').value = formattedDate;
+                } else {
+                    document.getElementById('profileCreatedAt').value = 'Non disponible';
+                }
+            } catch (error) {
+                console.error('Erreur lors du chargement de la date de création:', error);
+                document.getElementById('profileCreatedAt').value = 'N/A';
+            }
+        } else {
+            document.getElementById('profileCreatedAt').value = 'N/A';
+        }
     }
+}
+
+async function ensureUserProfile(user) {
+    if (!db || !user) return;
+
+    const userRef = db.collection('users').doc(user.uid);
+    const doc = await userRef.get();
+    const isAdmin = user.uid === ADMIN_UID;
+    const desiredRole = isAdmin ? 'Administrateur' : 'membre';
+    
+    // Utiliser la vraie date de création du compte Firebase
+    const createdAt = user.metadata?.creationTime || new Date().toISOString();
+
+    if (!doc.exists) {
+        await userRef.set({
+            email: user.email || '',
+            displayName: user.displayName || '',
+            role: desiredRole,
+            createdAt: createdAt
+        });
+        return;
+    }
+
+    const data = doc.data() || {};
+    const updates = {};
+
+    if (!data.role) {
+        updates.role = desiredRole;
+    }
+
+    if (isAdmin && data.role !== 'Administrateur') {
+        updates.role = 'Administrateur';
+    }
+
+    if (user.email && data.email !== user.email) {
+        updates.email = user.email;
+    }
+
+    if (user.displayName && data.displayName !== user.displayName) {
+        updates.displayName = user.displayName;
+    }
+    
+    // Ajouter createdAt pour les documents existants qui ne l'ont pas
+    if (!data.createdAt) {
+        updates.createdAt = createdAt;
+    }
+
+    if (Object.keys(updates).length > 0) {
+        await userRef.update(updates);
+    }
+}
+
+async function loadUserRole(user) {
+    const adminBtn = document.getElementById('adminPanelBtn');
+    const testerBtn = document.getElementById('testerPanelBtn');
+    if (!user) {
+        currentUserRole = 'membre';
+        if (adminBtn) adminBtn.style.display = 'none';
+        if (testerBtn) testerBtn.style.display = 'none';
+        const roleField = document.getElementById('profileRole');
+        if (roleField) {
+            roleField.value = 'membre';
+        }
+        return;
+    }
+
+    if (!db) {
+        currentUserRole = user.uid === ADMIN_UID ? 'Administrateur' : 'membre';
+        if (adminBtn) adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
+        if (testerBtn) testerBtn.style.display = 'none';
+        const roleField = document.getElementById('profileRole');
+        if (roleField) {
+            roleField.value = currentUserRole || 'membre';
+        }
+        return;
+    }
+
+    try {
+        const doc = await db.collection('users').doc(user.uid).get();
+        const role = doc.exists && doc.data().role ? doc.data().role : (user.uid === ADMIN_UID ? 'Administrateur' : 'membre');
+        currentUserRole = role;
+        if (adminBtn) adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
+        if (testerBtn) testerBtn.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'flex' : 'none';
+        const roleField = document.getElementById('profileRole');
+        if (roleField) {
+            roleField.value = currentUserRole || 'membre';
+        }
+    } catch (error) {
+        console.error('Erreur chargement role:', error);
+        currentUserRole = user.uid === ADMIN_UID ? 'Administrateur' : 'membre';
+        if (adminBtn) adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
+        if (testerBtn) testerBtn.style.display = 'none';
+        const roleField = document.getElementById('profileRole');
+        if (roleField) {
+            roleField.value = currentUserRole || 'membre';
+        }
+    }
+}
+
+async function loadAdminUsers() {
+    const container = document.getElementById('adminUsersList');
+    if (!container) return;
+
+    if (!db) {
+        container.innerHTML = '<p class="config-text">Firestore indisponible.</p>';
+        return;
+    }
+
+    container.innerHTML = '<p class="config-text">Chargement des utilisateurs...</p>';
+
+    try {
+        const snapshot = await db.collection('users').get();
+        if (snapshot.empty) {
+            adminUsersCache = [];
+            renderAdminUsers();
+            return;
+        }
+
+        const users = [];
+        snapshot.forEach(doc => {
+            const data = doc.data() || {};
+            const uid = doc.id;
+            const name = data.displayName || 'Sans nom';
+            const email = data.email || 'Sans email';
+            const role = data.role || 'membre';
+
+            users.push({ uid, name, email, role });
+        });
+
+        adminUsersCache = users;
+        renderAdminUsers();
+
+        container.querySelectorAll('.admin-role-select').forEach(select => {
+            select.addEventListener('change', async (e) => {
+                const target = e.target;
+                const uid = target.getAttribute('data-uid');
+                const newRole = target.value;
+
+                if (!uid || !newRole) return;
+
+                try {
+                    await db.collection('users').doc(uid).update({ role: newRole });
+                    if (uid === currentUser.uid) {
+                        currentUserRole = newRole;
+                        await loadProfileData();
+                        const adminBtn = document.getElementById('adminPanelBtn');
+                        if (adminBtn) {
+                            adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
+                        }
+                    }
+                    Toast.success('Rôle mis à jour', `${newRole}`);
+                } catch (error) {
+                    console.error('Erreur mise à jour role:', error);
+                    Toast.error('Erreur', 'Impossible de mettre à jour le rôle');
+                    await loadAdminUsers();
+                }
+            });
+        });
+    } catch (error) {
+        console.error('Erreur chargement utilisateurs:', error);
+        const isPermission = error && error.code === 'permission-denied';
+        container.innerHTML = isPermission
+            ? '<p class="config-text">Permissions insuffisantes. Mettez à jour les règles Firestore.</p>'
+            : '<p class="config-text">Erreur lors du chargement.</p>';
+    }
+}
+
+function renderAdminUsers() {
+    const container = document.getElementById('adminUsersList');
+    if (!container) return;
+
+    const searchInput = document.getElementById('adminUserSearch');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+
+    const filtered = adminUsersCache.filter(user => {
+        if (!query) return true;
+        const haystack = `${user.name} ${user.email} ${user.uid} ${user.role}`.toLowerCase();
+        return haystack.includes(query);
+    });
+
+    if (filtered.length === 0) {
+        container.innerHTML = '<p class="admin-users-empty">Aucun utilisateur correspondant.</p>';
+        return;
+    }
+
+    const rows = filtered.map(user => {
+        const options = ROLE_OPTIONS
+            .map(option => `<option value="${option}" ${option === user.role ? 'selected' : ''}>${option}</option>`)
+            .join('');
+
+        return `
+            <div class="admin-user-row">
+                <div class="admin-user-main">
+                    <div class="admin-user-name">${user.name}</div>
+                    <div class="admin-user-email">${user.email}</div>
+                    <div class="admin-user-uid">UID: ${user.uid}</div>
+                </div>
+                <select class="admin-role-select" data-uid="${user.uid}">
+                    ${options}
+                </select>
+            </div>
+        `;
+    });
+
+    container.innerHTML = rows.join('');
+}
+
+function logToTester(message) {
+    testerOutputBuffer.push(message);
+    const output = document.getElementById('testerOutput');
+    if (output) {
+        output.classList.add('active');
+        output.textContent = testerOutputBuffer.join('\n');
+        output.scrollTop = output.scrollHeight;
+    }
+}
+
+async function addFakeData() {
+    const fakeTransactions = [
+        // Dépenses
+        { type: 'expense', description: 'Carrefour Courses', category: 'Magasins', amount: 127.50, daysAgo: 45 },
+        { type: 'expense', description: 'SNCF Ticket Train', category: 'Transport', amount: 89.00, daysAgo: 42 },
+        { type: 'expense', description: 'Pharmacie Prescription', category: 'Santé', amount: 34.20, daysAgo: 38 },
+        { type: 'expense', description: 'Netflix Abonnement', category: 'Services', amount: 15.99, daysAgo: 35 },
+        { type: 'expense', description: 'Pizza Restaurant', category: 'Restaurants', amount: 28.50, daysAgo: 32 },
+        { type: 'expense', description: 'Carrefour Courses', category: 'Magasins', amount: 95.30, daysAgo: 30 },
+        { type: 'expense', description: 'Cinema Tickets', category: 'Loisirs', amount: 22.00, daysAgo: 28 },
+        { type: 'expense', description: 'Assurance Auto', category: 'Assurances', amount: 210.00, daysAgo: 25 },
+        { type: 'expense', description: 'Essence Station', category: 'Transport', amount: 65.00, daysAgo: 22 },
+        { type: 'expense', description: 'Restaurant Sushi', category: 'Restaurants', amount: 42.80, daysAgo: 20 },
+        { type: 'expense', description: 'Monoprix Provisions', category: 'Magasins', amount: 58.90, daysAgo: 18 },
+        { type: 'expense', description: 'Réparation Voiture', category: 'Services', amount: 350.00, daysAgo: 15 },
+        { type: 'expense', description: 'Steam Jeux Video', category: 'Loisirs', amount: 19.99, daysAgo: 12 },
+        { type: 'expense', description: 'Starbucks Coffee', category: 'Restaurants', amount: 6.50, daysAgo: 10 },
+        { type: 'expense', description: 'Carrefour Courses', category: 'Magasins', amount: 112.45, daysAgo: 8 },
+        { type: 'expense', description: 'Mutuelle Santé', category: 'Assurances', amount: 45.00, daysAgo: 5 },
+        { type: 'expense', description: 'Boulangerie Pain', category: 'Restaurants', amount: 4.30, daysAgo: 3 },
+        { type: 'expense', description: 'Auchan Courses', category: 'Magasins', amount: 88.70, daysAgo: 1 },
+
+        // Revenus
+        { type: 'income', description: 'Salaire Janvier', category: 'Salaire', amount: 2500.00, daysAgo: 44 },
+        { type: 'income', description: 'Bonus Entreprise', category: 'Revenus', amount: 500.00, daysAgo: 40 },
+        { type: 'income', description: 'Salaire Février', category: 'Salaire', amount: 2500.00, daysAgo: 18 },
+        { type: 'income', description: 'Remboursement Ami', category: 'Revenus', amount: 50.00, daysAgo: 6 }
+    ];
+
+    // Ajouter les transactions avec les dates correctes
+    for (const fakeData of fakeTransactions) {
+        const date = new Date();
+        date.setDate(date.getDate() - fakeData.daysAgo);
+        const dateString = date.toISOString().split('T')[0];
+
+        const transaction = {
+            type: fakeData.type,
+            description: fakeData.description,
+            category: fakeData.category,
+            amount: fakeData.amount,
+            date: dateString,
+            timestamp: date.toISOString()
+        };
+
+        transactions.push(transaction);
+
+        if (db && currentUser) {
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('transactions').add(transaction);
+            } catch (error) {
+                console.error('Erreur lors de l\'ajout de fausse donnée:', error);
+            }
+        }
+    }
+
+    // Sauvegarder localement si pas de Firestore
+    if (!db) {
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+    }
+
+    updateDashboard();
+}
+
+async function clearAllTransactions() {
+    if (!currentUser) {
+        Toast.error('Erreur', 'Aucun utilisateur connecté');
+        return;
+    }
+
+    if (db) {
+        try {
+            const snapshot = await db.collection('users').doc(currentUser.uid).collection('transactions').get();
+            const batch = db.batch();
+            snapshot.docs.forEach(doc => {
+                batch.delete(doc.ref);
+            });
+            await batch.commit();
+            logToTester('[Test Data] All transactions deleted from Firestore');
+        } catch (error) {
+            console.error('Erreur lors de la suppression:', error);
+            Toast.error('Erreur', 'Impossible de supprimer les transactions');
+        }
+    } else {
+        localStorage.removeItem('transactions');
+        logToTester('[Test Data] All transactions deleted from localStorage');
+    }
+
+    transactions = [];
+    updateDashboard();
 }
 
 async function handleProfileUpdate(e) {
@@ -418,6 +764,21 @@ function checkAuthState() {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
+                if (db) {
+                    ensureUserProfile(currentUser)
+                        .then(() => loadUserRole(currentUser))
+                        .then(() => {
+                            showDashboard();
+                            resolve();
+                        })
+                        .catch((error) => {
+                            console.error('Erreur initialisation role:', error);
+                            showDashboard();
+                            resolve();
+                        });
+                    return;
+                }
+                loadUserRole(currentUser);
                 showDashboard();
             } else {
                 showAuthPage();
@@ -432,7 +793,6 @@ function checkAuthState() {
 // ======================
 
 function initializeTheme() {
-    // Charger la préférence de thème sauvegardée
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
 }
@@ -452,7 +812,6 @@ function toggleTheme() {
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
 
-    // Mettre à jour le label du thème dans le menu paramètres
     const themeLabel = document.getElementById('themeLabel');
     if (themeLabel) {
         themeLabel.textContent = newTheme === 'dark' ? 'Mode Clair' : 'Mode Sombre';
@@ -460,6 +819,31 @@ function toggleTheme() {
 
     // Mettre à jour le dashboard pour les couleurs dynamiques
     updateDashboard();
+}
+
+// ======================
+// GESTION DU REGROUPEMENT TEMPOREL
+// ======================
+
+function initializeTimeGrouping() {
+    // Charger la préférence de regroupement temporel sauvegardée
+    const saved = localStorage.getItem('timeGroupingEnabled');
+    timeGroupingEnabled = saved === null ? false : saved === 'true';
+    updateTimeGroupingLabel();
+}
+
+function toggleTimeGrouping() {
+    timeGroupingEnabled = !timeGroupingEnabled;
+    localStorage.setItem('timeGroupingEnabled', timeGroupingEnabled);
+    updateTimeGroupingLabel();
+    updateDashboard();
+}
+
+function updateTimeGroupingLabel() {
+    const label = document.getElementById('timeGroupingLabel');
+    if (label) {
+        label.textContent = timeGroupingEnabled ? 'Regroupement: Activé' : 'Regroupement: Désactivé';
+    }
 }
 
 // ======================
@@ -646,8 +1030,15 @@ function setupModalListeners() {
     // Toggle Thème
     document.getElementById('themeToggle').addEventListener('click', toggleTheme);
 
+    // Toggle Regroupement Temporel
+    document.getElementById('timeGroupingToggle').addEventListener('click', toggleTimeGrouping);
+
     // Modal Configuration
     document.getElementById('configBtn').addEventListener('click', () => {
+        const uidEl = document.getElementById('configUid');
+        if (uidEl) {
+            uidEl.textContent = (currentUser && currentUser.uid) ? currentUser.uid : 'N/A';
+        }
         openModal('configModal');
     });
 
@@ -659,9 +1050,193 @@ function setupModalListeners() {
         closeModal('configModal');
     });
 
+    // Modal Admin Panel
+    const adminBtn = document.getElementById('adminPanelBtn');
+    if (adminBtn) {
+        adminBtn.addEventListener('click', async () => {
+            if (currentUserRole !== 'Administrateur') {
+                Toast.error('Accès refusé', 'Réservé aux administrateurs');
+                return;
+            }
+            const searchInput = document.getElementById('adminUserSearch');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            await loadAdminUsers();
+            openModal('adminPanelModal');
+        });
+    }
+
+    const adminSearchInput = document.getElementById('adminUserSearch');
+    if (adminSearchInput) {
+        adminSearchInput.addEventListener('input', () => {
+            renderAdminUsers();
+        });
+    }
+
+    document.getElementById('closeAdminPanel').addEventListener('click', () => {
+        closeModal('adminPanelModal');
+    });
+
+    document.getElementById('closeAdminPanel2').addEventListener('click', () => {
+        closeModal('adminPanelModal');
+    });
+
+    // Modal Tester Panel
+    const testerBtn = document.getElementById('testerPanelBtn');
+    if (testerBtn) {
+        testerBtn.addEventListener('click', () => {
+            if (currentUserRole !== 'Administrateur' && currentUserRole !== 'testeur') {
+                Toast.error('Accès refusé', 'Réservé aux testeurs et admins');
+                return;
+            }
+            testerOutputBuffer = [];
+            const output = document.getElementById('testerOutput');
+            if (output) {
+                output.classList.remove('active');
+                output.textContent = '';
+            }
+            openModal('testerPanelModal');
+        });
+    }
+
+    document.getElementById('closeTesterPanel').addEventListener('click', () => {
+        closeModal('testerPanelModal');
+    });
+
+    document.getElementById('closeTesterPanel2').addEventListener('click', () => {
+        closeModal('testerPanelModal');
+    });
+
+    // Tester Panel Tests
+    document.getElementById('testToastSuccess').addEventListener('click', () => {
+        Toast.success('Test Success', 'Ceci est un test de notification success');
+        logToTester('[Toast] Success notification triggered');
+    });
+
+    document.getElementById('testToastError').addEventListener('click', () => {
+        Toast.error('Test Error', 'Ceci est un test de notification error');
+        logToTester('[Toast] Error notification triggered');
+    });
+
+    document.getElementById('testToastInfo').addEventListener('click', () => {
+        Toast.info('Test Info', 'Ceci est un test de notification info');
+        logToTester('[Toast] Info notification triggered');
+    });
+
+    document.getElementById('testToastWarning').addEventListener('click', () => {
+        Toast.warning('Test Warning', 'Ceci est un test de notification warning');
+        logToTester('[Toast] Warning notification triggered');
+    });
+
+    document.getElementById('testToastLoading').addEventListener('click', () => {
+        const loadingToast = Toast.loading('Test Loading', 'Chargement en cours...');
+        logToTester('[Toast] Loading notification triggered');
+        setTimeout(() => {
+            removeToast(loadingToast);
+            logToTester('[Toast] Loading notification removed after 3s');
+        }, 3000);
+    });
+
+    document.getElementById('testLogUserData').addEventListener('click', () => {
+        if (currentUser) {
+            const info = {
+                uid: currentUser.uid,
+                email: currentUser.email,
+                displayName: currentUser.displayName,
+                role: currentUserRole,
+                emailVerified: currentUser.emailVerified
+            };
+            logToTester(`[User] ${JSON.stringify(info, null, 2)}`);
+        } else {
+            logToTester('[User] Aucun utilisateur connecté');
+        }
+    });
+
+    document.getElementById('testLogUsersCount').addEventListener('click', () => {
+        logToTester(`[Admin] Total utilisateurs en cache: ${adminUsersCache.length}`);
+        if (adminUsersCache.length > 0) {
+            const roles = {};
+            adminUsersCache.forEach(u => {
+                roles[u.role] = (roles[u.role] || 0) + 1;
+            });
+            logToTester(`[Admin] Par rôle: ${JSON.stringify(roles, null, 2)}`);
+        }
+    });
+
+    document.getElementById('testLogTransactions').addEventListener('click', () => {
+        logToTester(`[Transactions] Total: ${transactions.length}`);
+        if (transactions.length > 0) {
+            const income = transactions.filter(t => t.type === 'income').length;
+            const expense = transactions.filter(t => t.type === 'expense').length;
+            logToTester(`[Transactions] Recettes: ${income}, Dépenses: ${expense}`);
+            const totalIncome = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+            const totalExpense = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+            logToTester(`[Transactions] Totaux: Recettes ${totalIncome}€, Dépenses ${totalExpense}€`);
+        }
+    });
+
+    document.getElementById('testClearStorage').addEventListener('click', () => {
+        localStorage.clear();
+        logToTester('[Storage] localStorage cleared');
+        Toast.success('Storage', 'localStorage a été vidé');
+    });
+
+    document.getElementById('testLogStorage').addEventListener('click', () => {
+        const keys = Object.keys(localStorage);
+        logToTester(`[Storage] ${keys.length} items in localStorage:`);
+        keys.forEach(key => {
+            const value = localStorage.getItem(key);
+            logToTester(`  ${key}: ${value.substring(0, 50)}${value.length > 50 ? '...' : ''}`);
+        });
+    });
+
+    document.getElementById('testReloadTransactions').addEventListener('click', async () => {
+        logToTester('[Performance] Reloading transactions...');
+        const start = performance.now();
+        if (db) {
+            await loadTransactionsFromFirebase();
+        } else {
+            loadTransactionsFromLocal();
+        }
+        const end = performance.now();
+        logToTester(`[Performance] Transactions reloaded in ${(end - start).toFixed(2)}ms`);
+        logToTester(`[Performance] Loaded ${transactions.length} transactions`);
+    });
+
+    document.getElementById('testUpdateDashboard').addEventListener('click', () => {
+        logToTester('[Performance] Updating dashboard...');
+        const start = performance.now();
+        updateDashboard();
+        const end = performance.now();
+        logToTester(`[Performance] Dashboard updated in ${(end - start).toFixed(2)}ms`);
+    });
+
+    document.getElementById('testAddFakeData').addEventListener('click', async () => {
+        logToTester('[Test Data] Generating fake data...');
+        const start = performance.now();
+        await addFakeData();
+        const end = performance.now();
+        logToTester(`[Test Data] Fake data generated in ${(end - start).toFixed(2)}ms`);
+        logToTester(`[Test Data] Total transactions: ${transactions.length}`);
+        Toast.success('Fausses données ajoutées', `${transactions.length} transactions au total`);
+    });
+
+    document.getElementById('testClearAllTransactions').addEventListener('click', async () => {
+        const confirmed = window.confirm('Êtes-vous sûr ? Cela supprimera TOUTES les transactions.');
+        if (!confirmed) return;
+
+        logToTester('[Test Data] Clearing all transactions...');
+        const start = performance.now();
+        await clearAllTransactions();
+        const end = performance.now();
+        logToTester(`[Test Data] All transactions cleared in ${(end - start).toFixed(2)}ms`);
+        Toast.success('Transactions supprimées', 'Tous les données ont été effacées');
+    });
+
     // Modal Profil
-    document.getElementById('profileBtn').addEventListener('click', () => {
-        loadProfileData();
+    document.getElementById('profileBtn').addEventListener('click', async () => {
+        await loadProfileData();
         openModal('profileModal');
     });
 
@@ -673,10 +1248,18 @@ function setupModalListeners() {
 
     // Fermer modales en cliquant en dehors
     document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
+        let mouseDownTarget = null;
+
+        modal.addEventListener('mousedown', (e) => {
+            mouseDownTarget = e.target;
+        });
+
+        modal.addEventListener('mouseup', (e) => {
+            // Fermer seulement si mousedown et mouseup sont tous les deux sur le fond de la modale
+            if (e.target === modal && mouseDownTarget === modal) {
                 closeModal(modal.id);
             }
+            mouseDownTarget = null;
         });
     });
 }
@@ -822,6 +1405,7 @@ let activeFilters = {
     search: '',
     categories: []
 };
+let timeGroupingEnabled = false; // Désactiver le regroupement temporel par défaut
 
 // État du tri
 let currentSort = {
@@ -1111,37 +1695,127 @@ function updateTransactionsTable() {
     const sorted = sortTransactions(filteredTransactions);
 
     let html = '';
-    sorted.forEach((transaction, index) => {
-        const originalIndex = transactions.indexOf(transaction);
-        const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
-        const formattedDate = formatDate(transaction.date);
-        const formattedAmount = formatCurrency(transaction.amount);
-        const typeClass = transaction.type === 'income' ? 'income' : 'expense';
-        const typeLabel = transaction.type === 'income' ? 'Recette' : 'Dépense';
 
-        html += `
-            <tr>
-                <td>${formattedDate}</td>
-                <td><strong>${transaction.description}</strong></td>
-                <td>
-                    <i class="fas ${icon}" style="margin-right: 0.5rem;"></i>
-                    ${transaction.category}
-                </td>
-                <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
-                <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
-                <td>
-                    <div class="action-buttons">
-                        <button class="btn-edit" onclick="openEditModal(${originalIndex})">
-                            <i class="fas fa-edit"></i> Modifier
-                        </button>
-                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
-                            <i class="fas fa-trash-alt"></i> Supprimer
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `;
-    });
+    if (timeGroupingEnabled) {
+        // Regrouper par périodes temporelles
+        const groups = groupTransactionsByTime(sorted);
+
+        // Définir l'ordre des groupes
+        const groupOrder = [
+            "Aujourd'hui",
+            "Hier",
+            "Il y a 2 jours",
+            "Il y a 3 jours",
+            "Il y a 4 jours",
+            "Il y a 5 jours",
+            "Il y a 6 jours",
+            "Il y a 1 semaine",
+            "Il y a 2 semaines",
+            "Il y a 3 semaines",
+            "Il y a 1 mois"
+        ];
+
+        // Trier les clés des groupes selon l'ordre défini
+        const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+            const indexA = groupOrder.indexOf(a);
+            const indexB = groupOrder.indexOf(b);
+
+            // Si les deux sont dans l'ordre prédéfini
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+
+            // Si seulement A est dans l'ordre prédéfini
+            if (indexA !== -1) return -1;
+
+            // Si seulement B est dans l'ordre prédéfini
+            if (indexB !== -1) return 1;
+
+            // Pour les groupes "Il y a X mois", trier numériquement
+            const monthsA = parseInt(a.match(/(\d+) mois/)?.[1] || 999);
+            const monthsB = parseInt(b.match(/(\d+) mois/)?.[1] || 999);
+            return monthsA - monthsB;
+        });
+
+        sortedGroupKeys.forEach(timeLabel => {
+            const groupTransactions = groups[timeLabel];
+
+            // Ajouter le séparateur de groupe
+            html += `
+                <tr class="time-separator">
+                    <td colspan="6">
+                        <div class="time-separator-line"></div>
+                        <span class="time-separator-text">${timeLabel}</span>
+                        <div class="time-separator-line"></div>
+                    </td>
+                </tr>
+            `;
+
+            // Ajouter les transactions du groupe
+            groupTransactions.forEach((transaction) => {
+                const originalIndex = transactions.indexOf(transaction);
+                const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
+                const formattedDate = formatDate(transaction.date);
+                const formattedAmount = formatCurrency(transaction.amount);
+                const typeClass = transaction.type === 'income' ? 'income' : 'expense';
+                const typeLabel = transaction.type === 'income' ? 'Recette' : 'Dépense';
+
+                html += `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td><strong>${transaction.description}</strong></td>
+                        <td>
+                            <i class="fas ${icon}" style="margin-right: 0.5rem;"></i>
+                            ${transaction.category}
+                        </td>
+                        <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
+                        <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-edit" onclick="openEditModal(${originalIndex})">
+                                    <i class="fas fa-edit"></i> Modifier
+                                </button>
+                                <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
+                                    <i class="fas fa-trash-alt"></i> Supprimer
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        });
+    } else {
+        // Affichage sans regroupement temporel
+        sorted.forEach((transaction) => {
+            const originalIndex = transactions.indexOf(transaction);
+            const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
+            const formattedDate = formatDate(transaction.date);
+            const formattedAmount = formatCurrency(transaction.amount);
+            const typeClass = transaction.type === 'income' ? 'income' : 'expense';
+            const typeLabel = transaction.type === 'income' ? 'Recette' : 'Dépense';
+
+            html += `
+                <tr>
+                    <td>${formattedDate}</td>
+                    <td><strong>${transaction.description}</strong></td>
+                    <td>
+                        <i class="fas ${icon}" style="margin-right: 0.5rem;"></i>
+                        ${transaction.category}
+                    </td>
+                    <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
+                    <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="openEditModal(${originalIndex})">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
+                                <i class="fas fa-trash-alt"></i> Supprimer
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
 
     tableBody.innerHTML = html;
     countElement.textContent = `${filteredTransactions.length} transaction${filteredTransactions.length > 1 ? 's' : ''}`;
@@ -1167,40 +1841,125 @@ function updateTransactionsList() {
     const sorted = sortTransactions(filteredTransactions);
 
     let html = '';
-    sorted.forEach((transaction) => {
-        const originalIndex = transactions.indexOf(transaction);
-        const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
-        const formattedDate = formatDate(transaction.date);
-        const formattedAmount = formatCurrency(transaction.amount);
-        const typeClass = transaction.type === 'income' ? 'income' : 'expense';
 
-        html += `
-            <div class="transaction-card">
-                <div class="transaction-card-header">
-                    <div class="transaction-card-description">${transaction.description}</div>
-                    <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
+    if (timeGroupingEnabled) {
+        // Regrouper par périodes temporelles
+        const groups = groupTransactionsByTime(sorted);
+
+        // Définir l'ordre des groupes
+        const groupOrder = [
+            "Aujourd'hui",
+            "Hier",
+            "Il y a 2 jours",
+            "Il y a 3 jours",
+            "Il y a 4 jours",
+            "Il y a 5 jours",
+            "Il y a 6 jours",
+            "Il y a 1 semaine",
+            "Il y a 2 semaines",
+            "Il y a 3 semaines",
+            "Il y a 1 mois"
+        ];
+
+        // Trier les clés des groupes selon l'ordre défini
+        const sortedGroupKeys = Object.keys(groups).sort((a, b) => {
+            const indexA = groupOrder.indexOf(a);
+            const indexB = groupOrder.indexOf(b);
+
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+
+            const monthsA = parseInt(a.match(/(\d+) mois/)?.[1] || 999);
+            const monthsB = parseInt(b.match(/(\d+) mois/)?.[1] || 999);
+            return monthsA - monthsB;
+        });
+
+        sortedGroupKeys.forEach(timeLabel => {
+            const groupTransactions = groups[timeLabel];
+
+            // Ajouter le séparateur de groupe
+            html += `
+                <div class="mobile-time-separator">
+                    <div class="mobile-time-separator-line"></div>
+                    <span class="mobile-time-separator-text">${timeLabel}</span>
+                    <div class="mobile-time-separator-line"></div>
                 </div>
+            `;
 
-                <div class="transaction-card-category">
-                    <i class="fas ${icon}"></i> ${transaction.category}
-                </div>
+            // Ajouter les transactions du groupe
+            groupTransactions.forEach((transaction) => {
+                const originalIndex = transactions.indexOf(transaction);
+                const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
+                const formattedDate = formatDate(transaction.date);
+                const formattedAmount = formatCurrency(transaction.amount);
+                const typeClass = transaction.type === 'income' ? 'income' : 'expense';
 
-                <div class="transaction-card-separator"></div>
+                html += `
+                    <div class="transaction-card">
+                        <div class="transaction-card-header">
+                            <div class="transaction-card-description">${transaction.description}</div>
+                            <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
+                        </div>
 
-                <div class="transaction-card-footer">
-                    <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
-                    <div class="transaction-card-actions">
-                        <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        <div class="transaction-card-category">
+                            <i class="fas ${icon}"></i> ${transaction.category}
+                        </div>
+
+                        <div class="transaction-card-separator"></div>
+
+                        <div class="transaction-card-footer">
+                            <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
+                            <div class="transaction-card-actions">
+                                <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    } else {
+        // Affichage sans regroupement temporel
+        sorted.forEach((transaction) => {
+            const originalIndex = transactions.indexOf(transaction);
+            const icon = categoryIcons[transaction.category] || 'fa-ellipsis-h';
+            const formattedDate = formatDate(transaction.date);
+            const formattedAmount = formatCurrency(transaction.amount);
+            const typeClass = transaction.type === 'income' ? 'income' : 'expense';
+
+            html += `
+                <div class="transaction-card">
+                    <div class="transaction-card-header">
+                        <div class="transaction-card-description">${transaction.description}</div>
+                        <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
+                    </div>
+
+                    <div class="transaction-card-category">
+                        <i class="fas ${icon}"></i> ${transaction.category}
+                    </div>
+
+                    <div class="transaction-card-separator"></div>
+
+                    <div class="transaction-card-footer">
+                        <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
+                        <div class="transaction-card-actions">
+                            <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
-    });
+            `;
+        });
+    }
 
     listContainer.innerHTML = html;
 }
@@ -1215,6 +1974,46 @@ function formatCurrency(amount) {
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
+}
+
+// ======================
+// REGROUPEMENT TEMPOREL
+// ======================
+function getRelativeTimeLabel(dateString) {
+    const transactionDate = new Date(dateString);
+    const today = new Date();
+
+    // Réinitialiser l'heure pour comparer seulement les dates
+    today.setHours(0, 0, 0, 0);
+    transactionDate.setHours(0, 0, 0, 0);
+
+    const diffTime = today - transactionDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Aujourd'hui";
+    if (diffDays === 1) return "Hier";
+    if (diffDays < 7) return `Il y a ${diffDays} jours`;
+    if (diffDays < 14) return "Il y a 1 semaine";
+    if (diffDays < 21) return "Il y a 2 semaines";
+    if (diffDays < 28) return "Il y a 3 semaines";
+    if (diffDays < 60) return "Il y a 1 mois";
+
+    const diffMonths = Math.floor(diffDays / 30);
+    return `Il y a ${diffMonths} mois`;
+}
+
+function groupTransactionsByTime(transactionsList) {
+    const groups = {};
+
+    transactionsList.forEach(transaction => {
+        const label = getRelativeTimeLabel(transaction.date);
+        if (!groups[label]) {
+            groups[label] = [];
+        }
+        groups[label].push(transaction);
+    });
+
+    return groups;
 }
 
 // ======================
@@ -1560,6 +2359,9 @@ function updateIncomeExpenseChart() {
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialiser le thème
     initializeTheme();
+
+    // Initialiser le regroupement temporel
+    initializeTimeGrouping();
 
     // Initialiser les keyboard shortcuts
     setupKeyboardListeners();

@@ -14,11 +14,18 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrateur';
+    }
     // Collection users avec uid comme doc ID
     match /users/{uid} {
       // L'utilisateur peut lire/modifier/supprimer ses propres données
-      allow read, write: if request.auth != null && 
-                           request.auth.uid == uid;
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == uid;
       
       // Subcollection transactions
       match /transactions/{document=**} {
@@ -45,8 +52,10 @@ service cloud.firestore {
 
 ## Explication des Règles
 
+- **isAdmin()**: Vérifie que l'utilisateur a le rôle "Administrateur" dans son document Firestore (au lieu de vérifier un UID unique)
 - **users/{uid}**: Chaque utilisateur a un document avec son UID (identifiant unique Firebase) comme ID
-- **read/write sur user**: L'utilisateur ne peut accéder qu'à son propre document
+- **list**: Seuls les admin (rôle = 'Administrateur') peuvent lister tous les utilisateurs
+- **update**: Les admins peuvent modifier les rôles des autres utilisateurs
 - **transactions/{doc}**: Les transactions sont stockées dans une subcollection sous le user
 - **read**: L'utilisateur ne peut lire que ses propres transactions
 - **create**: L'utilisateur ne peut créer que ses propres transactions
@@ -68,9 +77,16 @@ Si tu veux ajouter des validations supplémentaires, tu peux étendre les règle
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Administrateur';
+    }
     match /users/{uid} {
-      allow read, write: if request.auth != null && 
-                           request.auth.uid == uid;
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null && request.auth.uid == uid || isAdmin();
+      allow delete: if request.auth != null && request.auth.uid == uid;
       
       match /transactions/{document=**} {
         allow read: if request.auth != null && 
