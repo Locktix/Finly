@@ -1,6 +1,20 @@
 {
   "versions": [
     {
+      "version": "1.1.0",
+      "date": "2026-02-17",
+      "title": "Amélioration UI Mobile - Cards Transactions",
+      "changes": [
+        "🎨 Refonte complète du design des cartes de transaction sur mobile",
+        "🎨 Nouveau layout avec en-tête (description + montant)",
+        "🎨 Badge de catégorie avec icône redesigné",
+        "🎨 Séparateur horizontal entre contenu et actions",
+        "🎨 Pied de carte avec date (icône horloge) et boutons d'action groupés",
+        "📱 Réduction des espacements pour afficher plus de cartes à l'écran",
+        "📱 Optimisation de la taille des textes et boutons pour mobile"
+      ]
+    },
+    {
       "version": "1.0.0",
       "date": "2026-02-16",
       "title": "Release Initial - Finly MVP",
