@@ -2540,6 +2540,19 @@ body {
         height: 44px; /* Minimum touch target */
     }
 
+    .modal-content form,
+    .modal-content .form-group {
+        min-width: 0;
+    }
+
+    .modal-content .form-group input[type="date"] {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+    }
+
     /* Modales responsif */
     .modal {
         padding: var(--spacing-md);
@@ -2734,6 +2747,31 @@ body {
         padding: var(--spacing-md) 12px;
         min-height: 48px;
         border-radius: var(--radius-md);
+    }
+
+    .modal-content form,
+    .modal-content .form-group {
+        min-width: 0;
+    }
+
+    .modal-content .form-group input[type="date"] {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    @supports (-webkit-touch-callout: none) {
+        .modal-content .form-group input[type="date"] {
+            width: -webkit-fill-available;
+        }
+
+        .modal-content .form-group input[type="date"]::-webkit-date-and-time-value {
+            text-align: left;
+        }
     }
 
     /* Modales Mobile */
