@@ -882,7 +882,7 @@ const categoryIcons = {
 };
 
 const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
-const incomeCategories = ['Salaire', 'Revenus', 'Autres'];
+const incomeCategories = ['Salaire', 'Revenus', 'Épargne', 'Autres'];
 
 let iconSelectListenersReady = false;
 
@@ -2122,10 +2122,10 @@ function updateSummary() {
     
     const balance = totalIncome - totalExpense;
 
-    // Calculer l'épargne cumulée (dépenses catégorie "Épargne" = épargne positive)
+    // Calculer l'épargne cumulée (dépenses catégorie "Épargne" = +montant, revenus Épargne = -montant)
     const cumulativeSavings = transactions
-        .filter(t => t.category === 'Épargne' && t.type === 'expense')
-        .reduce((sum, t) => sum + t.amount, 0);
+        .filter(t => t.category === 'Épargne')
+        .reduce((sum, t) => sum + (t.type === 'expense' ? t.amount : -t.amount), 0);
 
     document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
     document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
