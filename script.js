@@ -873,12 +873,15 @@ const categoryIcons = {
     'Santé': 'fa-hospital',
     'Restaurants': 'fa-utensils',
     'Services': 'fa-wrench',
+    'Abonnements': 'fa-file-invoice',
+    'Factures': 'fa-file-invoice-dollar',
+    'FastFood': 'fa-hamburger',
     'Salaire': 'fa-money-bill-wave',
     'Revenus': 'fa-chart-line',
     'Autres': 'fa-ellipsis-h'
 };
 
-const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Autres'];
+const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
 const incomeCategories = ['Salaire', 'Revenus', 'Autres'];
 
 let currentEditingIndex = null;
