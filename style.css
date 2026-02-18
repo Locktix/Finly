@@ -420,7 +420,7 @@ body {
    ====================== */
 .summary-section {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-2xl);
 }
@@ -1707,7 +1707,7 @@ body {
     }
 
     .summary-section {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--spacing-md);
     }
 
@@ -1940,38 +1940,39 @@ body {
     display: flex;
     align-items: center;
     gap: var(--spacing-md);
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
     border-radius: var(--radius-md);
     background-color: var(--color-bg-primary);
     box-shadow: var(--shadow-lg);
-    min-width: 300px;
-    max-width: 500px;
+    min-width: 240px;
+    max-width: 420px;
+    max-height: 72px;
     pointer-events: auto;
-    animation: slideInRight 300ms ease-out forwards;
+    animation: slideInDown 300ms ease-out forwards;
 }
 
 .toast.fade-out {
-    animation: slideOutRight 300ms ease-in forwards;
+    animation: slideOutUp 300ms ease-in forwards;
 }
 
-@keyframes slideInRight {
+@keyframes slideInDown {
     from {
-        transform: translateX(400px);
+        transform: translateY(-40px);
         opacity: 0;
     }
     to {
-        transform: translateX(0);
+        transform: translateY(0);
         opacity: 1;
     }
 }
 
-@keyframes slideOutRight {
+@keyframes slideOutUp {
     from {
-        transform: translateX(0);
+        transform: translateY(0);
         opacity: 1;
     }
     to {
-        transform: translateX(400px);
+        transform: translateY(-40px);
         opacity: 0;
     }
 }
@@ -2025,19 +2026,27 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 2px;
+    min-width: 0;
 }
 
 .toast-title {
     font-weight: 600;
     color: var(--color-text-primary);
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .toast-message {
     color: var(--color-text-secondary);
-    font-size: var(--font-size-sm);
-    line-height: 1.4;
+    font-size: var(--font-size-xs);
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .toast-close {
@@ -2643,7 +2652,7 @@ body {
     }
 
     .summary-section {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: var(--spacing-md);
     }
 
@@ -2816,14 +2825,41 @@ body {
 
     /* Toast Responsive */
     .toast-container {
-        top: var(--spacing-sm);
-        right: var(--spacing-sm);
-        left: var(--spacing-sm);
+        top: calc(env(safe-area-inset-top, 0px) + 8px);
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        width: auto;
+        align-items: center;
+        z-index: 120;
     }
 
     .toast {
-        min-width: unset;
-        max-width: 100%;
+        width: min(56vw, 220px);
+        min-width: 0;
+        max-width: 220px;
+        min-height: 36px;
+        max-height: 44px;
+        padding: 8px 10px;
+        border-radius: var(--radius-sm);
+        gap: var(--spacing-sm);
+    }
+
+    .toast-icon {
+        font-size: var(--font-size-sm);
+    }
+
+    .toast-title {
+        font-size: var(--font-size-xs);
+    }
+
+    .toast-message {
+        display: none;
+    }
+
+    .toast-close {
+        font-size: var(--font-size-sm);
+        min-height: unset;
     }
 
     /* Sync Indicator - Icon only */
@@ -2881,7 +2917,7 @@ body {
     }
 
     .summary-section {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
     }
 
     .charts-section {
