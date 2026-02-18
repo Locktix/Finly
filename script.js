@@ -1334,6 +1334,9 @@ function setupKeyboardListeners() {
             if (activeModals.length > 0) {
                 // Fermer la dernière modale ouverte
                 const lastModal = activeModals[activeModals.length - 1];
+                if (lastModal.id === 'rolloverModal') {
+                    return;
+                }
                 closeModal(lastModal.id);
             }
 
@@ -1545,6 +1548,35 @@ function setupModalListeners() {
         }
     });
 
+    // Modal Report Solde
+    const closeRolloverBtn = document.getElementById('closeRollover');
+    if (closeRolloverBtn) {
+        closeRolloverBtn.addEventListener('click', (event) => {
+            event.preventDefault();
+        });
+    }
+
+    const declineRolloverBtn = document.getElementById('declineRollover');
+    if (declineRolloverBtn) {
+        declineRolloverBtn.addEventListener('click', () => {
+            dismissRolloverPrompt(true);
+        });
+    }
+
+    const deferRolloverBtn = document.getElementById('deferRollover');
+    if (deferRolloverBtn) {
+        deferRolloverBtn.addEventListener('click', () => {
+            dismissRolloverPrompt(false);
+        });
+    }
+
+    const acceptRolloverBtn = document.getElementById('acceptRollover');
+    if (acceptRolloverBtn) {
+        acceptRolloverBtn.addEventListener('click', () => {
+            applyRolloverTransaction();
+        });
+    }
+
     // Modal Tester Panel
     const testerBtn = document.getElementById('testerPanelBtn');
     if (testerBtn) {
@@ -1720,6 +1752,9 @@ function setupModalListeners() {
         modal.addEventListener('mouseup', (e) => {
             // Fermer seulement si mousedown et mouseup sont tous les deux sur le fond de la modale
             if (e.target === modal && mouseDownTarget === modal) {
+                if (modal.id === 'rolloverModal') {
+                    return;
+                }
                 closeModal(modal.id);
             }
             mouseDownTarget = null;
@@ -1850,6 +1885,10 @@ function setupFormListeners() {
                 updatedTransaction.firebaseId = transactions[currentEditingIndex].firebaseId;
             }
 
+            if (transactions[currentEditingIndex].rollover) {
+                updatedTransaction.rollover = true;
+            }
+
             await updateTransaction(currentEditingIndex, updatedTransaction);
             document.getElementById('editForm').reset();
             closeModal('editModal');
@@ -1866,6 +1905,8 @@ function setupFormListeners() {
 // ======================
 let transactions = [];
 let selectedMonth = null; // Format: "YYYY-MM"
+let pendingRollover = null;
+const declinedRolloverMonths = new Set();
 let activeFilters = {
     search: '',
     categories: []
@@ -1880,6 +1921,90 @@ let currentSort = {
 
 function getSelectedMonth() {
     return selectedMonth || new Date().toISOString().slice(0, 7);
+}
+
+function formatMonthLabel(monthStr) {
+    if (!monthStr) return '';
+    const parts = monthStr.split('-');
+    if (parts.length !== 2) return monthStr;
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1;
+    const date = new Date(year, month, 1);
+    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+}
+
+function getMonthBalance(monthStr) {
+    const monthTransactions = getTransactionsForMonth(monthStr);
+    const income = monthTransactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
+    const expense = monthTransactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+    return income - expense;
+}
+
+function hasRolloverForMonth(monthStr) {
+    return transactions.some(t => t.rollover === true && t.date && t.date.startsWith(monthStr));
+}
+
+function setRolloverModalContent(previousMonth, balance) {
+    const labelEl = document.getElementById('rolloverSourceLabel');
+    const amountEl = document.getElementById('rolloverAmount');
+    if (labelEl) {
+        labelEl.textContent = formatMonthLabel(previousMonth);
+    }
+    if (amountEl) {
+        amountEl.textContent = formatCurrency(balance);
+        amountEl.classList.toggle('positive', balance > 0);
+        amountEl.classList.toggle('negative', balance < 0);
+    }
+}
+
+function maybePromptRollover(previousMonth, targetMonth) {
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    if (!previousMonth || !targetMonth) return;
+    if (previousMonth !== currentMonth) return;
+    if (targetMonth <= currentMonth) return;
+    if (declinedRolloverMonths.has(targetMonth)) return;
+    if (hasRolloverForMonth(targetMonth)) return;
+
+    const balance = getMonthBalance(previousMonth);
+    if (Math.abs(balance) < 0.01) return;
+
+    pendingRollover = { previousMonth, targetMonth, balance };
+    setRolloverModalContent(previousMonth, balance);
+    openModal('rolloverModal');
+}
+
+function applyRolloverTransaction() {
+    if (!pendingRollover) return;
+
+    const { previousMonth, targetMonth, balance } = pendingRollover;
+    const monthLabel = formatMonthLabel(previousMonth);
+    const type = balance >= 0 ? 'income' : 'expense';
+    const amount = Math.abs(balance);
+    const transaction = {
+        type,
+        description: `Report solde ${monthLabel}`,
+        category: 'Autres',
+        amount,
+        date: `${targetMonth}-01`,
+        timestamp: new Date().toISOString(),
+        rollover: true
+    };
+
+    pendingRollover = null;
+    addTransaction(transaction);
+    closeModal('rolloverModal');
+}
+
+function dismissRolloverPrompt(markDeclined = true) {
+    if (pendingRollover && markDeclined) {
+        declinedRolloverMonths.add(pendingRollover.targetMonth);
+    }
+    pendingRollover = null;
+    closeModal('rolloverModal');
 }
 
 // ======================
@@ -1901,16 +2026,16 @@ function navigateMonth(direction) {
     }
 
     const newMonthStr = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+    handleMonthChange(newMonthStr, currentMonth);
+}
+
+function handleMonthChange(newMonthStr, previousMonth = null) {
+    const prevMonth = previousMonth || selectedMonth || getSelectedMonth();
     selectedMonth = newMonthStr;
-
-    // Mettre à jour l'input month (hidden)
     document.getElementById('monthFilter').value = newMonthStr;
-
-    // Mettre à jour l'affichage
     updateMonthDisplay();
-
-    // Mettre à jour les données
     updateDashboard();
+    maybePromptRollover(prevMonth, newMonthStr);
 }
 
 function updateMonthDisplay() {
@@ -2903,8 +3028,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Listener pour le changement de mois
         document.getElementById('monthFilter').addEventListener('change', (e) => {
-            selectedMonth = e.target.value;
-            updateDashboard();
+            handleMonthChange(e.target.value, selectedMonth || getSelectedMonth());
         });
     }
 });

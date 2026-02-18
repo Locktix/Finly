@@ -1,6 +1,17 @@
 {
   "versions": [
     {
+      "version": "1.4.1",
+      "date": "2026-02-18",
+      "title": "Report de Solde Mensuel",
+      "changes": [
+        "💡 Demande de report du solde quand on passe au mois suivant",
+        "🧾 Creation d'une transaction automatique de report au debut du mois",
+        "🛡️ Confirmation obligatoire (le prompt reste tant que vous n'avez pas choisi)",
+        "⏳ Bouton 'Pas maintenant' pour remettre la decision a plus tard"
+      ]
+    },
+    {
       "version": "1.4.0",
       "date": "2026-02-18",
       "title": "Card Épargne Cumulée & Support Recettes Épargne",

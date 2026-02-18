@@ -259,6 +259,34 @@
         </div>
     </div>
 
+    <!-- Modal Report Solde -->
+    <div class="modal" id="rolloverModal">
+        <div class="modal-content rollover-modal">
+            <button class="modal-close" id="closeRollover">&times;</button>
+            <h2>Reporter le solde</h2>
+            <p class="config-info">Souhaitez-vous reporter le solde restant du mois precedent ?</p>
+
+            <div class="rollover-summary">
+                <div class="rollover-row">
+                    <span>Mois precedent</span>
+                    <span id="rolloverSourceLabel">-</span>
+                </div>
+                <div class="rollover-row">
+                    <span>Solde a reporter</span>
+                    <span class="rollover-amount" id="rolloverAmount">0,00 €</span>
+                </div>
+            </div>
+
+            <p class="config-info">Une transaction automatique sera ajoutee au debut du mois.</p>
+
+            <div class="rollover-actions">
+                <button type="button" class="btn-secondary" id="deferRollover">Pas maintenant</button>
+                <button type="button" class="btn-secondary" id="declineRollover">Non merci</button>
+                <button type="button" class="btn-primary" id="acceptRollover">Oui, reporter</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Admin Panel -->
     <div class="modal" id="adminPanelModal">
         <div class="modal-content">

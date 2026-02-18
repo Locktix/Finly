@@ -1095,6 +1095,10 @@ body {
     transform: rotate(90deg);
 }
 
+#rolloverModal .modal-close {
+    display: none;
+}
+
 .modal-content h2 {
     font-size: var(--font-size-2xl);
     margin-bottom: var(--spacing-lg);
@@ -1176,6 +1180,52 @@ body {
     color: var(--color-text-secondary);
 }
 
+
+/* Report Solde Modal */
+.rollover-modal {
+    max-width: 520px;
+}
+
+.rollover-summary {
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.rollover-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
+.rollover-amount {
+    font-weight: 700;
+    font-size: var(--font-size-lg);
+    color: var(--color-text-primary);
+}
+
+.rollover-amount.positive {
+    color: #10b981;
+}
+
+.rollover-amount.negative {
+    color: #ef4444;
+}
+
+.rollover-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
 .data-transfer-mode label {
     display: flex;
     align-items: center;
