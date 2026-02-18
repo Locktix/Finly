@@ -884,6 +884,135 @@ const categoryIcons = {
 const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
 const incomeCategories = ['Salaire', 'Revenus', 'Autres'];
 
+let iconSelectListenersReady = false;
+
+function getCategoryIcon(value) {
+    return categoryIcons[value] || 'fa-tag';
+}
+
+function closeIconSelects(except = null) {
+    document.querySelectorAll('.icon-select.open').forEach(container => {
+        if (container === except) return;
+        container.classList.remove('open');
+        const trigger = container.querySelector('.icon-select-trigger');
+        if (trigger) {
+            trigger.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
+function syncIconSelectValue(container, selectEl) {
+    const valueEl = container.querySelector('.icon-select-value');
+    const selectedOption = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+    if (!valueEl || !selectedOption) return;
+
+    const iconClass = getCategoryIcon(selectedOption.value);
+    valueEl.innerHTML = `<i class="fas ${iconClass}"></i><span>${selectedOption.textContent}</span>`;
+    container.classList.toggle('is-placeholder', !selectedOption.value);
+}
+
+function handleIconSelectChange(event) {
+    const selectEl = event.currentTarget;
+    const container = selectEl.iconSelectContainer;
+    if (!container) return;
+    syncIconSelectValue(container, selectEl);
+}
+
+function buildIconSelect(container, selectEl) {
+    if (!container || !selectEl) return;
+
+    const existingTrigger = container.querySelector('.icon-select-trigger');
+    const existingMenu = container.querySelector('.icon-select-menu');
+    if (existingTrigger) existingTrigger.remove();
+    if (existingMenu) existingMenu.remove();
+    container.classList.remove('open');
+
+    selectEl.iconSelectContainer = container;
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'icon-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const valueEl = document.createElement('span');
+    valueEl.className = 'icon-select-value';
+
+    const caret = document.createElement('i');
+    caret.className = 'fas fa-chevron-down';
+
+    trigger.appendChild(valueEl);
+    trigger.appendChild(caret);
+
+    const menu = document.createElement('div');
+    menu.className = 'icon-select-menu';
+    menu.setAttribute('role', 'listbox');
+
+    Array.from(selectEl.options).forEach(option => {
+        const optionButton = document.createElement('button');
+        optionButton.type = 'button';
+        optionButton.className = 'icon-select-option';
+        optionButton.setAttribute('role', 'option');
+        optionButton.dataset.value = option.value;
+        optionButton.innerHTML = `<i class="fas ${getCategoryIcon(option.value)}"></i><span>${option.textContent}</span>`;
+
+        optionButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            selectEl.value = option.value;
+            selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+            container.classList.remove('open');
+            trigger.setAttribute('aria-expanded', 'false');
+        });
+
+        menu.appendChild(optionButton);
+    });
+
+    trigger.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const isOpen = !container.classList.contains('open');
+        closeIconSelects(container);
+        container.classList.toggle('open', isOpen);
+        trigger.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    if (!selectEl.dataset.iconSelectBound) {
+        selectEl.addEventListener('change', handleIconSelectChange);
+        selectEl.dataset.iconSelectBound = 'true';
+    }
+
+    container.appendChild(trigger);
+    container.appendChild(menu);
+
+    syncIconSelectValue(container, selectEl);
+}
+
+function initializeIconSelects() {
+    document.querySelectorAll('.icon-select').forEach(container => {
+        const selectId = container.dataset.select;
+        const selectEl = selectId ? document.getElementById(selectId) : null;
+        if (!selectEl) return;
+        buildIconSelect(container, selectEl);
+    });
+
+    if (!iconSelectListenersReady) {
+        document.addEventListener('click', () => closeIconSelects());
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                closeIconSelects();
+            }
+        });
+        iconSelectListenersReady = true;
+    }
+}
+
+function refreshIconSelect(selectId) {
+    const selectEl = document.getElementById(selectId);
+    const container = document.querySelector(`.icon-select[data-select="${selectId}"]`);
+    if (!selectEl || !container) return;
+    buildIconSelect(container, selectEl);
+}
+
 let currentEditingIndex = null;
 let currentEditingType = null;
 
@@ -1335,6 +1464,7 @@ function setupFormListeners() {
             };
             await addTransaction(transaction);
             document.getElementById('expenseForm').reset();
+            refreshIconSelect('expenseCategory');
             closeModal('expenseModal');
             hideSpinner(button);
         } catch (error) {
@@ -1360,6 +1490,7 @@ function setupFormListeners() {
             };
             await addTransaction(transaction);
             document.getElementById('incomeForm').reset();
+            refreshIconSelect('incomeCategory');
             closeModal('incomeModal');
             hideSpinner(button);
         } catch (error) {
@@ -1576,6 +1707,8 @@ function openEditModal(index) {
     document.getElementById('editCategory').value = transaction.category;
     document.getElementById('editAmount').value = transaction.amount;
     document.getElementById('editDate').value = transaction.date;
+
+    refreshIconSelect('editCategory');
     
     openModal('editModal');
 }
@@ -2380,6 +2513,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Charger les changelogs
     loadChangelogs();
+
+    // Initialiser les select avec icones
+    initializeIconSelects();
 
     // Vérifier l'état de l'authentification
     await checkAuthState();

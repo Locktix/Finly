@@ -1313,6 +1313,104 @@ body {
     color: var(--color-text-tertiary);
 }
 
+.native-select {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.icon-select {
+    position: relative;
+}
+
+.icon-select-trigger {
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.icon-select-trigger:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.icon-select-value {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    white-space: nowrap;
+}
+
+.icon-select-value i {
+    color: var(--color-text-secondary);
+}
+
+.icon-select.is-placeholder .icon-select-value {
+    color: var(--color-text-tertiary);
+}
+
+.icon-select-menu {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 6px);
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xs);
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 20;
+    display: none;
+}
+
+.icon-select.open .icon-select-menu {
+    display: block;
+}
+
+.icon-select-option {
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--color-text-primary);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: left;
+}
+
+.icon-select-option i {
+    color: var(--color-text-secondary);
+}
+
+.icon-select-option:hover,
+.icon-select-option:focus-visible {
+    background-color: var(--color-bg-secondary);
+    outline: none;
+}
+
 /* ======================
    BOUTONS
    ====================== */
