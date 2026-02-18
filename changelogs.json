@@ -1,6 +1,17 @@
 {
   "versions": [
     {
+      "version": "1.4.0",
+      "date": "2026-02-18",
+      "title": "Card Épargne Cumulée & Support Recettes Épargne",
+      "changes": [
+        "💜 Nouvelle card 'Épargne Cumulée' affichant le solde uniquement des transactions catégorie Épargne",
+        "💜 Couleur violet distincte pour la card épargne",
+        "📥 Ajout de la catégorie 'Épargne' dans 'Ajouter une Recette'",
+        "💾 Permet désormais de tracker l'épargne en tant que revenu (ex: remboursement épargne)"
+      ]
+    },
+    {
       "version": "1.3.0",
       "date": "2026-02-18",
       "title": "Dropdowns Personnalisés & Import/Export Données",

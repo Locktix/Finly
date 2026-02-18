@@ -454,6 +454,11 @@ body {
     background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0) 100%);
 }
 
+.summary-card.savings {
+    border-left-color: #8b5cf6;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(139, 92, 246, 0) 100%);
+}
+
 .summary-header {
     display: flex;
     align-items: center;
@@ -484,6 +489,10 @@ body {
 
 .summary-card.balance .summary-header i {
     color: var(--color-primary);
+}
+
+.summary-card.savings .summary-header i {
+    color: #8b5cf6;
 }
 
 .summary-value {

@@ -882,7 +882,7 @@ const categoryIcons = {
 };
 
 const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
-const incomeCategories = ['Salaire', 'Revenus', 'Autres'];
+const incomeCategories = ['Salaire', 'Revenus', 'Épargne', 'Autres'];
 
 let iconSelectListenersReady = false;
 
@@ -2122,9 +2122,15 @@ function updateSummary() {
     
     const balance = totalIncome - totalExpense;
 
+    // Calculer l'épargne cumulée (catégorie "Épargne" uniquement)
+    const cumulativeSavings = transactions
+        .filter(t => t.category === 'Épargne')
+        .reduce((sum, t) => sum + (t.type === 'expense' ? -t.amount : t.amount), 0);
+
     document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
     document.getElementById('totalExpense').textContent = formatCurrency(totalExpense);
     document.getElementById('totalBalance').textContent = formatCurrency(balance);
+    document.getElementById('totalSavings').textContent = formatCurrency(cumulativeSavings);
 
     // Couleur dynamique du solde
     const balanceElement = document.getElementById('totalBalance');
@@ -2140,6 +2146,21 @@ function updateSummary() {
     } else {
         balanceCard.style.borderLeftColor = '#3b82f6';
         balanceElement.style.color = isDark ? '#f9fafb' : '#111827';
+    }
+
+    // Couleur dynamique de l'épargne cumulée
+    const savingsElement = document.getElementById('totalSavings');
+    const savingsCard = savingsElement.closest('.summary-card');
+    
+    if (cumulativeSavings < 0) {
+        savingsCard.style.borderLeftColor = '#ef4444';
+        savingsElement.style.color = '#ef4444';
+    } else if (cumulativeSavings > 0) {
+        savingsCard.style.borderLeftColor = '#8b5cf6';
+        savingsElement.style.color = '#8b5cf6';
+    } else {
+        savingsCard.style.borderLeftColor = '#8b5cf6';
+        savingsElement.style.color = isDark ? '#f9fafb' : '#111827';
     }
 }
 
