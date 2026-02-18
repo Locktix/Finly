@@ -1912,6 +1912,8 @@ let activeFilters = {
     categories: []
 };
 let timeGroupingEnabled = false; // Désactiver le regroupement temporel par défaut
+const SWIPE_TRIGGER_DISTANCE = 90;
+const SWIPE_MAX_OFFSET = 120;
 
 // État du tri
 let currentSort = {
@@ -2508,32 +2510,13 @@ function updateTransactionsList() {
                 const formattedAmount = formatCurrency(transaction.amount);
                 const typeClass = transaction.type === 'income' ? 'income' : 'expense';
 
-                html += `
-                    <div class="transaction-card">
-                        <div class="transaction-card-header">
-                            <div class="transaction-card-description">${transaction.description}</div>
-                            <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
-                        </div>
-
-                        <div class="transaction-card-category">
-                            <i class="fas ${icon}"></i> ${transaction.category}
-                        </div>
-
-                        <div class="transaction-card-separator"></div>
-
-                        <div class="transaction-card-footer">
-                            <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
-                            <div class="transaction-card-actions">
-                                <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
+                html += renderTransactionCard(transaction, {
+                    originalIndex,
+                    icon,
+                    formattedDate,
+                    formattedAmount,
+                    typeClass
+                });
             });
         });
     } else {
@@ -2545,36 +2528,186 @@ function updateTransactionsList() {
             const formattedAmount = formatCurrency(transaction.amount);
             const typeClass = transaction.type === 'income' ? 'income' : 'expense';
 
-            html += `
-                <div class="transaction-card">
-                    <div class="transaction-card-header">
-                        <div class="transaction-card-description">${transaction.description}</div>
-                        <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
-                    </div>
-
-                    <div class="transaction-card-category">
-                        <i class="fas ${icon}"></i> ${transaction.category}
-                    </div>
-
-                    <div class="transaction-card-separator"></div>
-
-                    <div class="transaction-card-footer">
-                        <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
-                        <div class="transaction-card-actions">
-                            <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
+            html += renderTransactionCard(transaction, {
+                originalIndex,
+                icon,
+                formattedDate,
+                formattedAmount,
+                typeClass
+            });
         });
     }
 
     listContainer.innerHTML = html;
+    setupMobileSwipeActions();
+}
+
+function renderTransactionCard(transaction, {
+    originalIndex,
+    icon,
+    formattedDate,
+    formattedAmount,
+    typeClass
+}) {
+    return `
+        <div class="transaction-swipe-item" data-transaction-index="${originalIndex}">
+            <div class="transaction-swipe-bg swipe-edit">
+                <i class="fas fa-edit"></i>
+                <span>Modifier</span>
+            </div>
+            <div class="transaction-swipe-bg swipe-delete">
+                <i class="fas fa-trash-alt"></i>
+                <span>Supprimer</span>
+            </div>
+
+            <div class="transaction-card">
+                <div class="transaction-card-header">
+                    <div class="transaction-card-description">${transaction.description}</div>
+                    <div class="transaction-card-amount ${typeClass}">${formattedAmount}</div>
+                </div>
+
+                <div class="transaction-card-category">
+                    <i class="fas ${icon}"></i> ${transaction.category}
+                </div>
+
+                <div class="transaction-card-separator"></div>
+
+                <div class="transaction-card-footer">
+                    <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
+                    <div class="transaction-card-actions">
+                        <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function isMobileSwipeEnabled() {
+    return window.matchMedia('(max-width: 768px)').matches && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+}
+
+function resetSwipeItem(item, withTransition = true) {
+    const card = item.querySelector('.transaction-card');
+    if (!card) return;
+
+    card.style.transition = withTransition ? 'transform 180ms ease' : 'none';
+    card.style.transform = 'translateX(0px)';
+    item.classList.remove('swiping-left', 'swiping-right');
+}
+
+function setupMobileSwipeActions() {
+    const listContainer = document.getElementById('transactionsList');
+    if (!listContainer) return;
+
+    const swipeItems = listContainer.querySelectorAll('.transaction-swipe-item');
+    if (swipeItems.length === 0) return;
+
+    if (!isMobileSwipeEnabled()) {
+        swipeItems.forEach((item) => resetSwipeItem(item));
+        return;
+    }
+
+    let activeSwipeItem = null;
+
+    swipeItems.forEach((item) => {
+        const card = item.querySelector('.transaction-card');
+        if (!card) return;
+
+        let startX = 0;
+        let startY = 0;
+        let currentOffset = 0;
+        let isHorizontalSwipe = false;
+        let gestureLocked = false;
+
+        card.addEventListener('touchstart', (event) => {
+            if (event.target.closest('button')) return;
+
+            const touch = event.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            currentOffset = 0;
+            isHorizontalSwipe = false;
+            gestureLocked = false;
+            card.style.transition = 'none';
+        }, { passive: true });
+
+        card.addEventListener('touchmove', (event) => {
+            if (startX === 0 && startY === 0) return;
+
+            const touch = event.touches[0];
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+
+            if (!gestureLocked) {
+                if (Math.abs(deltaY) > 8 && Math.abs(deltaY) > Math.abs(deltaX)) {
+                    startX = 0;
+                    startY = 0;
+                    return;
+                }
+
+                if (Math.abs(deltaX) > 8 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                    isHorizontalSwipe = true;
+                    gestureLocked = true;
+                } else {
+                    return;
+                }
+            }
+
+            if (!isHorizontalSwipe) return;
+            event.preventDefault();
+
+            if (activeSwipeItem && activeSwipeItem !== item) {
+                resetSwipeItem(activeSwipeItem);
+            }
+            activeSwipeItem = item;
+
+            currentOffset = Math.max(-SWIPE_MAX_OFFSET, Math.min(SWIPE_MAX_OFFSET, deltaX));
+            card.style.transform = `translateX(${currentOffset}px)`;
+            item.classList.toggle('swiping-right', currentOffset > 10);
+            item.classList.toggle('swiping-left', currentOffset < -10);
+        }, { passive: false });
+
+        card.addEventListener('touchend', () => {
+            if (!isHorizontalSwipe) {
+                startX = 0;
+                startY = 0;
+                return;
+            }
+
+            const transactionIndex = Number(item.dataset.transactionIndex);
+            const shouldEdit = currentOffset >= SWIPE_TRIGGER_DISTANCE;
+            const shouldDelete = currentOffset <= -SWIPE_TRIGGER_DISTANCE;
+
+            resetSwipeItem(item);
+
+            if (shouldEdit) {
+                openEditModal(transactionIndex);
+            } else if (shouldDelete) {
+                deleteTransaction(transactionIndex);
+            }
+
+            startX = 0;
+            startY = 0;
+            currentOffset = 0;
+            isHorizontalSwipe = false;
+            gestureLocked = false;
+        }, { passive: true });
+
+        card.addEventListener('touchcancel', () => {
+            resetSwipeItem(item);
+            startX = 0;
+            startY = 0;
+            currentOffset = 0;
+            isHorizontalSwipe = false;
+            gestureLocked = false;
+        }, { passive: true });
+    });
 }
 
 function formatCurrency(amount) {

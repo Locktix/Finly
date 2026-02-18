@@ -2352,6 +2352,49 @@ body {
         white-space: nowrap;
     }
 
+    .transaction-swipe-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: var(--radius-md);
+    }
+
+    .transaction-swipe-bg {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 45%;
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        padding: 0 var(--spacing-md);
+        font-size: var(--font-size-xs);
+        font-weight: 600;
+        color: #ffffff;
+        opacity: 0;
+        transition: opacity var(--transition-fast);
+        pointer-events: none;
+    }
+
+    .transaction-swipe-bg.swipe-edit {
+        left: 0;
+        justify-content: flex-start;
+        background-color: var(--color-primary);
+    }
+
+    .transaction-swipe-bg.swipe-delete {
+        right: 0;
+        justify-content: flex-end;
+        background-color: var(--color-expense);
+    }
+
+    .transaction-swipe-item.swiping-right .swipe-edit {
+        opacity: 0.95;
+    }
+
+    .transaction-swipe-item.swiping-left .swipe-delete {
+        opacity: 0.95;
+    }
+
     .transaction-card {
         background-color: var(--color-bg-primary);
         border-radius: var(--radius-md);
@@ -2360,6 +2403,10 @@ body {
         display: flex;
         flex-direction: column;
         gap: 6px;
+        position: relative;
+        z-index: 1;
+        will-change: transform;
+        touch-action: pan-y;
     }
 
     /* En-tête: Description + Montant */
