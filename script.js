@@ -1013,6 +1013,270 @@ function refreshIconSelect(selectId) {
     buildIconSelect(container, selectEl);
 }
 
+function formatDateForExport(dateStr) {
+    if (!dateStr) return '';
+    return dateStr;
+}
+
+function formatDateToIso(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function parseDateValue(value) {
+    if (!value) return null;
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+        return formatDateToIso(value);
+    }
+
+    if (typeof value === 'number') {
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+        const date = new Date(excelEpoch.getTime() + value * 86400000);
+        return formatDateToIso(date);
+    }
+
+    if (typeof value === 'string') {
+        const trimmed = value.trim();
+        if (!trimmed) return null;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+        if (/^\d{2}\/\d{2}\/\d{4}$/.test(trimmed)) {
+            const [day, month, year] = trimmed.split('/');
+            return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        }
+        const parsed = new Date(trimmed);
+        if (!isNaN(parsed.getTime())) {
+            return formatDateToIso(parsed);
+        }
+    }
+
+    return null;
+}
+
+function normalizeTransaction(row) {
+    if (!row || typeof row !== 'object') return null;
+
+    const normalized = {};
+    Object.keys(row).forEach(key => {
+        normalized[key.toLowerCase().trim()] = row[key];
+    });
+
+    const rawType = normalized.type || normalized['transaction type'] || normalized['type transaction'] || normalized['type de transaction'];
+    const rawDescription = normalized.description || normalized.libelle || normalized['libellé'] || normalized.label;
+    const rawCategory = normalized.category || normalized.categorie || normalized['catégorie'] || normalized.catégorie;
+    const rawAmount = normalized.amount || normalized.montant;
+    const rawDate = normalized.date || normalized['transaction date'] || normalized['date transaction'];
+    const rawTimestamp = normalized.timestamp;
+
+    const typeStr = typeof rawType === 'string' ? rawType.toLowerCase() : rawType;
+    let type = null;
+    if (typeStr === 'expense' || typeStr === 'depense' || typeStr === 'dépense' || typeStr === 'depenses' || typeStr === 'dépenses') {
+        type = 'expense';
+    } else if (typeStr === 'income' || typeStr === 'recette' || typeStr === 'revenu' || typeStr === 'revenus') {
+        type = 'income';
+    }
+
+    if (!type || !rawDescription || !rawCategory || rawAmount === undefined || rawAmount === null || rawDate === undefined) {
+        return null;
+    }
+
+    const amount = typeof rawAmount === 'number'
+        ? rawAmount
+        : parseFloat(String(rawAmount).replace(',', '.'));
+
+    if (!Number.isFinite(amount)) return null;
+
+    const date = parseDateValue(rawDate);
+    if (!date) return null;
+
+    const timestamp = rawTimestamp ? String(rawTimestamp) : new Date().toISOString();
+
+    return {
+        type,
+        description: String(rawDescription).trim(),
+        category: String(rawCategory).trim(),
+        amount,
+        date,
+        timestamp
+    };
+}
+
+function getExportRows() {
+    return transactions.map(transaction => ({
+        Type: transaction.type === 'expense' ? 'Depense' : 'Recette',
+        Description: transaction.description,
+        Categorie: transaction.category,
+        Montant: transaction.amount,
+        Date: formatDateForExport(transaction.date),
+        Timestamp: transaction.timestamp || ''
+    }));
+}
+
+function downloadBlob(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function exportTransactionsJson() {
+    if (!transactions.length) {
+        Toast.warning('Aucune donnée', 'Rien à exporter pour le moment');
+        return;
+    }
+
+    const payload = {
+        exportedAt: new Date().toISOString(),
+        transactions
+    };
+
+    downloadBlob(JSON.stringify(payload, null, 2), 'finly-transactions.json', 'application/json');
+    Toast.success('Export JSON', 'Fichier JSON généré');
+}
+
+function exportTransactionsExcel() {
+    if (!transactions.length) {
+        Toast.warning('Aucune donnée', 'Rien à exporter pour le moment');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        Toast.error('Excel indisponible', 'La librairie XLSX n\'est pas chargée');
+        return;
+    }
+
+    const worksheet = XLSX.utils.json_to_sheet(getExportRows());
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transactions');
+    XLSX.writeFile(workbook, 'finly-transactions.xlsx');
+    Toast.success('Export Excel', 'Fichier Excel généré');
+}
+
+function readJsonFile(file) {
+    return file.text().then(text => JSON.parse(text));
+}
+
+function readExcelFile(file) {
+    if (typeof XLSX === 'undefined') {
+        return Promise.reject(new Error('XLSX indisponible'));
+    }
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+                resolve(rows);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+async function clearFirebaseTransactions() {
+    if (!db || !currentUser) return;
+    const snapshot = await db.collection('users')
+        .doc(currentUser.uid)
+        .collection('transactions')
+        .get();
+
+    if (snapshot.empty) return;
+
+    let batch = db.batch();
+    let count = 0;
+    const commits = [];
+
+    snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+        count += 1;
+        if (count >= 400) {
+            commits.push(batch.commit());
+            batch = db.batch();
+            count = 0;
+        }
+    });
+
+    if (count > 0) {
+        commits.push(batch.commit());
+    }
+
+    await Promise.all(commits);
+}
+
+async function addTransactionsToFirebase(list) {
+    if (!db || !currentUser || !list.length) return;
+    const collectionRef = db.collection('users').doc(currentUser.uid).collection('transactions');
+
+    let batch = db.batch();
+    let count = 0;
+    const commits = [];
+
+    list.forEach(item => {
+        const docRef = collectionRef.doc();
+        batch.set(docRef, item);
+        count += 1;
+        if (count >= 400) {
+            commits.push(batch.commit());
+            batch = db.batch();
+            count = 0;
+        }
+    });
+
+    if (count > 0) {
+        commits.push(batch.commit());
+    }
+
+    await Promise.all(commits);
+}
+
+async function importTransactionsData(rawData, mode = 'merge') {
+    const list = Array.isArray(rawData)
+        ? rawData
+        : (rawData && Array.isArray(rawData.transactions) ? rawData.transactions : []);
+
+    const cleaned = list.map(normalizeTransaction).filter(Boolean);
+
+    if (!cleaned.length) {
+        Toast.error('Import échoué', 'Aucune transaction valide trouvée');
+        return { imported: 0 };
+    }
+
+    updateSyncStatus('syncing');
+
+    if (db && currentUser) {
+        if (mode === 'replace') {
+            await clearFirebaseTransactions();
+        }
+        await addTransactionsToFirebase(cleaned);
+        await loadTransactionsFromFirebase();
+    } else {
+        if (mode === 'replace') {
+            transactions = cleaned;
+        } else {
+            transactions = transactions.concat(cleaned);
+        }
+        localStorage.setItem('transactions', JSON.stringify(transactions));
+        updateDashboard();
+    }
+
+    updateSyncStatus('synced');
+
+    return { imported: cleaned.length };
+}
+
 let currentEditingIndex = null;
 let currentEditingType = null;
 
@@ -1212,6 +1476,73 @@ function setupModalListeners() {
 
     document.getElementById('closeAdminPanel2').addEventListener('click', () => {
         closeModal('adminPanelModal');
+    });
+
+    // Modal Data Transfer
+    const dataTransferBtn = document.getElementById('dataTransferBtn');
+    if (dataTransferBtn) {
+        dataTransferBtn.addEventListener('click', () => {
+            document.getElementById('importFile').value = '';
+            document.getElementById('importError').style.display = 'none';
+            document.getElementById('importSuccess').style.display = 'none';
+            openModal('dataTransferModal');
+        });
+    }
+
+    document.getElementById('closeDataTransfer').addEventListener('click', () => {
+        closeModal('dataTransferModal');
+    });
+
+    document.getElementById('closeDataTransfer2').addEventListener('click', () => {
+        closeModal('dataTransferModal');
+    });
+
+    document.getElementById('exportJsonBtn').addEventListener('click', exportTransactionsJson);
+    document.getElementById('exportExcelBtn').addEventListener('click', exportTransactionsExcel);
+
+    document.getElementById('importDataBtn').addEventListener('click', async () => {
+        const file = document.getElementById('importFile').files[0];
+        const errorEl = document.getElementById('importError');
+        const successEl = document.getElementById('importSuccess');
+        const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
+
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!file) {
+            errorEl.textContent = 'Sélectionnez un fichier (JSON ou Excel)';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        try {
+            let data = null;
+
+            if (file.name.endsWith('.json')) {
+                data = await readJsonFile(file);
+            } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                data = await readExcelFile(file);
+            } else {
+                errorEl.textContent = 'Format de fichier non supporté. Utilisez JSON ou Excel.';
+                errorEl.style.display = 'block';
+                return;
+            }
+
+            const result = await importTransactionsData(data, mode);
+            successEl.textContent = `${result.imported} transaction(s) importée(s) avec succès`;
+            successEl.style.display = 'block';
+            Toast.success('Import réussi', `${result.imported} transaction(s) importée(s)`);
+
+            setTimeout(() => {
+                closeModal('dataTransferModal');
+                successEl.style.display = 'none';
+            }, 2000);
+        } catch (error) {
+            console.error('Erreur lors de l\'import:', error);
+            errorEl.textContent = `Erreur: ${error.message}`;
+            errorEl.style.display = 'block';
+            Toast.error('Erreur import', error.message);
+        }
     });
 
     // Modal Tester Panel

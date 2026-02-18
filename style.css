@@ -1120,6 +1120,59 @@ body {
     margin-bottom: var(--spacing-sm);
 }
 
+/* Import/Export Modal */
+.data-transfer-modal {
+    max-width: 680px;
+}
+
+.data-transfer-section {
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.data-transfer-section h3 {
+    margin: 0 0 var(--spacing-md) 0;
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.data-transfer-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.data-transfer-file {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-secondary);
+    margin-bottom: var(--spacing-md);
+}
+
+.data-transfer-mode {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
+.data-transfer-mode label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
 /* Admin Panel */
 .admin-panel-toolbar {
     display: flex;

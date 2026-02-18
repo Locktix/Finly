@@ -167,6 +167,12 @@
                         <span id="timeGroupingLabel">Regroupement Temporel</span>
                     </button>
 
+                    <!-- Data Transfer Button -->
+                    <button class="settings-item" id="dataTransferBtn">
+                        <i class="fas fa-file-import"></i>
+                        <span>Importer / Exporter</span>
+                    </button>
+
                     <!-- Config Button -->
                     <button class="settings-item" id="configBtn">
                         <i class="fas fa-info-circle"></i>
@@ -209,6 +215,47 @@
                 <p class="config-text"><strong>UID:</strong> <span id="configUid">N/A</span></p>
             </div>
             <button type="button" class="btn-primary" id="closeConfigBtn2">Fermer</button>
+        </div>
+    </div>
+
+    <!-- Modal Import/Export -->
+    <div class="modal" id="dataTransferModal">
+        <div class="modal-content data-transfer-modal">
+            <button class="modal-close" id="closeDataTransfer">&times;</button>
+            <h2>Importer / Exporter</h2>
+            <p class="config-info">Exportez vos transactions ou importez un fichier JSON/Excel.</p>
+
+            <div class="data-transfer-section">
+                <h3>Exporter</h3>
+                <div class="data-transfer-actions">
+                    <button type="button" class="btn-secondary" id="exportJsonBtn">
+                        <i class="fas fa-file-code"></i> Exporter JSON
+                    </button>
+                    <button type="button" class="btn-secondary" id="exportExcelBtn">
+                        <i class="fas fa-file-excel"></i> Exporter Excel
+                    </button>
+                </div>
+            </div>
+
+            <div class="data-transfer-section">
+                <h3>Importer</h3>
+                <input type="file" id="importFile" class="data-transfer-file" accept=".json,.xlsx,.xls">
+                <div class="data-transfer-mode">
+                    <label>
+                        <input type="radio" name="importMode" value="merge" checked>
+                        Ajouter aux données existantes
+                    </label>
+                    <label>
+                        <input type="radio" name="importMode" value="replace">
+                        Remplacer les données existantes
+                    </label>
+                </div>
+                <button type="button" class="btn-primary" id="importDataBtn">Importer</button>
+                <div class="auth-error" id="importError" style="display: none;"></div>
+                <div class="auth-success" id="importSuccess" style="display: none; color: #10b981; background-color: rgba(16, 185, 129, 0.1); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-top: var(--spacing-sm);"></div>
+            </div>
+
+            <button type="button" class="btn-primary" id="closeDataTransfer2">Fermer</button>
         </div>
     </div>
 
@@ -558,6 +605,9 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- SheetJS (Excel) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Application Script -->
     <script src="script.js"></script>
