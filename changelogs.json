@@ -1,6 +1,21 @@
 {
   "versions": [
     {
+      "version": "1.3.0",
+      "date": "2026-02-18",
+      "title": "Dropdowns Personnalisés & Import/Export Données",
+      "changes": [
+        "🎨 Dropdowns de catégories avec icônes Font Awesome intégrées",
+        "🎨 Custom select triggers pour meilleur UX sur les formulaires",
+        "🐛 Correction du décalage de layout lors de la validation des sélects",
+        "📤 Export des transactions en JSON (avec métadonnées)",
+        "📊 Export des transactions en Excel (XLSX)",
+        "📥 Import de fichiers JSON ou Excel avec validation robuste",
+        "🔄 Mode import : fusion ou remplacement des données existantes",
+        "⚙️ Nouvelle option 'Importer / Exporter' dans les paramètres"
+      ]
+    },
+    {
       "version": "1.2.0",
       "date": "2026-02-17",
       "title": "Amélioration Profil & Données de Test",
