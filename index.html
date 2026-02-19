@@ -264,7 +264,7 @@
         <div class="modal-content rollover-modal">
             <button class="modal-close" id="closeRollover">&times;</button>
             <h2>Reporter le solde</h2>
-            <p class="config-info">Souhaitez-vous reporter le solde restant du mois precedent ?</p>
+            <p class="config-info">Choisissez quoi faire du solde restant du mois précédent.</p>
 
             <div class="rollover-summary">
                 <div class="rollover-row">
@@ -277,12 +277,14 @@
                 </div>
             </div>
 
-            <p class="config-info">Une transaction automatique sera ajoutee au debut du mois.</p>
+            <p class="config-info">Oui, reporter : ajoute un report classique au début du mois.</p>
+            <p class="config-info">Oui, épargner : crée une dépense dans la catégorie Épargne au début du mois.</p>
 
             <div class="rollover-actions">
                 <button type="button" class="btn-secondary" id="deferRollover">Pas maintenant</button>
                 <button type="button" class="btn-secondary" id="declineRollover">Non merci</button>
-                <button type="button" class="btn-primary" id="acceptRollover">Oui, reporter</button>
+                <button type="button" class="btn-secondary" id="acceptRolloverSavings">Oui, épargner (dépense)</button>
+                <button type="button" class="btn-primary" id="acceptRollover">Oui, reporter (solde)</button>
             </div>
         </div>
     </div>

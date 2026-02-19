@@ -1,6 +1,19 @@
 {
   "versions": [
     {
+      "version": "1.5.0",
+      "date": "2026-02-19",
+      "title": "Report de Solde Avancé & Cohérence Inter-Mois",
+      "changes": [
+        "💰 Ajout de l'action 'Oui, épargner (dépense)' dans la modale de report",
+        "📝 Clarification du texte de la modale pour différencier report du solde et épargne",
+        "🧾 Lors d'un report, création d'une écriture de clôture en fin de mois précédent",
+        "⚖️ Les reports vers l'épargne sont traités comme transferts internes (ne modifient pas le total dépenses ni le solde global)",
+        "🔁 Le calcul des reports mensuels ignore ces transferts internes pour éviter le double comptage",
+        "🐛 Correction de l'incohérence d'affichage du même montant sur deux mois"
+      ]
+    },
+    {
       "version": "1.4.1",
       "date": "2026-02-18",
       "title": "Report de Solde Mensuel",

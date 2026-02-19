@@ -1577,6 +1577,13 @@ function setupModalListeners() {
         });
     }
 
+    const acceptRolloverSavingsBtn = document.getElementById('acceptRolloverSavings');
+    if (acceptRolloverSavingsBtn) {
+        acceptRolloverSavingsBtn.addEventListener('click', () => {
+            applyRolloverTransaction('savings');
+        });
+    }
+
     // Modal Tester Panel
     const testerBtn = document.getElementById('testerPanelBtn');
     if (testerBtn) {
@@ -1889,6 +1896,10 @@ function setupFormListeners() {
                 updatedTransaction.rollover = true;
             }
 
+            if (transactions[currentEditingIndex].rolloverMode) {
+                updatedTransaction.rolloverMode = transactions[currentEditingIndex].rolloverMode;
+            }
+
             await updateTransaction(currentEditingIndex, updatedTransaction);
             document.getElementById('editForm').reset();
             closeModal('editModal');
@@ -1938,12 +1949,32 @@ function formatMonthLabel(monthStr) {
 function getMonthBalance(monthStr) {
     const monthTransactions = getTransactionsForMonth(monthStr);
     const income = monthTransactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'income' && !isInternalSavingsTransfer(t))
         .reduce((sum, t) => sum + t.amount, 0);
     const expense = monthTransactions
-        .filter(t => t.type === 'expense')
+        .filter(t => t.type === 'expense' && !isInternalSavingsTransfer(t))
         .reduce((sum, t) => sum + t.amount, 0);
     return income - expense;
+}
+
+function isInternalSavingsTransfer(transaction) {
+    if (!transaction) return false;
+
+    if (transaction.rolloverMode === 'savings-transfer') {
+        return true;
+    }
+
+    const description = typeof transaction.description === 'string' ? transaction.description.toLowerCase() : '';
+    return transaction.rollover === true
+        && transaction.type === 'expense'
+        && transaction.category === 'Épargne'
+        && description.startsWith('épargne report solde');
+}
+
+function getMonthLastDate(monthStr) {
+    const [year, month] = monthStr.split('-').map(value => parseInt(value, 10));
+    const lastDay = new Date(year, month, 0).getDate();
+    return `${monthStr}-${String(lastDay).padStart(2, '0')}`;
 }
 
 function hasRolloverForMonth(monthStr) {
@@ -1979,25 +2010,52 @@ function maybePromptRollover(previousMonth, targetMonth) {
     openModal('rolloverModal');
 }
 
-function applyRolloverTransaction() {
+async function applyRolloverTransaction(mode = 'balance') {
     if (!pendingRollover) return;
 
     const { previousMonth, targetMonth, balance } = pendingRollover;
     const monthLabel = formatMonthLabel(previousMonth);
-    const type = balance >= 0 ? 'income' : 'expense';
-    const amount = Math.abs(balance);
-    const transaction = {
-        type,
-        description: `Report solde ${monthLabel}`,
+
+    if (mode === 'savings' && balance <= 0) {
+        Toast.warning('Épargne impossible', 'Le solde à épargner doit être positif');
+        return;
+    }
+
+    const openingTransaction = mode === 'savings'
+        ? {
+            type: 'expense',
+            description: `Épargne report solde ${monthLabel}`,
+            category: 'Épargne',
+            amount: Math.abs(balance),
+            date: `${targetMonth}-01`,
+            timestamp: new Date().toISOString(),
+            rollover: true,
+            rolloverMode: 'savings-transfer'
+        }
+        : {
+            type: balance >= 0 ? 'income' : 'expense',
+            description: `Report solde ${monthLabel}`,
+            category: 'Autres',
+            amount: Math.abs(balance),
+            date: `${targetMonth}-01`,
+            timestamp: new Date().toISOString(),
+            rollover: true
+        };
+
+    const closingTransaction = {
+        type: balance >= 0 ? 'expense' : 'income',
+        description: `Clôture report solde ${monthLabel}`,
         category: 'Autres',
-        amount,
-        date: `${targetMonth}-01`,
+        amount: Math.abs(balance),
+        date: getMonthLastDate(previousMonth),
         timestamp: new Date().toISOString(),
-        rollover: true
+        rollover: true,
+        rolloverMode: 'closing-entry'
     };
 
     pendingRollover = null;
-    addTransaction(transaction);
+    await addTransaction(closingTransaction);
+    await addTransaction(openingTransaction);
     closeModal('rolloverModal');
 }
 
@@ -2240,11 +2298,11 @@ function updateSummary() {
     const filteredTransactions = applyFilters(monthTransactions);
     
     const totalIncome = filteredTransactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'income' && !isInternalSavingsTransfer(t))
         .reduce((sum, t) => sum + t.amount, 0);
     
     const totalExpense = filteredTransactions
-        .filter(t => t.type === 'expense')
+        .filter(t => t.type === 'expense' && !isInternalSavingsTransfer(t))
         .reduce((sum, t) => sum + t.amount, 0);
     
     const balance = totalIncome - totalExpense;
