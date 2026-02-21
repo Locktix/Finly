@@ -1186,6 +1186,173 @@ function readExcelFile(file) {
     });
 }
 
+function parseSemicolonCsvLine(line) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i += 1) {
+        const char = line[i];
+        const next = line[i + 1];
+
+        if (char === '"') {
+            if (inQuotes && next === '"') {
+                current += '"';
+                i += 1;
+            } else {
+                inQuotes = !inQuotes;
+            }
+            continue;
+        }
+
+        if (char === ';' && !inQuotes) {
+            values.push(current);
+            current = '';
+            continue;
+        }
+
+        current += char;
+    }
+
+    values.push(current);
+    return values;
+}
+
+function toFlatLower(value) {
+    return String(value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function parseIngAmount(value) {
+    if (value === undefined || value === null) return null;
+    const cleaned = String(value)
+        .replace(/\s/g, '')
+        .replace(/\./g, '')
+        .replace(',', '.');
+    const amount = parseFloat(cleaned);
+    return Number.isFinite(amount) ? amount : null;
+}
+
+function inferIngDescription(row) {
+    const labels = String(row.labels || '').trim();
+    const details = String(row.details || '').trim();
+    const primary = labels || details;
+    if (!primary) return 'Transaction ING';
+
+    const cardMatch = primary.match(/-\s*(.+?)\s+(?:\d{4}\s*-|Numero de carte|Numéro de carte)/i);
+    if (cardMatch && cardMatch[1]) {
+        return cardMatch[1].replace(/\s+-\s+BEL$/i, '').trim();
+    }
+
+    const transferFrom = primary.match(/de\s*:\s*([^\-;]+?)(?:\s*-\s*[A-Z]{2}\d+|\s{2,}|$)/i);
+    if (transferFrom && transferFrom[1]) {
+        return `Virement de ${transferFrom[1].trim()}`;
+    }
+
+    const transferTo = primary.match(/vers\s*:\s*([^\-;]+?)(?:\s*-\s*[A-Z]{2}\d+|\s{2,}|$)/i);
+    if (transferTo && transferTo[1]) {
+        return `Virement vers ${transferTo[1].trim()}`;
+    }
+
+    const directDebit = primary.match(/domiciliation[^\w]*(.+?)(?:avis|$)/i);
+    if (directDebit && directDebit[1]) {
+        return `Domiciliation ${directDebit[1].trim()}`;
+    }
+
+    return primary.length > 90 ? `${primary.slice(0, 90).trim()}...` : primary;
+}
+
+function inferIngCategory(transactionType, description, row) {
+    const haystack = toFlatLower(`${description} ${row.labels || ''} ${row.details || ''}`);
+
+    if (transactionType === 'income') {
+        if (/salaire|loon|wedde|interim/.test(haystack)) return 'Salaire';
+        if (/epargne|epagne|savings/.test(haystack)) return 'Épargne';
+        return 'Revenus';
+    }
+
+    if (/uber\s*\*\s*eats|burger king|o\s*'?tacos|o\s*'?cheese|dunkin|khan|restaurant|snack|pizza/.test(haystack)) return 'Restaurants';
+    if (/lidl|delhaize|carrefour|intermarche|action|jefar|magasin|courses/.test(haystack)) return 'Magasins';
+    if (/lukoil|seety|parking|bolt|resa|carburant|essence|pony\b|transport/.test(haystack)) return 'Transport';
+    if (/apple\.com|instant ink|abonnement|membership|domiciliation/.test(haystack)) return 'Abonnements';
+    if (/vet|pharmacie|hopital|hopital|sante/.test(haystack)) return 'Santé';
+    if (/facture|electricite|gaz|eau|internet|telecom/.test(haystack)) return 'Factures';
+    if (/epargne|savings/.test(haystack)) return 'Épargne';
+
+    return 'Autres';
+}
+
+function parseIngCsvText(text) {
+    const rows = String(text || '')
+        .replace(/^\uFEFF/, '')
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+
+    if (rows.length < 2) {
+        throw new Error('Fichier CSV ING vide ou incomplet');
+    }
+
+    const headers = parseSemicolonCsvLine(rows[0]).map(item => toFlatLower(item));
+    const indexOf = (name) => headers.indexOf(toFlatLower(name));
+
+    const amountIndex = indexOf('Montant');
+    const bookingDateIndex = indexOf('Date comptable');
+    const labelsIndex = indexOf('Libellés');
+    const detailsIndex = indexOf('Détails du mouvement');
+    const currencyIndex = indexOf('Devise');
+
+    if (amountIndex < 0 || bookingDateIndex < 0 || labelsIndex < 0) {
+        throw new Error('Format CSV ING non reconnu');
+    }
+
+    const parsedTransactions = [];
+
+    for (let i = 1; i < rows.length; i += 1) {
+        const values = parseSemicolonCsvLine(rows[i]);
+        if (!values.length) continue;
+
+        const amount = parseIngAmount(values[amountIndex]);
+        if (!Number.isFinite(amount) || amount === 0) continue;
+
+        const row = {
+            labels: values[labelsIndex] || '',
+            details: detailsIndex >= 0 ? (values[detailsIndex] || '') : '',
+            currency: currencyIndex >= 0 ? (values[currencyIndex] || '') : 'EUR'
+        };
+
+        const date = parseDateValue(values[bookingDateIndex]);
+        if (!date) continue;
+
+        const type = amount < 0 ? 'expense' : 'income';
+        const description = inferIngDescription(row);
+        const category = inferIngCategory(type, description, row);
+
+        parsedTransactions.push({
+            type,
+            description,
+            category,
+            amount: Math.abs(amount),
+            date,
+            timestamp: new Date().toISOString()
+        });
+    }
+
+    if (!parsedTransactions.length) {
+        throw new Error('Aucune transaction ING valide trouvée dans le CSV');
+    }
+
+    return parsedTransactions;
+}
+
+function readIngCsvFile(file) {
+    return file.text().then(parseIngCsvText);
+}
+
 async function clearFirebaseTransactions() {
     if (!db || !currentUser) return;
     const snapshot = await db.collection('users')
@@ -1513,7 +1680,7 @@ function setupModalListeners() {
         successEl.style.display = 'none';
 
         if (!file) {
-            errorEl.textContent = 'Sélectionnez un fichier (JSON ou Excel)';
+            errorEl.textContent = 'Sélectionnez un fichier (JSON, Excel ou CSV ING)';
             errorEl.style.display = 'block';
             return;
         }
@@ -1525,8 +1692,10 @@ function setupModalListeners() {
                 data = await readJsonFile(file);
             } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                 data = await readExcelFile(file);
+            } else if (file.name.endsWith('.csv')) {
+                data = await readIngCsvFile(file);
             } else {
-                errorEl.textContent = 'Format de fichier non supporté. Utilisez JSON ou Excel.';
+                errorEl.textContent = 'Format de fichier non supporté. Utilisez JSON, Excel ou CSV ING.';
                 errorEl.style.display = 'block';
                 return;
             }

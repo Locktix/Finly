@@ -223,7 +223,7 @@
         <div class="modal-content data-transfer-modal">
             <button class="modal-close" id="closeDataTransfer">&times;</button>
             <h2>Importer / Exporter</h2>
-            <p class="config-info">Exportez vos transactions ou importez un fichier JSON/Excel.</p>
+            <p class="config-info">Exportez vos transactions ou importez un fichier JSON/Excel/CSV ING.</p>
 
             <div class="data-transfer-section">
                 <h3>Exporter</h3>
@@ -239,7 +239,8 @@
 
             <div class="data-transfer-section">
                 <h3>Importer</h3>
-                <input type="file" id="importFile" class="data-transfer-file" accept=".json,.xlsx,.xls">
+                <p class="config-info" style="margin-bottom: var(--spacing-sm);">Importer données depuis ING (CSV) ou depuis Finly (JSON/Excel).</p>
+                <input type="file" id="importFile" class="data-transfer-file" accept=".json,.xlsx,.xls,.csv">
                 <div class="data-transfer-mode">
                     <label>
                         <input type="radio" name="importMode" value="merge" checked>
