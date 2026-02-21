@@ -1652,9 +1652,19 @@ function setupModalListeners() {
     const dataTransferBtn = document.getElementById('dataTransferBtn');
     if (dataTransferBtn) {
         dataTransferBtn.addEventListener('click', () => {
-            document.getElementById('importFile').value = '';
-            document.getElementById('importError').style.display = 'none';
-            document.getElementById('importSuccess').style.display = 'none';
+            const importFinlyFile = document.getElementById('importFinlyFile');
+            const importBankFile = document.getElementById('importBankFile');
+            const importFinlyError = document.getElementById('importFinlyError');
+            const importFinlySuccess = document.getElementById('importFinlySuccess');
+            const importBankError = document.getElementById('importBankError');
+            const importBankSuccess = document.getElementById('importBankSuccess');
+
+            if (importFinlyFile) importFinlyFile.value = '';
+            if (importBankFile) importBankFile.value = '';
+            if (importFinlyError) importFinlyError.style.display = 'none';
+            if (importFinlySuccess) importFinlySuccess.style.display = 'none';
+            if (importBankError) importBankError.style.display = 'none';
+            if (importBankSuccess) importBankSuccess.style.display = 'none';
             openModal('dataTransferModal');
         });
     }
@@ -1670,17 +1680,17 @@ function setupModalListeners() {
     document.getElementById('exportJsonBtn').addEventListener('click', exportTransactionsJson);
     document.getElementById('exportExcelBtn').addEventListener('click', exportTransactionsExcel);
 
-    document.getElementById('importDataBtn').addEventListener('click', async () => {
-        const file = document.getElementById('importFile').files[0];
-        const errorEl = document.getElementById('importError');
-        const successEl = document.getElementById('importSuccess');
-        const mode = document.querySelector('input[name="importMode"]:checked')?.value || 'merge';
+    document.getElementById('importFinlyBtn').addEventListener('click', async () => {
+        const file = document.getElementById('importFinlyFile').files[0];
+        const errorEl = document.getElementById('importFinlyError');
+        const successEl = document.getElementById('importFinlySuccess');
+        const mode = document.querySelector('input[name="importFinlyMode"]:checked')?.value || 'merge';
 
         errorEl.style.display = 'none';
         successEl.style.display = 'none';
 
         if (!file) {
-            errorEl.textContent = 'Sélectionnez un fichier (JSON, Excel ou CSV ING)';
+            errorEl.textContent = 'Sélectionnez un fichier Finly (JSON ou Excel)';
             errorEl.style.display = 'block';
             return;
         }
@@ -1692,10 +1702,8 @@ function setupModalListeners() {
                 data = await readJsonFile(file);
             } else if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                 data = await readExcelFile(file);
-            } else if (file.name.endsWith('.csv')) {
-                data = await readIngCsvFile(file);
             } else {
-                errorEl.textContent = 'Format de fichier non supporté. Utilisez JSON, Excel ou CSV ING.';
+                errorEl.textContent = 'Format non supporté pour Finly. Utilisez JSON ou Excel.';
                 errorEl.style.display = 'block';
                 return;
             }
@@ -1703,17 +1711,59 @@ function setupModalListeners() {
             const result = await importTransactionsData(data, mode);
             successEl.textContent = `${result.imported} transaction(s) importée(s) avec succès`;
             successEl.style.display = 'block';
-            Toast.success('Import réussi', `${result.imported} transaction(s) importée(s)`);
+            Toast.success('Import Finly réussi', `${result.imported} transaction(s) importée(s)`);
 
             setTimeout(() => {
                 closeModal('dataTransferModal');
                 successEl.style.display = 'none';
             }, 2000);
         } catch (error) {
-            console.error('Erreur lors de l\'import:', error);
+            console.error('Erreur lors de l\'import Finly:', error);
             errorEl.textContent = `Erreur: ${error.message}`;
             errorEl.style.display = 'block';
-            Toast.error('Erreur import', error.message);
+            Toast.error('Erreur import Finly', error.message);
+        }
+    });
+
+    document.getElementById('importBankBtn').addEventListener('click', async () => {
+        const file = document.getElementById('importBankFile').files[0];
+        const errorEl = document.getElementById('importBankError');
+        const successEl = document.getElementById('importBankSuccess');
+        const mode = document.querySelector('input[name="importBankMode"]:checked')?.value || 'merge';
+
+        errorEl.style.display = 'none';
+        successEl.style.display = 'none';
+
+        if (!file) {
+            errorEl.textContent = 'Sélectionnez un fichier Bank (CSV ING)';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        if (!file.name.endsWith('.csv')) {
+            errorEl.textContent = 'Format non supporté pour Bank. Utilisez un CSV ING.';
+            errorEl.style.display = 'block';
+            return;
+        }
+
+        try {
+            const data = await readIngCsvFile(file);
+            Toast.warning('Import ING (bêta)', 'La description ou la catégorie peut être inexacte. Vérifie les transactions importées.');
+
+            const result = await importTransactionsData(data, mode);
+            successEl.textContent = `${result.imported} transaction(s) importée(s) avec succès`;
+            successEl.style.display = 'block';
+            Toast.success('Import Bank réussi', `${result.imported} transaction(s) importée(s)`);
+
+            setTimeout(() => {
+                closeModal('dataTransferModal');
+                successEl.style.display = 'none';
+            }, 2000);
+        } catch (error) {
+            console.error('Erreur lors de l\'import Bank:', error);
+            errorEl.textContent = `Erreur: ${error.message}`;
+            errorEl.style.display = 'block';
+            Toast.error('Erreur import Bank', error.message);
         }
     });
 

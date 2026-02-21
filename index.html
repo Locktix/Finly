@@ -239,21 +239,41 @@
 
             <div class="data-transfer-section">
                 <h3>Importer</h3>
-                <p class="config-info" style="margin-bottom: var(--spacing-sm);">Importer données depuis ING (CSV) ou depuis Finly (JSON/Excel).</p>
-                <input type="file" id="importFile" class="data-transfer-file" accept=".json,.xlsx,.xls,.csv">
+                <h4 style="margin: var(--spacing-sm) 0;">Importer data Finly</h4>
+                <p class="config-info" style="margin-bottom: var(--spacing-sm);">Formats supportés: JSON / Excel.</p>
+                <input type="file" id="importFinlyFile" class="data-transfer-file" accept=".json,.xlsx,.xls">
                 <div class="data-transfer-mode">
                     <label>
-                        <input type="radio" name="importMode" value="merge" checked>
+                        <input type="radio" name="importFinlyMode" value="merge" checked>
                         Ajouter aux données existantes
                     </label>
                     <label>
-                        <input type="radio" name="importMode" value="replace">
+                        <input type="radio" name="importFinlyMode" value="replace">
                         Remplacer les données existantes
                     </label>
                 </div>
-                <button type="button" class="btn-primary" id="importDataBtn">Importer</button>
-                <div class="auth-error" id="importError" style="display: none;"></div>
-                <div class="auth-success" id="importSuccess" style="display: none; color: #10b981; background-color: rgba(16, 185, 129, 0.1); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-top: var(--spacing-sm);"></div>
+                <button type="button" class="btn-primary" id="importFinlyBtn">Importer data Finly</button>
+                <div class="auth-error" id="importFinlyError" style="display: none;"></div>
+                <div class="auth-success" id="importFinlySuccess" style="display: none; color: #10b981; background-color: rgba(16, 185, 129, 0.1); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-top: var(--spacing-sm);"></div>
+
+                <h4 style="margin: var(--spacing-lg) 0 var(--spacing-sm);">Importer data Bank</h4>
+                <p class="config-info" style="margin-bottom: var(--spacing-sm);">Format supporté: CSV ING.</p>
+                <p class="config-info" style="margin-bottom: var(--spacing-sm);">⚠️ Import ING en bêta : la description et/ou la catégorie peuvent être erronées et nécessiter une vérification manuelle.</p>
+                <p class="config-info" style="margin-bottom: var(--spacing-sm);">🏦 Autres banques : non supportées pour le moment, faute de données d'export pour implémenter un import fiable.</p>
+                <input type="file" id="importBankFile" class="data-transfer-file" accept=".csv">
+                <div class="data-transfer-mode">
+                    <label>
+                        <input type="radio" name="importBankMode" value="merge" checked>
+                        Ajouter aux données existantes
+                    </label>
+                    <label>
+                        <input type="radio" name="importBankMode" value="replace">
+                        Remplacer les données existantes
+                    </label>
+                </div>
+                <button type="button" class="btn-primary" id="importBankBtn">Importer data Bank</button>
+                <div class="auth-error" id="importBankError" style="display: none;"></div>
+                <div class="auth-success" id="importBankSuccess" style="display: none; color: #10b981; background-color: rgba(16, 185, 129, 0.1); padding: var(--spacing-sm); border-radius: var(--radius-md); margin-top: var(--spacing-sm);"></div>
             </div>
 
             <button type="button" class="btn-primary" id="closeDataTransfer2">Fermer</button>

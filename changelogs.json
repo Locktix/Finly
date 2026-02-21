@@ -1,6 +1,17 @@
 {
   "versions": [
     {
+      "version": "1.5.0",
+      "date": "2026-02-22",
+      "title": "Import CSV ING (Bêta)",
+      "changes": [
+        "📥 Ajout de l'import des exports CSV ING dans la modale Importer / Exporter",
+        "🧠 Détection automatique recette/dépense selon le montant, avec proposition de description et de catégorie",
+        "⚠️ Mention explicite du mode bêta : description et catégorie peuvent être erronées",
+        "🏦 Précision produit : autres banques non supportées pour le moment faute de données d'export de référence"
+      ]
+    },
+    {
       "version": "1.4.2",
       "date": "2026-02-19",
       "title": "Report de Solde Avancé & Cohérence Inter-Mois",
