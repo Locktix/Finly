@@ -712,12 +712,22 @@ body {
 }
 
 .filters-panel {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
     padding: var(--spacing-sm) 0 0 0;
     margin-top: var(--spacing-md);
     max-height: 0;
     overflow: hidden;
     opacity: 0;
-    transition: max-height var(--transition-base), opacity var(--transition-fast);
+    transform: translateY(-4px);
+    contain: layout paint;
+    will-change: opacity;
+    transition:
+        opacity 160ms ease,
+        transform 180ms ease,
+        padding 160ms ease,
+        margin-top 160ms ease;
 }
 
 .filters-panel:not(.active) {
@@ -725,14 +735,15 @@ body {
     padding: 0;
     margin-top: 0;
     opacity: 0;
+    transform: translateY(-4px);
+    pointer-events: none;
 }
 
 .filters-panel.active {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--spacing-sm);
     max-height: 420px;
     opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
 }
 
 .filter-group {
