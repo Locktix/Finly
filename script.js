@@ -1600,13 +1600,16 @@ function setupModalListeners() {
     document.getElementById('timeGroupingToggle').addEventListener('click', toggleTimeGrouping);
 
     // Modal Configuration
-    document.getElementById('configBtn').addEventListener('click', () => {
-        const uidEl = document.getElementById('configUid');
-        if (uidEl) {
-            uidEl.textContent = (currentUser && currentUser.uid) ? currentUser.uid : 'N/A';
-        }
-        openModal('configModal');
-    });
+    const configBtn = document.getElementById('configBtn');
+    if (configBtn) {
+        configBtn.addEventListener('click', () => {
+            const uidEl = document.getElementById('configUid');
+            if (uidEl) {
+                uidEl.textContent = (currentUser && currentUser.uid) ? currentUser.uid : 'N/A';
+            }
+            openModal('configModal');
+        });
+    }
 
     document.getElementById('closeConfigBtn').addEventListener('click', () => {
         closeModal('configModal');

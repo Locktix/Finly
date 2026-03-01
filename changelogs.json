@@ -1,6 +1,23 @@
 {
   "versions": [
     {
+      "version": "1.6.0",
+      "date": "2026-03-01",
+      "title": "Refonte Filtres & Ajustements Navigation Mensuelle",
+      "changes": [
+        "🔁 Correction du déclenchement du report de solde lors du passage vers un mois suivant (ex: Février → Mars)",
+        "📅 Ajout de la proposition automatique de report au chargement du mois courant (prend en compte chaque mois, pas seulement Mars)",
+        "🎛️ Refonte complète de la section filtres avec une interface plus sobre et compacte",
+        "🏷️ Catégories affichées en chips visuelles, avec harmonisation des arrondis et des couleurs",
+        "🌙 Ajustements de cohérence visuelle en mode sombre pour le bouton filtres, la recherche et les chips",
+        "🧹 Suppression du bloc 'Trier par' dans les filtres (tri conservé directement via les en-têtes du tableau)",
+        "⚡ Optimisation de l'animation d'ouverture/fermeture des filtres pour réduire les micro-freezes",
+        "🧾 Le titre transactions affiche désormais le format 'xx Transactions Récentes'",
+        "📐 Réduction de la hauteur du sélecteur de mois pour un en-tête plus compact",
+        "🇫🇷 Harmonisation des libellés de la section filtres en français"
+      ]
+    },
+    {
       "version": "1.5.0",
       "date": "2026-02-22",
       "title": "Import CSV ING (Bêta)",
