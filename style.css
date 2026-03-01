@@ -570,17 +570,23 @@ body {
     gap: var(--spacing-lg);
 }
 
+.transactions-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
 .transactions-header h2 {
     font-size: var(--font-size-2xl);
     color: var(--color-text-primary);
+    margin: 0;
 }
 
 .transaction-count {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-secondary);
-    background-color: var(--color-bg-tertiary);
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--radius-md);
+    font-size: inherit;
+    font-weight: 700;
+    color: var(--color-text-primary);
 }
 
 .month-selector {

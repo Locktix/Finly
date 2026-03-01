@@ -2582,7 +2582,7 @@ function updateTransactionsTable() {
 
     if (filteredTransactions.length === 0) {
         tableBody.innerHTML = '<tr class="empty-row"><td colspan="6">Aucune transaction pour ce mois.</td></tr>';
-        countElement.textContent = '0 transactions';
+        countElement.textContent = '0';
         updateTransactionsList(); // Aussi vider les cartes
         return;
     }
@@ -2714,7 +2714,7 @@ function updateTransactionsTable() {
     }
 
     tableBody.innerHTML = html;
-    countElement.textContent = `${filteredTransactions.length} transaction${filteredTransactions.length > 1 ? 's' : ''}`;
+    countElement.textContent = `${filteredTransactions.length}`;
     updateTransactionsList(); // Aussi mettre à jour les cartes
 }
 
