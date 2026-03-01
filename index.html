@@ -440,34 +440,25 @@
 
             <!-- Filters Section -->
             <div class="filters-section">
-                <button class="toggle-filters-btn" id="toggleFiltersBtn">
-                    <i class="fas fa-sliders-h"></i> Filtres Avancés
-                </button>
-                
+                <div class="filters-toolbar">
+                    <div class="filters-left">
+                        <button class="toggle-filters-btn" id="toggleFiltersBtn" type="button" aria-expanded="false" aria-controls="filtersPanel">
+                            <i class="fas fa-sliders-h"></i>
+                            <span>Filtres</span>
+                        </button>
+                        <button class="clear-filters-btn" id="resetFiltersBtn" type="button">Tout effacer</button>
+                    </div>
+                </div>
+
                 <div class="filters-panel" id="filtersPanel">
-                    <!-- Search Filter -->
-                    <div class="filter-group">
-                        <label for="searchFilter">
-                            <i class="fas fa-search"></i> Rechercher
-                        </label>
-                        <input type="text" id="searchFilter" placeholder="Description, catégorie..." class="filter-input">
+                    <div class="filter-group filter-search-group">
+                        <input type="text" id="searchFilter" placeholder="Rechercher une transaction..." class="filter-input">
                     </div>
 
-                    <!-- Category Filter -->
-                    <div class="filter-group">
-                        <label>
-                            <i class="fas fa-tag"></i> Catégories
-                        </label>
+                    <div class="filter-group filter-category-group">
                         <div class="filter-checkboxes" id="categoryFilter">
                             <!-- Sera rempli dynamiquement -->
                         </div>
-                    </div>
-
-                    <!-- Filter Actions -->
-                    <div class="filter-actions">
-                        <button class="btn-secondary" id="resetFiltersBtn">
-                            <i class="fas fa-redo"></i> Réinitialiser
-                        </button>
                     </div>
                 </div>
             </div>

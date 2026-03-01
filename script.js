@@ -3052,10 +3052,11 @@ function initializeCategoryFilter() {
     const uniqueCategories = [...new Set(allCategories)];
 
     filterContainer.innerHTML = uniqueCategories.map(cat => `
-        <div class="filter-checkbox">
+        <div class="filter-chip">
             <input type="checkbox" id="cat-${cat}" value="${cat}" class="category-checkbox">
             <label for="cat-${cat}">
-                <i class="fas ${categoryIcons[cat] || 'fa-tag'}"></i> ${cat}
+                <i class="fas ${categoryIcons[cat] || 'fa-tag'}"></i>
+                <span>${cat}</span>
             </label>
         </div>
     `).join('');
@@ -3066,13 +3067,20 @@ function initializeCategoryFilter() {
 }
 
 function setupFilterListeners() {
+    const panel = document.getElementById('filtersPanel');
+    const toggleButton = document.getElementById('toggleFiltersBtn');
+    const isInitiallyActive = panel.classList.contains('active');
+    toggleButton.classList.toggle('active', isInitiallyActive);
+    toggleButton.setAttribute('aria-expanded', isInitiallyActive ? 'true' : 'false');
+
     // Recherche
     document.getElementById('searchFilter').addEventListener('input', updateFilters);
 
     // Toggle filtres
     document.getElementById('toggleFiltersBtn').addEventListener('click', () => {
-        const panel = document.getElementById('filtersPanel');
-        panel.classList.toggle('active');
+        const nextActive = panel.classList.toggle('active');
+        toggleButton.classList.toggle('active', nextActive);
+        toggleButton.setAttribute('aria-expanded', nextActive ? 'true' : 'false');
     });
 
     // Réinitialiser filtres
