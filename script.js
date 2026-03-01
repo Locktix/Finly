@@ -2196,6 +2196,12 @@ function getMonthLastDate(monthStr) {
     return `${monthStr}-${String(lastDay).padStart(2, '0')}`;
 }
 
+function getPreviousMonth(monthStr) {
+    const [year, month] = monthStr.split('-').map(value => parseInt(value, 10));
+    const date = new Date(year, month - 2, 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+}
+
 function hasRolloverForMonth(monthStr) {
     return transactions.some(t => t.rollover === true && t.date && t.date.startsWith(monthStr));
 }
@@ -2214,10 +2220,8 @@ function setRolloverModalContent(previousMonth, balance) {
 }
 
 function maybePromptRollover(previousMonth, targetMonth) {
-    const currentMonth = new Date().toISOString().slice(0, 7);
     if (!previousMonth || !targetMonth) return;
-    if (previousMonth !== currentMonth) return;
-    if (targetMonth <= currentMonth) return;
+    if (targetMonth <= previousMonth) return;
     if (declinedRolloverMonths.has(targetMonth)) return;
     if (hasRolloverForMonth(targetMonth)) return;
 
@@ -3430,6 +3434,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('monthFilter').value = currentMonth;
         
         updateDashboard();
+        maybePromptRollover(getPreviousMonth(currentMonth), currentMonth);
 
         // Ajouter les valeurs par défaut aux champs de date
         const todayStr = today.toISOString().split('T')[0];
