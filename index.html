@@ -481,6 +481,259 @@
         </section>
     </main>
 
+    <!-- ======================
+         MOBILE PAGES
+         ====================== -->
+
+    <!-- Statistics Page -->
+    <div class="app-page" id="statsPage" style="display: none;">
+        <div class="page-container">
+            <!-- Header -->
+            <div class="page-header stats-header">
+                <div class="header-content">
+                    <h1>Statistiques</h1>
+                    <p>Analyse de vos transactions</p>
+                </div>
+            </div>
+
+            <!-- Period Selector -->
+            <div class="period-selector">
+                <button class="period-btn active" data-period="allTime">
+                    <i class="fas fa-infinity"></i>
+                    <span>Toujours</span>
+                </button>
+                <button class="period-btn" data-period="year">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>12 mois</span>
+                </button>
+                <button class="period-btn" data-period="month">
+                    <i class="fas fa-calendar-days"></i>
+                    <span>Ce mois</span>
+                </button>
+                <button class="period-btn" data-period="week">
+                    <i class="fas fa-calendar-week"></i>
+                    <span>7 jours</span>
+                </button>
+            </div>
+
+            <!-- Key Stats Cards -->
+            <div class="key-stats">
+                <div class="stat-card-large">
+                    <div class="stat-card-header">
+                        <i class="fas fa-arrow-up expense-icon"></i>
+                        <h3>Dépenses</h3>
+                    </div>
+                    <div class="stat-card-body">
+                        <div class="stat-main" id="statsAvgExpense">0,00 €</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Moyenne</span>
+                            <span class="stat-value" id="statsAvgExpenseValue">0,00 €</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Min</span>
+                            <span class="stat-value" id="statsMinExpense">0,00 €</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Max</span>
+                            <span class="stat-value expense" id="statsMaxExpense">0,00 €</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card-large">
+                    <div class="stat-card-header income-header">
+                        <i class="fas fa-arrow-down income-icon"></i>
+                        <h3>Recettes</h3>
+                    </div>
+                    <div class="stat-card-body">
+                        <div class="stat-main income" id="statsAvgIncome">0,00 €</div>
+                        <div class="stat-row">
+                            <span class="stat-label">Moyenne</span>
+                            <span class="stat-value" id="statsAvgIncomeValue">0,00 €</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Min</span>
+                            <span class="stat-value" id="statsMinIncome">0,00 €</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Max</span>
+                            <span class="stat-value income" id="statsMaxIncome">0,00 €</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Balance Card -->
+            <div class="balance-card">
+                <div class="balance-content">
+                    <span class="balance-label">Balance</span>
+                    <span class="balance-value" id="statsBalance">0,00 €</span>
+                </div>
+                <div class="balance-chart">
+                    <canvas id="balanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Categories Stats -->
+            <div class="categories-section">
+                <h2>Par Catégorie</h2>
+                <div class="categories-list" id="categoriesStatsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Page -->
+    <div class="app-page" id="profilePage" style="display: none;">
+        <div class="page-container">
+            <!-- Header with Profile Card -->
+            <div class="page-header profile-header">
+                <div class="profile-card">
+                    <div class="profile-avatar-large">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="profile-info-section">
+                        <h1 id="profileDisplayName">Utilisateur</h1>
+                        <p id="profileDisplayEmail">email@example.com</p>
+                        <div class="profile-meta">
+                            <span id="profileMemberSince">Membre depuis -</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="quick-stat-item">
+                    <div class="stat-icon transactions-icon">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number" id="profileTotalTrans">0</p>
+                        <p class="stat-title">Transactions</p>
+                    </div>
+                </div>
+                <div class="quick-stat-item">
+                    <div class="stat-icon categories-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number" id="profileTotalCats">0</p>
+                        <p class="stat-title">Catégories</p>
+                    </div>
+                </div>
+                <div class="quick-stat-item">
+                    <div class="stat-icon months-icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p class="stat-number" id="profileActiveMonths">0</p>
+                        <p class="stat-title">Mois actifs</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="settings-section">
+                <h2>Paramètres</h2>
+                
+                <div class="settings-group">
+                    <h3>Apparence</h3>
+                    <div class="setting-item">
+                        <div class="setting-left">
+                            <i class="fas fa-moon"></i>
+                            <div class="setting-text">
+                                <span class="setting-title">Mode Sombre</span>
+                                <span class="setting-desc">Activez le mode nuit</span>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="profileThemeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Données</h3>
+                    <button class="setting-button" id="profileExportBtn">
+                        <i class="fas fa-download"></i>
+                        <div class="setting-text">
+                            <span class="setting-title">Importer / Exporter</span>
+                            <span class="setting-desc">Sauvegardez vos données</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="setting-button" id="profileEditBtn">
+                        <i class="fas fa-pen"></i>
+                        <div class="setting-text">
+                            <span class="setting-title">Éditer le Profil</span>
+                            <span class="setting-desc">Modifiez vos informations</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="settings-group">
+                    <h3>Aide</h3>
+                    <button class="setting-button" id="profileChangelogBtn">
+                        <i class="fas fa-history"></i>
+                        <div class="setting-text">
+                            <span class="setting-title">Changelogs</span>
+                            <span class="setting-desc">Voir les mises à jour</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <div class="settings-group" id="profileAdminSection" style="display: none;">
+                    <h3>Administration</h3>
+                    <button class="setting-button" id="profileAdminBtn">
+                        <i class="fas fa-user-shield"></i>
+                        <div class="setting-text">
+                            <span class="setting-title">Admin Panel</span>
+                            <span class="setting-desc">Gérer les utilisateurs</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+
+                    <button class="setting-button" id="profileTesterBtn">
+                        <i class="fas fa-flask"></i>
+                        <div class="setting-text">
+                            <span class="setting-title">Tester Panel</span>
+                            <span class="setting-desc">Outils de test</span>
+                        </div>
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Logout Button -->
+            <div class="logout-section">
+                <button class="btn-logout-large" id="profileLogoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-navbar" id="mobileNavbar" style="display: none;">
+        <button class="navbar-btn" data-page="statsPage">
+            <i class="fas fa-chart-bar"></i>
+            <span class="navbar-label">Stats</span>
+        </button>
+        <button class="navbar-btn active" data-page="homePage" title="Accueil">
+            <i class="fas fa-wallet"></i>
+            <span class="navbar-label">Finly</span>
+        </button>
+        <button class="navbar-btn" data-page="profilePage">
+            <i class="fas fa-user-circle"></i>
+            <span class="navbar-label">Profil</span>
+        </button>
+    </nav>
+
     <!-- Graphiques Section -->
     <section class="charts-section" id="chartsSection" style="display: none;">
         <div class="charts-container">

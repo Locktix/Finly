@@ -272,7 +272,13 @@ async function handleLogout() {
         currentUser = null;
         currentUserRole = 'membre';
         const adminBtn = document.getElementById('adminPanelBtn');
+        const testerBtn = document.getElementById('testerPanelBtn');
+        const profileAdminSection = document.getElementById('profileAdminSection');
+        
         if (adminBtn) adminBtn.style.display = 'none';
+        if (testerBtn) testerBtn.style.display = 'none';
+        if (profileAdminSection) profileAdminSection.style.display = 'none';
+        
         transactions = []; // Vider les transactions
         Toast.info('Déconnexion', 'À bientôt !');
         showAuthPage();
@@ -422,10 +428,13 @@ async function ensureUserProfile(user) {
 async function loadUserRole(user) {
     const adminBtn = document.getElementById('adminPanelBtn');
     const testerBtn = document.getElementById('testerPanelBtn');
+    const profileAdminSection = document.getElementById('profileAdminSection');
+    
     if (!user) {
         currentUserRole = 'membre';
         if (adminBtn) adminBtn.style.display = 'none';
         if (testerBtn) testerBtn.style.display = 'none';
+        if (profileAdminSection) profileAdminSection.style.display = 'none';
         const roleField = document.getElementById('profileRole');
         if (roleField) {
             roleField.value = 'membre';
@@ -437,6 +446,7 @@ async function loadUserRole(user) {
         currentUserRole = user.uid === ADMIN_UID ? 'Administrateur' : 'membre';
         if (adminBtn) adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
         if (testerBtn) testerBtn.style.display = 'none';
+        if (profileAdminSection) profileAdminSection.style.display = (currentUserRole === 'Administrateur') ? 'block' : 'none';
         const roleField = document.getElementById('profileRole');
         if (roleField) {
             roleField.value = currentUserRole || 'membre';
@@ -450,6 +460,7 @@ async function loadUserRole(user) {
         currentUserRole = role;
         if (adminBtn) adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
         if (testerBtn) testerBtn.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'flex' : 'none';
+        if (profileAdminSection) profileAdminSection.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'block' : 'none';
         const roleField = document.getElementById('profileRole');
         if (roleField) {
             roleField.value = currentUserRole || 'membre';
@@ -459,6 +470,7 @@ async function loadUserRole(user) {
         currentUserRole = user.uid === ADMIN_UID ? 'Administrateur' : 'membre';
         if (adminBtn) adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
         if (testerBtn) testerBtn.style.display = 'none';
+        if (profileAdminSection) profileAdminSection.style.display = (currentUserRole === 'Administrateur') ? 'block' : 'none';
         const roleField = document.getElementById('profileRole');
         if (roleField) {
             roleField.value = currentUserRole || 'membre';
@@ -513,8 +525,17 @@ async function loadAdminUsers() {
                         currentUserRole = newRole;
                         await loadProfileData();
                         const adminBtn = document.getElementById('adminPanelBtn');
+                        const testerBtn = document.getElementById('testerPanelBtn');
+                        const profileAdminSection = document.getElementById('profileAdminSection');
+                        
                         if (adminBtn) {
                             adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
+                        }
+                        if (testerBtn) {
+                            testerBtn.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'flex' : 'none';
+                        }
+                        if (profileAdminSection) {
+                            profileAdminSection.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'block' : 'none';
                         }
                     }
                     Toast.success('Rôle mis à jour', `${newRole}`);
@@ -1450,6 +1471,7 @@ let currentEditingType = null;
 // Instances des graphiques
 let expensesChartInstance = null;
 let incomeExpenseChartInstance = null;
+let balanceChartInstance = null;
 
 // ======================
 // INITIALISATION FIREBASE
@@ -3456,8 +3478,523 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('monthFilter').addEventListener('change', (e) => {
             handleMonthChange(e.target.value, selectedMonth || getSelectedMonth());
         });
+
+        // Initialiser la navigation mobile
+        initializeMobileApp();
     }
 });
+
+// ======================
+// MOBILE APP SYSTEM
+// ======================
+
+let currentMobilePage = 'homePage';
+let currentStatsPeriod = 'allTime';
+
+function initializeMobileApp() {
+    const navbar = document.getElementById('mobileNavbar');
+    const navButtons = document.querySelectorAll('.navbar-btn');
+
+    // Masquer tous les app-pages au démarrage
+    document.querySelectorAll('.app-page').forEach(page => page.style.display = 'none');
+
+    // Afficher la navbar mobile uniquement sur mobile
+    if (navbar && window.innerWidth <= 768) {
+        navbar.style.display = 'flex';
+    }
+
+    // Ajouter les événements de navigation
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const pageId = btn.getAttribute('data-page');
+            switchMobilePage(pageId);
+        });
+    });
+
+    // Initialiser les pages
+    setupStatsPageListeners();
+    setupProfilePageListeners();
+
+    // Par défaut, afficher la page d'accueil
+    switchMobilePage('homePage');
+}
+
+function switchMobilePage(pageId) {
+    // Masquer tous les app-pages
+    const pages = document.querySelectorAll('.app-page');
+    pages.forEach(page => page.style.display = 'none');
+
+    // Masquer le mainContainer
+    const mainContainer = document.getElementById('mainContainer');
+    if (mainContainer) {
+        mainContainer.style.display = 'none';
+    }
+
+    // Afficher la page appropriée
+    if (pageId === 'homePage') {
+        if (mainContainer) {
+            mainContainer.style.display = 'block';
+        }
+    } else {
+        const newPage = document.getElementById(pageId);
+        if (newPage) {
+            newPage.style.display = 'block';
+            
+            // Mettre à jour les données
+            if (pageId === 'statsPage') {
+                refreshStatsPage();
+            } else if (pageId === 'profilePage') {
+                refreshProfilePage();
+            }
+        }
+    }
+
+    // Mettre à jour le navbar actif
+    document.querySelectorAll('.navbar-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-page') === pageId) {
+            btn.classList.add('active');
+        }
+    });
+
+    currentMobilePage = pageId;
+}
+
+// ======================
+// STATISTICS PAGE
+// ======================
+
+function setupStatsPageListeners() {
+    const periodButtons = document.querySelectorAll('.period-btn');
+    
+    periodButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentStatsPeriod = btn.getAttribute('data-period');
+            updateStatsDisplay();
+        });
+    });
+}
+
+function refreshStatsPage() {
+    updateStatsDisplay();
+}
+
+function updateStatsDisplay() {
+    const stats = calculateAllStatistics(transactions, currentStatsPeriod);
+
+    // Mettre à jour les cartes principales
+    document.getElementById('statsAvgExpense').textContent = formatCurrency(stats.avgExpense);
+    document.getElementById('statsAvgExpenseValue').textContent = formatCurrency(stats.avgExpense);
+    document.getElementById('statsMinExpense').textContent = formatCurrency(stats.minExpense);
+    document.getElementById('statsMaxExpense').textContent = formatCurrency(stats.maxExpense);
+
+    document.getElementById('statsAvgIncome').textContent = formatCurrency(stats.avgIncome);
+    document.getElementById('statsAvgIncomeValue').textContent = formatCurrency(stats.avgIncome);
+    document.getElementById('statsMinIncome').textContent = formatCurrency(stats.minIncome);
+    document.getElementById('statsMaxIncome').textContent = formatCurrency(stats.maxIncome);
+
+    // Balance
+    const balance = stats.totalIncome - stats.totalExpense;
+    document.getElementById('statsBalance').textContent = formatCurrency(balance);
+    if (balance < 0) {
+        document.getElementById('statsBalance').style.color = 'var(--color-expense)';
+    } else {
+        document.getElementById('statsBalance').style.color = 'var(--color-income)';
+    }
+
+    // Categories
+    updateStatsByCategory(stats);
+    
+    // Update balance chart
+    updateBalanceChart(stats);
+}
+
+function updateBalanceChart(stats) {
+    const canvas = document.getElementById('balanceChart');
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    
+    // Préparer les données pour le graphique
+    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod);
+    
+    // Regrouper par date et calculer le solde cumulatif
+    const balanceData = [];
+    const labels = [];
+    let cumulativeBalance = 0;
+    
+    // Trier par date
+    const sorted = [...filtered].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // Calculer le solde jour par jour
+    const dailyData = {};
+    sorted.forEach(t => {
+        const date = t.date;
+        if (!dailyData[date]) {
+            dailyData[date] = 0;
+        }
+        const amount = t.type === 'income' ? t.amount : -t.amount;
+        dailyData[date] += amount;
+    });
+    
+    // Créer les points pour le graphique
+    const dates = Object.keys(dailyData).sort();
+    dates.forEach(date => {
+        cumulativeBalance += dailyData[date];
+        labels.push(new Date(date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+        balanceData.push(cumulativeBalance);
+    });
+    
+    // Si pas de données, afficher au moins le solde actuel
+    if (balanceData.length === 0) {
+        labels.push('Maintenant');
+        balanceData.push(stats.totalIncome - stats.totalExpense);
+    }
+    
+    if (balanceChartInstance) {
+        balanceChartInstance.destroy();
+    }
+    
+    balanceChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Solde',
+                data: balanceData,
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    callbacks: {
+                        label: function(context) {
+                            return 'Solde: ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return formatCurrency(value);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#9ca3af',
+                        maxRotation: 45,
+                        minRotation: 0
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateStatsByCategory(stats) {
+    const container = document.getElementById('categoriesStatsList');
+    container.innerHTML = '';
+
+    const sortedCategories = Object.entries(stats.byCategory)
+        .sort((a, b) => b[1].total - a[1].total);
+
+    sortedCategories.forEach(([name, data]) => {
+        const categoryDiv = document.createElement('div');
+        categoryDiv.className = 'category-item';
+
+        const icon = getCategoryIconClass(name);
+        const iconColor = data.type === 'income' ? 'income' : 'expense';
+
+        categoryDiv.innerHTML = `
+            <div class="category-left">
+                <div class="category-icon ${iconColor}">
+                    <i class="${icon}"></i>
+                </div>
+                <div class="category-text">
+                    <h4>${name}</h4>
+                    <p>${data.count} transaction${data.count > 1 ? 's' : ''}</p>
+                </div>
+            </div>
+            <div>
+                <div class="category-value ${iconColor}">${formatCurrency(data.avg)}</div>
+                <div style="font-size: 0.75rem; color: var(--color-text-tertiary); text-align: right;">
+                    ${formatCurrency(data.min)} - ${formatCurrency(data.max)}
+                </div>
+            </div>
+        `;
+        
+        container.appendChild(categoryDiv);
+    });
+}
+
+// ======================
+// PROFILE PAGE
+// ======================
+
+function setupProfilePageListeners() {
+    const themeToggle = document.getElementById('profileThemeToggle');
+    const exportBtn = document.getElementById('profileExportBtn');
+    const editBtn = document.getElementById('profileEditBtn');
+    const changelogBtn = document.getElementById('profileChangelogBtn');
+    const logoutBtn = document.getElementById('profileLogoutBtn');
+    const adminBtn = document.getElementById('profileAdminBtn');
+    const testerBtn = document.getElementById('profileTesterBtn');
+
+    if (themeToggle) {
+        themeToggle.addEventListener('change', () => {
+            document.getElementById('themeToggle').click();
+        });
+    }
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', () => {
+            document.getElementById('dataTransferBtn').click();
+        });
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            document.getElementById('profileBtn').click();
+        });
+    }
+
+    if (changelogBtn) {
+        changelogBtn.addEventListener('click', () => {
+            document.getElementById('changelogs-btn').click();
+        });
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            document.getElementById('logoutBtn').click();
+        });
+    }
+
+    if (adminBtn) {
+        adminBtn.addEventListener('click', async () => {
+            if (currentUserRole !== 'Administrateur') {
+                Toast.error('Accès refusé', 'Réservé aux administrateurs');
+                return;
+            }
+            const searchInput = document.getElementById('adminUserSearch');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+            await loadAdminUsers();
+            openModal('adminPanelModal');
+        });
+    }
+
+    if (testerBtn) {
+        testerBtn.addEventListener('click', () => {
+            if (currentUserRole !== 'Administrateur' && currentUserRole !== 'testeur') {
+                Toast.error('Accès refusé', 'Réservé aux testeurs et admins');
+                return;
+            }
+            testerOutputBuffer = [];
+            const output = document.getElementById('testerOutput');
+            if (output) {
+                output.classList.remove('active');
+                output.textContent = '';
+            }
+            openModal('testerPanelModal');
+        });
+    }
+}
+
+function refreshProfilePage() {
+    updateProfileDisplay();
+}
+
+function updateProfileDisplay() {
+    const user = firebase.auth().currentUser;
+
+    if (user) {
+        document.getElementById('profileDisplayName').textContent = user.displayName || 'Utilisateur';
+        document.getElementById('profileDisplayEmail').textContent = user.email || 'N/A';
+        const createdDate = new Date(user.metadata?.creationTime).toLocaleDateString('fr-FR', {
+            year: 'numeric',
+            month: 'long'
+        });
+        document.getElementById('profileMemberSince').textContent = `Membre depuis ${createdDate}`;
+    }
+
+    // Compter les transactions
+    document.getElementById('profileTotalTrans').textContent = transactions.length;
+
+    // Compter les catégories uniques
+    const categories = new Set();
+    const months = new Set();
+    transactions.forEach(t => {
+        if (t.category) categories.add(t.category);
+        const month = new Date(t.date).toISOString().slice(0, 7);
+        months.add(month);
+    });
+
+    document.getElementById('profileTotalCats').textContent = categories.size;
+    document.getElementById('profileActiveMonths').textContent = months.size;
+
+    // Mettre à jour le toggle du thème
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const themeToggle = document.getElementById('profileThemeToggle');
+    if (themeToggle) {
+        themeToggle.checked = isDark;
+    }
+}
+
+// ======================
+// STATISTICS CALCULATIONS
+// ======================
+
+function calculateAllStatistics(transactionsList, period = 'allTime') {
+    const filtered = filterTransactionsByPeriod(transactionsList, period);
+    
+    const expenses = filtered.filter(t => t.type === 'expense');
+    const incomes = filtered.filter(t => t.type === 'income');
+
+    const stats = {
+        avgExpense: 0,
+        maxExpense: 0,
+        minExpense: 0,
+        totalExpense: 0,
+        avgIncome: 0,
+        maxIncome: 0,
+        minIncome: 0,
+        totalIncome: 0,
+        byCategory: {}
+    };
+
+    // Dépenses
+    if (expenses.length > 0) {
+        const amounts = expenses.map(e => e.amount);
+        stats.totalExpense = amounts.reduce((a, b) => a + b, 0);
+        stats.avgExpense = stats.totalExpense / amounts.length;
+        stats.maxExpense = Math.max(...amounts);
+        stats.minExpense = Math.min(...amounts);
+    }
+
+    // Recettes
+    if (incomes.length > 0) {
+        const amounts = incomes.map(i => i.amount);
+        stats.totalIncome = amounts.reduce((a, b) => a + b, 0);
+        stats.avgIncome = stats.totalIncome / amounts.length;
+        stats.maxIncome = Math.max(...amounts);
+        stats.minIncome = Math.min(...amounts);
+    }
+
+    // Par catégorie
+    filtered.forEach(transaction => {
+        const cat = transaction.category || 'Non catégorisé';
+        if (!stats.byCategory[cat]) {
+            stats.byCategory[cat] = {
+                total: 0,
+                count: 0,
+                amounts: [],
+                type: transaction.type
+            };
+        }
+        stats.byCategory[cat].total += transaction.amount;
+        stats.byCategory[cat].count += 1;
+        stats.byCategory[cat].amounts.push(transaction.amount);
+    });
+
+    // Calculer moyennes, min, max par catégorie
+    Object.keys(stats.byCategory).forEach(cat => {
+        const catData = stats.byCategory[cat];
+        const amounts = catData.amounts;
+        catData.avg = amounts.length > 0 ? amounts.reduce((a, b) => a + b, 0) / amounts.length : 0;
+        catData.min = amounts.length > 0 ? Math.min(...amounts) : 0;
+        catData.max = amounts.length > 0 ? Math.max(...amounts) : 0;
+    });
+
+    return stats;
+}
+
+function filterTransactionsByPeriod(transactionsList, period) {
+    const today = new Date();
+    const filtered = [];
+
+    transactionsList.forEach(t => {
+        const date = new Date(t.date);
+        let include = false;
+
+        switch(period) {
+            case 'allTime':
+                include = true;
+                break;
+            case 'year':
+                // 12 derniers mois
+                const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
+                include = date >= oneYearAgo && date <= today;
+                break;
+            case 'month':
+                // Ce mois
+                include = date.getMonth() === today.getMonth() &&
+                         date.getFullYear() === today.getFullYear();
+                break;
+            case 'week':
+                // 7 derniers jours
+                const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+                include = date >= sevenDaysAgo && date <= today;
+                break;
+        }
+
+        if (include) {
+            filtered.push(t);
+        }
+    });
+
+    return filtered;
+}
+
+function getCategoryIconClass(category) {
+    const iconMap = {
+        'Salaire': 'fas fa-briefcase',
+        'Revenus': 'fas fa-coins',
+        'Épargne': 'fas fa-piggy-bank',
+        'Assurances': 'fas fa-shield-alt',
+        'Magasins': 'fas fa-shopping-bag',
+        'Loisirs': 'fas fa-gamepad',
+        'Transport': 'fas fa-bus',
+        'Santé': 'fas fa-heart',
+        'Restaurants': 'fas fa-utensils',
+        'Abonnements': 'fas fa-subscript',
+        'Factures': 'fas fa-file-invoice',
+        'FastFood': 'fas fa-hamburger',
+        'Services': 'fas fa-tools',
+        'Autres': 'fas fa-tag'
+    };
+    return iconMap[category] || 'fas fa-circle';
+}
 
 // Sauvegarder automatiquement les transactions locales quand elles changent
 window.addEventListener('beforeunload', () => {
