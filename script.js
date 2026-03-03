@@ -3490,33 +3490,93 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 let currentMobilePage = 'homePage';
 let currentStatsPeriod = 'allTime';
+let mobileAppInitialized = false;
+let responsiveListenersInitialized = false;
 
-function initializeMobileApp() {
+function isMobileViewport() {
+    return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function updateViewportCssVariable() {
+    const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    const vh = viewportHeight * 0.01;
+    document.documentElement.style.setProperty('--app-vh', `${vh}px`);
+}
+
+function applyResponsiveLayoutState() {
     const navbar = document.getElementById('mobileNavbar');
-    const navButtons = document.querySelectorAll('.navbar-btn');
+    const appPages = document.querySelectorAll('.app-page');
+    const mainContainer = document.getElementById('mainContainer');
+    const mobile = isMobileViewport();
 
-    // Masquer tous les app-pages au démarrage
-    document.querySelectorAll('.app-page').forEach(page => page.style.display = 'none');
-
-    // Afficher la navbar mobile uniquement sur mobile
-    if (navbar && window.innerWidth <= 768) {
-        navbar.style.display = 'flex';
+    if (navbar) {
+        navbar.style.display = mobile ? 'flex' : 'none';
     }
 
-    // Ajouter les événements de navigation
-    navButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const pageId = btn.getAttribute('data-page');
-            switchMobilePage(pageId);
+    if (!mobile) {
+        appPages.forEach(page => {
+            page.style.display = 'none';
         });
-    });
 
-    // Initialiser les pages
-    setupStatsPageListeners();
-    setupProfilePageListeners();
+        if (mainContainer) {
+            mainContainer.style.display = 'block';
+        }
 
-    // Par défaut, afficher la page d'accueil
-    switchMobilePage('homePage');
+        currentMobilePage = 'homePage';
+        document.querySelectorAll('.navbar-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-page') === 'homePage');
+        });
+        return;
+    }
+
+    if (currentMobilePage && currentMobilePage !== 'homePage') {
+        switchMobilePage(currentMobilePage);
+    } else {
+        switchMobilePage('homePage');
+    }
+}
+
+function setupResponsiveListeners() {
+    if (responsiveListenersInitialized) {
+        return;
+    }
+
+    const handleViewportChange = debounce(() => {
+        updateViewportCssVariable();
+        applyResponsiveLayoutState();
+    }, 120);
+
+    window.addEventListener('resize', handleViewportChange, { passive: true });
+    window.addEventListener('orientationchange', handleViewportChange, { passive: true });
+
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleViewportChange, { passive: true });
+    }
+
+    responsiveListenersInitialized = true;
+}
+
+function initializeMobileApp() {
+    const navButtons = document.querySelectorAll('.navbar-btn');
+
+    if (!mobileAppInitialized) {
+        // Ajouter les événements de navigation
+        navButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pageId = btn.getAttribute('data-page');
+                switchMobilePage(pageId);
+            });
+        });
+
+        // Initialiser les pages
+        setupStatsPageListeners();
+        setupProfilePageListeners();
+        mobileAppInitialized = true;
+    }
+
+    updateViewportCssVariable();
+    applyResponsiveLayoutState();
+    setupResponsiveListeners();
 }
 
 function switchMobilePage(pageId) {
