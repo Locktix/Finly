@@ -145,6 +145,22 @@
                 <span>Finly</span>
             </div>
 
+            <!-- Desktop Navigation Menu -->
+            <nav class="desktop-nav" id="desktopNav">
+                <button class="desktop-nav-btn active" data-page="homePage">
+                    <i class="fas fa-home"></i>
+                    <span>Accueil</span>
+                </button>
+                <button class="desktop-nav-btn" data-page="statsPage">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Statistiques</span>
+                </button>
+                <button class="desktop-nav-btn" data-page="profilePage">
+                    <i class="fas fa-user-circle"></i>
+                    <span>Profil</span>
+                </button>
+            </nav>
+
             <!-- Settings Menu -->
             <div class="settings-menu-wrapper">
                 <button class="settings-menu-btn" id="settingsBtn" title="Paramètres">
@@ -525,61 +541,95 @@
                 </button>
             </div>
 
-            <!-- Key Stats Cards -->
-            <div class="key-stats">
-                <div class="stat-card-large">
-                    <div class="stat-card-header">
-                        <i class="fas fa-arrow-up expense-icon"></i>
-                        <h3>Dépenses</h3>
+            <!-- Vue d'ensemble -->
+            <div class="stats-overview">
+                <div class="overview-card">
+                    <div class="overview-icon expense-bg">
+                        <i class="fas fa-arrow-down"></i>
                     </div>
-                    <div class="stat-card-body">
-                        <div class="stat-main" id="statsAvgExpense">0,00 €</div>
-                        <div class="stat-row">
-                            <span class="stat-label">Moyenne</span>
-                            <span class="stat-value" id="statsAvgExpenseValue">0,00 €</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Min</span>
-                            <span class="stat-value" id="statsMinExpense">0,00 €</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Max</span>
-                            <span class="stat-value expense" id="statsMaxExpense">0,00 €</span>
-                        </div>
+                    <div class="overview-content">
+                        <span class="overview-label">Total Dépenses</span>
+                        <span class="overview-value expense-text" id="statsAvgExpense">0,00 €</span>
                     </div>
                 </div>
-
-                <div class="stat-card-large">
-                    <div class="stat-card-header income-header">
-                        <i class="fas fa-arrow-down income-icon"></i>
-                        <h3>Recettes</h3>
+                <div class="overview-card">
+                    <div class="overview-icon income-bg">
+                        <i class="fas fa-arrow-up"></i>
                     </div>
-                    <div class="stat-card-body">
-                        <div class="stat-main income" id="statsAvgIncome">0,00 €</div>
-                        <div class="stat-row">
-                            <span class="stat-label">Moyenne</span>
-                            <span class="stat-value" id="statsAvgIncomeValue">0,00 €</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Min</span>
-                            <span class="stat-value" id="statsMinIncome">0,00 €</span>
-                        </div>
-                        <div class="stat-row">
-                            <span class="stat-label">Max</span>
-                            <span class="stat-value income" id="statsMaxIncome">0,00 €</span>
-                        </div>
+                    <div class="overview-content">
+                        <span class="overview-label">Total Recettes</span>
+                        <span class="overview-value income-text" id="statsAvgIncome">0,00 €</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-icon balance-bg">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="overview-content">
+                        <span class="overview-label">Balance</span>
+                        <span class="overview-value" id="statsBalance">0,00 €</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="overview-icon transactions-bg">
+                        <i class="fas fa-exchange-alt"></i>
+                    </div>
+                    <div class="overview-content">
+                        <span class="overview-label">Transactions</span>
+                        <span class="overview-value" id="statsTransactionCount">0</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Balance Card -->
-            <div class="balance-card">
-                <div class="balance-content">
-                    <span class="balance-label">Balance</span>
-                    <span class="balance-value" id="statsBalance">0,00 €</span>
-                </div>
+            <!-- Balance Evolution Chart -->
+            <div class="chart-card">
+                <h3 class="chart-title">
+                    <i class="fas fa-chart-area"></i>
+                    Évolution de la balance
+                </h3>
                 <div class="balance-chart">
                     <canvas id="balanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Stats détaillées -->
+            <div class="detailed-stats">
+                <div class="stat-detail-card">
+                    <div class="stat-detail-header expense-header">
+                        <i class="fas fa-calculator"></i>
+                        <span>Détails Dépenses</span>
+                    </div>
+                    <div class="stat-detail-row">
+                        <span>Moyenne par transaction</span>
+                        <span id="statsAvgExpenseValue">0,00 €</span>
+                    </div>
+                    <div class="stat-detail-row">
+                        <span>Plus petite</span>
+                        <span id="statsMinExpense">0,00 €</span>
+                    </div>
+                    <div class="stat-detail-row">
+                        <span>Plus grande</span>
+                        <span id="statsMaxExpense">0,00 €</span>
+                    </div>
+                </div>
+
+                <div class="stat-detail-card">
+                    <div class="stat-detail-header income-header">
+                        <i class="fas fa-calculator"></i>
+                        <span>Détails Recettes</span>
+                    </div>
+                    <div class="stat-detail-row">
+                        <span>Moyenne par transaction</span>
+                        <span id="statsAvgIncomeValue">0,00 €</span>
+                    </div>
+                    <div class="stat-detail-row">
+                        <span>Plus petite</span>
+                        <span id="statsMinIncome">0,00 €</span>
+                    </div>
+                    <div class="stat-detail-row">
+                        <span>Plus grande</span>
+                        <span id="statsMaxIncome">0,00 €</span>
+                    </div>
                 </div>
             </div>
 

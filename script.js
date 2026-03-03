@@ -3567,11 +3567,12 @@ function applyResponsiveLayoutState() {
     }
 
     if (!mobile) {
-        // En mode desktop, afficher le mainContainer
-        currentMobilePage = 'homePage';
-        document.querySelectorAll('.navbar-btn').forEach(btn => {
-            btn.classList.toggle('active', btn.getAttribute('data-page') === 'homePage');
-        });
+        // En mode desktop, s'assurer que la page actuelle est affichée correctement
+        if (currentMobilePage && currentMobilePage !== 'homePage') {
+            switchPage(currentMobilePage);
+        } else {
+            switchPage('homePage');
+        }
         return;
     }
 
@@ -3619,14 +3620,23 @@ function setupResponsiveListeners() {
 }
 
 function initializeMobileApp() {
-    const navButtons = document.querySelectorAll('.navbar-btn');
+    const mobileNavButtons = document.querySelectorAll('.navbar-btn');
+    const desktopNavButtons = document.querySelectorAll('.desktop-nav-btn');
 
     if (!mobileAppInitialized) {
-        // Ajouter les événements de navigation
-        navButtons.forEach(btn => {
+        // Ajouter les événements de navigation mobile
+        mobileNavButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 const pageId = btn.getAttribute('data-page');
-                switchMobilePage(pageId);
+                switchPage(pageId);
+            });
+        });
+
+        // Ajouter les événements de navigation desktop
+        desktopNavButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pageId = btn.getAttribute('data-page');
+                switchPage(pageId);
             });
         });
 
@@ -3641,21 +3651,29 @@ function initializeMobileApp() {
     setupResponsiveListeners();
 }
 
-function switchMobilePage(pageId) {
+function switchPage(pageId) {
     // Retirer la classe active de toutes les pages
     const pages = document.querySelectorAll('.app-page');
     pages.forEach(page => page.classList.remove('active-page'));
 
-    // Retirer la classe active du mainContainer
+    // Retirer la classe active du mainContainer et chartsSection
     const mainContainer = document.getElementById('mainContainer');
+    const chartsSection = document.getElementById('chartsSection');
+    
     if (mainContainer) {
         mainContainer.classList.remove('active-page');
+    }
+    if (chartsSection) {
+        chartsSection.classList.remove('active-page');
     }
 
     // Afficher la page appropriée
     if (pageId === 'homePage') {
         if (mainContainer) {
             mainContainer.classList.add('active-page');
+        }
+        if (chartsSection) {
+            chartsSection.classList.add('active-page');
         }
     } else {
         const newPage = document.getElementById(pageId);
@@ -3671,7 +3689,7 @@ function switchMobilePage(pageId) {
         }
     }
 
-    // Mettre à jour le navbar actif
+    // Mettre à jour les boutons de navigation mobile
     document.querySelectorAll('.navbar-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.getAttribute('data-page') === pageId) {
@@ -3679,7 +3697,20 @@ function switchMobilePage(pageId) {
         }
     });
 
+    // Mettre à jour les boutons de navigation desktop
+    document.querySelectorAll('.desktop-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.getAttribute('data-page') === pageId) {
+            btn.classList.add('active');
+        }
+    });
+
     currentMobilePage = pageId;
+}
+
+// Alias pour compatibilité
+function switchMobilePage(pageId) {
+    switchPage(pageId);
 }
 
 // ======================
@@ -3705,26 +3736,33 @@ function refreshStatsPage() {
 
 function updateStatsDisplay() {
     const stats = calculateAllStatistics(transactions, currentStatsPeriod);
+    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod);
 
-    // Mettre à jour les cartes principales
-    document.getElementById('statsAvgExpense').textContent = formatCurrency(stats.avgExpense);
+    // Vue d'ensemble - Totaux
+    document.getElementById('statsAvgExpense').textContent = formatCurrency(stats.totalExpense);
+    document.getElementById('statsAvgIncome').textContent = formatCurrency(stats.totalIncome);
+    
+    // Balance
+    const balance = stats.totalIncome - stats.totalExpense;
+    document.getElementById('statsBalance').textContent = formatCurrency(balance);
+    const balanceElement = document.getElementById('statsBalance');
+    if (balance < 0) {
+        balanceElement.style.color = 'var(--color-expense)';
+    } else {
+        balanceElement.style.color = 'var(--color-income)';
+    }
+    
+    // Nombre de transactions
+    document.getElementById('statsTransactionCount').textContent = filtered.length;
+
+    // Détails - Moyennes, Min, Max
     document.getElementById('statsAvgExpenseValue').textContent = formatCurrency(stats.avgExpense);
     document.getElementById('statsMinExpense').textContent = formatCurrency(stats.minExpense);
     document.getElementById('statsMaxExpense').textContent = formatCurrency(stats.maxExpense);
 
-    document.getElementById('statsAvgIncome').textContent = formatCurrency(stats.avgIncome);
     document.getElementById('statsAvgIncomeValue').textContent = formatCurrency(stats.avgIncome);
     document.getElementById('statsMinIncome').textContent = formatCurrency(stats.minIncome);
     document.getElementById('statsMaxIncome').textContent = formatCurrency(stats.maxIncome);
-
-    // Balance
-    const balance = stats.totalIncome - stats.totalExpense;
-    document.getElementById('statsBalance').textContent = formatCurrency(balance);
-    if (balance < 0) {
-        document.getElementById('statsBalance').style.color = 'var(--color-expense)';
-    } else {
-        document.getElementById('statsBalance').style.color = 'var(--color-income)';
-    }
 
     // Categories
     updateStatsByCategory(stats);
@@ -3849,32 +3887,127 @@ function updateStatsByCategory(stats) {
     const sortedCategories = Object.entries(stats.byCategory)
         .sort((a, b) => b[1].total - a[1].total);
 
+    // Filtrer les transactions pour la période actuelle
+    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod);
+
     sortedCategories.forEach(([name, data]) => {
         const categoryDiv = document.createElement('div');
         categoryDiv.className = 'category-item';
+        let currentSort = 'date'; // Par défaut : tri par date
 
         const icon = getCategoryIconClass(name);
         const iconColor = data.type === 'income' ? 'income' : 'expense';
 
+        // Récupérer les transactions de cette catégorie
+        let categoryTransactions = filtered.filter(t => 
+            (t.category || 'Non catégorisé') === name
+        );
+
+        // Fonction pour trier les transactions
+        const sortTransactions = (sortType) => {
+            let sorted = [...categoryTransactions];
+            switch(sortType) {
+                case 'date':
+                    sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    break;
+                case 'amount-asc':
+                    sorted.sort((a, b) => a.amount - b.amount);
+                    break;
+                case 'amount-desc':
+                    sorted.sort((a, b) => b.amount - a.amount);
+                    break;
+            }
+            return sorted;
+        };
+
+        // Fonction pour rendre les transactions
+        const renderTransactions = (sortType) => {
+            currentSort = sortType;
+            const sorted = sortTransactions(sortType);
+            const transactionsContainer = categoryDiv.querySelector('.category-transactions-list');
+            
+            transactionsContainer.innerHTML = sorted.length > 0 ? 
+                sorted.map(t => `
+                    <div class="category-transaction-item">
+                        <div class="category-transaction-left">
+                            <div class="category-transaction-desc">${t.description || 'Sans description'}</div>
+                            <div class="category-transaction-date">${new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                        </div>
+                        <div class="category-transaction-amount ${iconColor}">
+                            ${formatCurrency(t.amount)}
+                        </div>
+                    </div>
+                `).join('') : 
+                '<div class="category-dropdown-empty">Aucune transaction</div>';
+            
+            // Mettre à jour les boutons actifs
+            categoryDiv.querySelectorAll('.category-sort-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-sort') === sortType) {
+                    btn.classList.add('active');
+                }
+            });
+        };
+
         categoryDiv.innerHTML = `
-            <div class="category-left">
-                <div class="category-icon ${iconColor}">
-                    <i class="${icon}"></i>
+            <div class="category-item-header">
+                <div class="category-left">
+                    <div class="category-icon ${iconColor}">
+                        <i class="${icon}"></i>
+                    </div>
+                    <div class="category-text">
+                        <h4>${name}</h4>
+                        <p>${data.count} transaction${data.count > 1 ? 's' : ''}</p>
+                    </div>
                 </div>
-                <div class="category-text">
-                    <h4>${name}</h4>
-                    <p>${data.count} transaction${data.count > 1 ? 's' : ''}</p>
+                <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
+                    <div>
+                        <div class="category-value ${iconColor}">${formatCurrency(data.avg)}</div>
+                        <div style="font-size: 0.75rem; color: var(--color-text-tertiary); text-align: right;">
+                            ${formatCurrency(data.min)} - ${formatCurrency(data.max)}
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-down category-chevron"></i>
                 </div>
             </div>
-            <div>
-                <div class="category-value ${iconColor}">${formatCurrency(data.avg)}</div>
-                <div style="font-size: 0.75rem; color: var(--color-text-tertiary); text-align: right;">
-                    ${formatCurrency(data.min)} - ${formatCurrency(data.max)}
+            <div class="category-dropdown">
+                <div class="category-sort-header">
+                    <button class="category-sort-btn active" data-sort="date" title="Tri par date">
+                        <i class="fas fa-calendar"></i>
+                        <span>Date</span>
+                    </button>
+                    <button class="category-sort-btn" data-sort="amount-asc" title="Du moins cher au plus cher">
+                        <i class="fas fa-sort-amount-up"></i>
+                        <span>Prix ↑</span>
+                    </button>
+                    <button class="category-sort-btn" data-sort="amount-desc" title="Du plus cher au moins cher">
+                        <i class="fas fa-sort-amount-down"></i>
+                        <span>Prix ↓</span>
+                    </button>
                 </div>
+                <div class="category-transactions-list"></div>
             </div>
         `;
         
+        // Ajouter l'event listener pour le toggle
+        const header = categoryDiv.querySelector('.category-item-header');
+        header.addEventListener('click', () => {
+            categoryDiv.classList.toggle('expanded');
+        });
+        
+        // Ajouter les event listeners pour le tri
+        categoryDiv.querySelectorAll('.category-sort-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const sortType = btn.getAttribute('data-sort');
+                renderTransactions(sortType);
+            });
+        });
+        
         container.appendChild(categoryDiv);
+        
+        // Rendu initial avec tri par date
+        renderTransactions('date');
     });
 }
 
