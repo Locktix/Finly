@@ -794,8 +794,10 @@ function hideAppLoader() {
         appLoaderTimeout = null;
     }
     
-    if (loader && body.classList.contains('loading')) {
-        body.classList.remove('loading');
+    // Toujours retirer l'état loading pour éviter tout écran bloqué
+    body.classList.remove('loading');
+
+    if (loader) {
         loader.classList.add('fade-out');
         setTimeout(() => {
             loader.remove();
@@ -805,17 +807,49 @@ function hideAppLoader() {
 
 function showAuthPage() {
     hideAppLoader();
-    document.getElementById('authPage').style.display = 'flex';
-    document.getElementById('mainHeader').style.display = 'none';
-    document.getElementById('mainFooter').style.display = 'none';
-    document.getElementById('chartsSection').style.display = 'none';
+    const authPage = document.getElementById('authPage');
+    const mainHeader = document.getElementById('mainHeader');
+    const mainFooter = document.getElementById('mainFooter');
+    const chartsSection = document.getElementById('chartsSection');
+    const mainContainer = document.getElementById('mainContainer');
+    const mobileNavbar = document.getElementById('mobileNavbar');
+
+    if (authPage) authPage.style.display = 'flex';
+    if (mainHeader) mainHeader.style.display = 'none';
+    if (mainFooter) mainFooter.style.display = 'none';
+    if (chartsSection) {
+        chartsSection.style.display = 'none';
+        chartsSection.classList.remove('active-page');
+    }
+    if (mainContainer) {
+        mainContainer.style.display = 'none';
+        mainContainer.classList.remove('active-page');
+    }
+    if (mobileNavbar) mobileNavbar.style.display = 'none';
+
+    document.querySelectorAll('.app-page').forEach(page => {
+        page.style.display = 'none';
+        page.classList.remove('active-page');
+    });
     
     // Retirer les classes de layout pour que les pages ne soient pas affichées
     document.body.classList.remove('mobile-layout', 'desktop-layout');
+
+    // Fermer toute modale ouverte
+    document.querySelectorAll('.modal.active').forEach(modal => {
+        modal.classList.remove('active');
+    });
+    document.body.style.overflow = 'auto';
 }
 
 function showDashboard() {
     hideAppLoader();
+    // Sécurité : fermer les overlays éventuels qui peuvent bloquer les clics
+    document.querySelectorAll('.modal.active').forEach(modal => {
+        modal.classList.remove('active');
+    });
+    document.body.style.overflow = 'auto';
+
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainHeader').style.display = 'block';
     document.getElementById('mainFooter').style.display = 'block';
@@ -3606,7 +3640,51 @@ function updateViewportCssVariable() {
     document.documentElement.style.setProperty('--app-vh', `${vh}px`);
 }
 
+function isAuthenticatedSession() {
+    if (currentUser) {
+        return true;
+    }
+
+    try {
+        const hasFirebaseApp = typeof firebase !== 'undefined' && Array.isArray(firebase.apps) && firebase.apps.length > 0;
+        if (!hasFirebaseApp || typeof firebase.auth !== 'function') {
+            return false;
+        }
+
+        return !!firebase.auth().currentUser;
+    } catch (error) {
+        return false;
+    }
+}
+
 function applyResponsiveLayoutState() {
+    if (!isAuthenticatedSession()) {
+        document.body.classList.remove('mobile-layout', 'desktop-layout');
+
+        const mainContainer = document.getElementById('mainContainer');
+        const chartsSection = document.getElementById('chartsSection');
+        const mobileNavbar = document.getElementById('mobileNavbar');
+
+        if (mainContainer) {
+            mainContainer.classList.remove('active-page');
+            mainContainer.style.display = 'none';
+        }
+        if (chartsSection) {
+            chartsSection.classList.remove('active-page');
+            chartsSection.style.display = 'none';
+        }
+        if (mobileNavbar) {
+            mobileNavbar.style.display = 'none';
+        }
+
+        document.querySelectorAll('.app-page').forEach(page => {
+            page.classList.remove('active-page');
+            page.style.display = 'none';
+        });
+
+        return;
+    }
+
     const mobile = isMobileViewport();
     
     // Ajouter/retirer la classe mobile-layout sur le body
@@ -3704,6 +3782,10 @@ function initializeMobileApp() {
 }
 
 function switchPage(pageId) {
+    if (!isAuthenticatedSession()) {
+        return;
+    }
+
     // Retirer la classe active de toutes les pages
     const pages = document.querySelectorAll('.app-page');
     pages.forEach(page => page.classList.remove('active-page'));

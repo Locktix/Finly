@@ -1,6 +1,19 @@
 {
   "versions": [
     {
+      "version": "1.7.0",
+      "date": "2026-03-03",
+      "title": "Refonte Navigation & Expérience Multi-Écrans",
+      "changes": [
+        "🧭 Ajout d'une navigation desktop dédiée et consolidation de la navigation mobile par pages (Accueil / Statistiques / Profil)",
+        "📱 Refonte de l'interface mobile des pages Stats et Profil pour une expérience plus claire et cohérente",
+        "🖥️ Amélioration du responsive global avec correction du viewport mobile et refactor de la logique d'adaptation d'affichage",
+        "🚀 Ajout d'un écran de chargement initial (loader) et optimisation du cycle d'initialisation de l'application",
+        "📊 Refonte visuelle de la section statistiques et amélioration des contrôles de tri des transactions par catégorie",
+        "🎨 Passe de polish UI sur plusieurs composants (modales, sélecteurs de période, détails visuels)"
+      ]
+    },
+    {
       "version": "1.6.0",
       "date": "2026-03-01",
       "title": "Refonte Filtres & Ajustements Navigation Mensuelle",
