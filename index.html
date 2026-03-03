@@ -13,12 +13,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="loading">
+    <!-- Initial Loading Screen -->
+    <div id="appLoader" class="app-loader">
+        <div class="loader-content">
+            <i class="fas fa-wallet loader-icon"></i>
+            <h1>Finly</h1>
+            <div class="loader-spinner"></div>
+        </div>
+    </div>
+
     <!-- Toast Notifications Container -->
     <div id="toastContainer" class="toast-container"></div>
 
     <!-- Page de Connexion/Inscription -->
-    <div id="authPage" class="auth-page">
+    <div id="authPage" class="auth-page" style="display: none;">
         <div class="auth-container">
             <div class="auth-box">
                 <div class="auth-logo">

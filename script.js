@@ -1,4 +1,19 @@
 // ======================
+// UTILITY FUNCTIONS
+// ======================
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// ======================
 // TOAST NOTIFICATIONS SYSTEM
 // ======================
 const Toast = {
@@ -147,6 +162,7 @@ const ADMIN_UID = '6aqDFLL8obNSdUKoAmdnm9kgMEg2';
 const ROLE_OPTIONS = ['Administrateur', 'testeur', 'membre'];
 let adminUsersCache = [];
 let testerOutputBuffer = [];
+let appLoaderTimeout = null;
 
 function setupAuthListeners() {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
@@ -753,20 +769,45 @@ async function handleProfileUpdate(e) {
     }
 }
 
+function hideAppLoader() {
+    const loader = document.getElementById('appLoader');
+    const body = document.body;
+    
+    // Clear le timeout de sécurité s'il existe
+    if (appLoaderTimeout) {
+        clearTimeout(appLoaderTimeout);
+        appLoaderTimeout = null;
+    }
+    
+    if (loader && body.classList.contains('loading')) {
+        body.classList.remove('loading');
+        loader.classList.add('fade-out');
+        setTimeout(() => {
+            loader.remove();
+        }, 300);
+    }
+}
+
 function showAuthPage() {
+    hideAppLoader();
     document.getElementById('authPage').style.display = 'flex';
     document.getElementById('mainHeader').style.display = 'none';
-    document.getElementById('mainContainer').style.display = 'none';
     document.getElementById('mainFooter').style.display = 'none';
     document.getElementById('chartsSection').style.display = 'none';
+    
+    // Retirer les classes de layout pour que les pages ne soient pas affichées
+    document.body.classList.remove('mobile-layout', 'desktop-layout');
 }
 
 function showDashboard() {
+    hideAppLoader();
     document.getElementById('authPage').style.display = 'none';
     document.getElementById('mainHeader').style.display = 'block';
-    document.getElementById('mainContainer').style.display = 'block';
     document.getElementById('mainFooter').style.display = 'block';
     document.getElementById('chartsSection').style.display = 'block';
+
+    // Appliquer l'état responsive
+    applyResponsiveLayoutState();
 
     // Afficher le mois courant
     updateMonthDisplay();
@@ -1500,8 +1541,7 @@ async function initializeFirebase() {
 function useLocalStorage() {
     console.log('Utilisation du mode local (localStorage)');
     db = null;
-    loadTransactionsFromLocal();
-    updateDashboard();
+    // Ne pas charger les données ici, attendre checkAuthState
 }
 
 // ======================
@@ -3417,6 +3457,17 @@ function updateIncomeExpenseChart() {
 // INITIALISATION AU CHARGEMENT
 // ======================
 document.addEventListener('DOMContentLoaded', async () => {
+    // Appliquer l'état responsive immédiatement
+    applyResponsiveLayoutState();
+    setupResponsiveListeners();
+    
+    // Timeout de sécurité pour retirer le loader si quelque chose tourne mal
+    appLoaderTimeout = setTimeout(() => {
+        console.warn('Timeout du loader - retrait forcé');
+        hideAppLoader();
+        showAuthPage();
+    }, 10000); // 10 secondes maximum
+    
     // Initialiser le thème
     initializeTheme();
 
@@ -3504,24 +3555,19 @@ function updateViewportCssVariable() {
 }
 
 function applyResponsiveLayoutState() {
-    const navbar = document.getElementById('mobileNavbar');
-    const appPages = document.querySelectorAll('.app-page');
-    const mainContainer = document.getElementById('mainContainer');
     const mobile = isMobileViewport();
-
-    if (navbar) {
-        navbar.style.display = mobile ? 'flex' : 'none';
+    
+    // Ajouter/retirer la classe mobile-layout sur le body
+    if (mobile) {
+        document.body.classList.add('mobile-layout');
+        document.body.classList.remove('desktop-layout');
+    } else {
+        document.body.classList.add('desktop-layout');
+        document.body.classList.remove('mobile-layout');
     }
 
     if (!mobile) {
-        appPages.forEach(page => {
-            page.style.display = 'none';
-        });
-
-        if (mainContainer) {
-            mainContainer.style.display = 'block';
-        }
-
+        // En mode desktop, afficher le mainContainer
         currentMobilePage = 'homePage';
         document.querySelectorAll('.navbar-btn').forEach(btn => {
             btn.classList.toggle('active', btn.getAttribute('data-page') === 'homePage');
@@ -3529,6 +3575,7 @@ function applyResponsiveLayoutState() {
         return;
     }
 
+    // En mode mobile, gérer les pages
     if (currentMobilePage && currentMobilePage !== 'homePage') {
         switchMobilePage(currentMobilePage);
     } else {
@@ -3546,11 +3593,26 @@ function setupResponsiveListeners() {
         applyResponsiveLayoutState();
     }, 120);
 
+    // Écouter les changements de resize
     window.addEventListener('resize', handleViewportChange, { passive: true });
     window.addEventListener('orientationchange', handleViewportChange, { passive: true });
 
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleViewportChange, { passive: true });
+    }
+
+    // Écouter les changements de media query (pour les devtools)
+    const mediaQuery = window.matchMedia('(max-width: 768px)');
+    const handleMediaQueryChange = (e) => {
+        updateViewportCssVariable();
+        applyResponsiveLayoutState();
+    };
+    
+    // Ancien navigateurs
+    if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleMediaQueryChange);
+    } else {
+        mediaQuery.addListener(handleMediaQueryChange);
     }
 
     responsiveListenersInitialized = true;
@@ -3580,25 +3642,25 @@ function initializeMobileApp() {
 }
 
 function switchMobilePage(pageId) {
-    // Masquer tous les app-pages
+    // Retirer la classe active de toutes les pages
     const pages = document.querySelectorAll('.app-page');
-    pages.forEach(page => page.style.display = 'none');
+    pages.forEach(page => page.classList.remove('active-page'));
 
-    // Masquer le mainContainer
+    // Retirer la classe active du mainContainer
     const mainContainer = document.getElementById('mainContainer');
     if (mainContainer) {
-        mainContainer.style.display = 'none';
+        mainContainer.classList.remove('active-page');
     }
 
     // Afficher la page appropriée
     if (pageId === 'homePage') {
         if (mainContainer) {
-            mainContainer.style.display = 'block';
+            mainContainer.classList.add('active-page');
         }
     } else {
         const newPage = document.getElementById(pageId);
         if (newPage) {
-            newPage.style.display = 'block';
+            newPage.classList.add('active-page');
             
             // Mettre à jour les données
             if (pageId === 'statsPage') {
