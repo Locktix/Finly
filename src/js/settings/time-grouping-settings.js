@@ -2,21 +2,21 @@
 // GESTION DU REGROUPEMENT TEMPOREL
 // ======================
 
-function initializeTimeGrouping() {
+export function initializeTimeGrouping() {
     // Charger la préférence de regroupement temporel sauvegardée
     const saved = localStorage.getItem('timeGroupingEnabled');
     timeGroupingEnabled = saved === null ? false : saved === 'true';
     updateTimeGroupingLabel();
 }
 
-function toggleTimeGrouping() {
+export function toggleTimeGrouping() {
     timeGroupingEnabled = !timeGroupingEnabled;
     localStorage.setItem('timeGroupingEnabled', timeGroupingEnabled);
     updateTimeGroupingLabel();
     updateDashboard();
 }
 
-function updateTimeGroupingLabel() {
+export function updateTimeGroupingLabel() {
     const label = document.getElementById('timeGroupingLabel');
     if (label) {
         label.textContent = timeGroupingEnabled ? 'Regroupement: Activé' : 'Regroupement: Désactivé';
@@ -28,13 +28,13 @@ function updateTimeGroupingLabel() {
     }
 }
 
-function openProfileModal() {
+export function openProfileModal() {
     loadProfileData().then(() => {
         openModal('profileModal');
     });
 }
 
-function openDataTransferModal() {
+export function openDataTransferModal() {
     const importFinlyFile = document.getElementById('importFinlyFile');
     const importBankFile = document.getElementById('importBankFile');
     const importFinlyError = document.getElementById('importFinlyError');
@@ -51,3 +51,9 @@ function openDataTransferModal() {
 
     openModal('dataTransferModal');
 }
+
+window.initializeTimeGrouping = initializeTimeGrouping;
+window.toggleTimeGrouping = toggleTimeGrouping;
+window.updateTimeGroupingLabel = updateTimeGroupingLabel;
+window.openProfileModal = openProfileModal;
+window.openDataTransferModal = openDataTransferModal;

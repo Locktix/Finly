@@ -1,7 +1,7 @@
 // ======================
 // UTILITY FUNCTIONS
 // ======================
-function debounce(func, wait) {
+export function debounce(func, wait) {
     let timeout;
     return function executedFunction(...args) {
         const later = () => {
@@ -12,3 +12,5 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+window.debounce = debounce;

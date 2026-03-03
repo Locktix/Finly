@@ -1,13 +1,13 @@
 // ======================
 // LOADING SPINNERS
 // ======================
-function showSpinner(buttonEl, originalText = '') {
+export function showSpinner(buttonEl, originalText = '') {
     buttonEl.disabled = true;
     buttonEl.dataset.originalText = originalText || buttonEl.innerHTML;
     buttonEl.innerHTML = '<span class="toast-spinner"></span> Chargement...';
 }
 
-function hideSpinner(buttonEl) {
+export function hideSpinner(buttonEl) {
     buttonEl.disabled = false;
     buttonEl.innerHTML = buttonEl.dataset.originalText || 'Soumettre';
 }
@@ -15,7 +15,7 @@ function hideSpinner(buttonEl) {
 // ======================
 // TOAST NOTIFICATIONS SYSTEM
 // ======================
-const Toast = {
+export const Toast = {
     show(type, title, message, duration = 4000) {
         const container = document.getElementById('toastContainer');
         const toast = document.createElement('div');
@@ -87,9 +87,14 @@ const Toast = {
     }
 };
 
-function removeToast(toastElement) {
+export function removeToast(toastElement) {
     toastElement.classList.add('fade-out');
     setTimeout(() => {
         toastElement.remove();
     }, 300);
 }
+
+window.Toast = Toast;
+window.showSpinner = showSpinner;
+window.hideSpinner = hideSpinner;
+window.removeToast = removeToast;

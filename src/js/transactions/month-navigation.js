@@ -1,7 +1,7 @@
 // ======================
 // NAVIGATION MOIS
 // ======================
-function navigateMonth(direction) {
+export function navigateMonth(direction) {
     const currentMonth = getSelectedMonth();
     const [year, month] = currentMonth.split('-');
     let newYear = parseInt(year);
@@ -20,7 +20,7 @@ function navigateMonth(direction) {
     handleMonthChange(newMonthStr, currentMonth);
 }
 
-function handleMonthChange(newMonthStr, previousMonth = null) {
+export function handleMonthChange(newMonthStr, previousMonth = null) {
     const prevMonth = previousMonth || selectedMonth || getSelectedMonth();
     selectedMonth = newMonthStr;
     document.getElementById('monthFilter').value = newMonthStr;
@@ -29,7 +29,7 @@ function handleMonthChange(newMonthStr, previousMonth = null) {
     maybePromptRollover(prevMonth, newMonthStr);
 }
 
-function updateMonthDisplay() {
+export function updateMonthDisplay() {
     const currentMonth = getSelectedMonth();
     const [year, month] = currentMonth.split('-');
 
@@ -43,7 +43,7 @@ function updateMonthDisplay() {
     monthDisplay.textContent = `${monthName} ${year}`;
 }
 
-async function addTransaction(transaction) {
+export async function addTransaction(transaction) {
     transactions.push(transaction);
     Toast.success('Transaction ajoutée', `${transaction.description} - ${formatCurrency(transaction.amount)}`);
     updateSyncStatus('syncing');
@@ -68,7 +68,7 @@ async function addTransaction(transaction) {
     updateDashboard();
 }
 
-async function deleteTransaction(index) {
+export async function deleteTransaction(index) {
     const transaction = transactions[index];
 
     const confirmed = window.confirm(`Voulez-vous vraiment supprimer cette transaction : "${transaction.description}" (${formatCurrency(transaction.amount)}) ?`);
@@ -96,7 +96,7 @@ async function deleteTransaction(index) {
     updateDashboard();
 }
 
-async function updateTransaction(index, updatedTransaction) {
+export async function updateTransaction(index, updatedTransaction) {
     const oldTransaction = transactions[index];
     transactions[index] = updatedTransaction;
     Toast.success('Mise à jour', updatedTransaction.description);
@@ -120,7 +120,7 @@ async function updateTransaction(index, updatedTransaction) {
     updateDashboard();
 }
 
-function openEditModal(index) {
+export function openEditModal(index) {
     const transaction = transactions[index];
     currentEditingIndex = index;
     currentEditingType = transaction.type;
@@ -160,7 +160,7 @@ function openEditModal(index) {
     openModal('editModal');
 }
 
-async function loadTransactionsFromFirebase() {
+export async function loadTransactionsFromFirebase() {
     try {
         // Charger les transactions de l'utilisateur connecté
         const querySnapshot = await db.collection('users')
@@ -184,7 +184,17 @@ async function loadTransactionsFromFirebase() {
     }
 }
 
-function loadTransactionsFromLocal() {
+export function loadTransactionsFromLocal() {
     const stored = localStorage.getItem('transactions');
     transactions = stored ? JSON.parse(stored) : [];
 }
+
+window.navigateMonth = navigateMonth;
+window.handleMonthChange = handleMonthChange;
+window.updateMonthDisplay = updateMonthDisplay;
+window.addTransaction = addTransaction;
+window.deleteTransaction = deleteTransaction;
+window.updateTransaction = updateTransaction;
+window.openEditModal = openEditModal;
+window.loadTransactionsFromFirebase = loadTransactionsFromFirebase;
+window.loadTransactionsFromLocal = loadTransactionsFromLocal;

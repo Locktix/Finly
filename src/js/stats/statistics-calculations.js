@@ -2,7 +2,7 @@
 // STATISTICS CALCULATIONS
 // ======================
 
-function calculateAllStatistics(transactionsList, period = 'allTime', selection = {}) {
+export function calculateAllStatistics(transactionsList, period = 'allTime', selection = {}) {
     const filtered = filterTransactionsByPeriod(transactionsList, period, selection);
     
     const expenses = filtered.filter(t => t.type === 'expense');
@@ -66,7 +66,7 @@ function calculateAllStatistics(transactionsList, period = 'allTime', selection 
     return stats;
 }
 
-function filterTransactionsByPeriod(transactionsList, period, selection = {}) {
+export function filterTransactionsByPeriod(transactionsList, period, selection = {}) {
     const filtered = [];
 
     transactionsList.forEach(t => {
@@ -108,7 +108,7 @@ function filterTransactionsByPeriod(transactionsList, period, selection = {}) {
     return filtered;
 }
 
-function getCategoryIconClass(category) {
+export function getCategoryIconClass(category) {
     const iconMap = {
         'Salaire': 'fas fa-briefcase',
         'Revenus': 'fas fa-coins',
@@ -127,3 +127,7 @@ function getCategoryIconClass(category) {
     };
     return iconMap[category] || 'fas fa-circle';
 }
+
+window.calculateAllStatistics = calculateAllStatistics;
+window.filterTransactionsByPeriod = filterTransactionsByPeriod;
+window.getCategoryIconClass = getCategoryIconClass;

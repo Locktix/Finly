@@ -1,7 +1,7 @@
 // ======================
 // GESTION PROFIL UTILISATEUR
 // ======================
-async function loadProfileData() {
+export async function loadProfileData() {
     if (currentUser) {
         const roleField = document.getElementById('profileRole');
         if (roleField) {
@@ -40,7 +40,7 @@ async function loadProfileData() {
     }
 }
 
-async function ensureUserProfile(user) {
+export async function ensureUserProfile(user) {
     if (!db || !user) return;
 
     const userRef = db.collection('users').doc(user.uid);
@@ -90,7 +90,7 @@ async function ensureUserProfile(user) {
     }
 }
 
-async function loadUserRole(user) {
+export async function loadUserRole(user) {
     const adminBtn = document.getElementById('adminPanelBtn');
     const testerBtn = document.getElementById('testerPanelBtn');
     const profileAdminSection = document.getElementById('profileAdminSection');
@@ -143,7 +143,7 @@ async function loadUserRole(user) {
     }
 }
 
-async function loadAdminUsers() {
+export async function loadAdminUsers() {
     const container = document.getElementById('adminUsersList');
     if (!container) return;
 
@@ -220,7 +220,7 @@ async function loadAdminUsers() {
     }
 }
 
-function renderAdminUsers() {
+export function renderAdminUsers() {
     const container = document.getElementById('adminUsersList');
     if (!container) return;
 
@@ -260,7 +260,7 @@ function renderAdminUsers() {
     container.innerHTML = rows.join('');
 }
 
-function logToTester(message) {
+export function logToTester(message) {
     testerOutputBuffer.push(message);
     const output = document.getElementById('testerOutput');
     if (output) {
@@ -270,7 +270,7 @@ function logToTester(message) {
     }
 }
 
-async function addFakeData() {
+export async function addFakeData() {
     const fakeTransactions = [
         // Dépenses
         { type: 'expense', description: 'Carrefour Courses', category: 'Magasins', amount: 127.50, daysAgo: 45 },
@@ -333,7 +333,7 @@ async function addFakeData() {
     updateDashboard();
 }
 
-async function clearAllTransactions() {
+export async function clearAllTransactions() {
     if (!currentUser) {
         Toast.error('Erreur', 'Aucun utilisateur connecté');
         return;
@@ -361,7 +361,7 @@ async function clearAllTransactions() {
     updateDashboard();
 }
 
-async function handleProfileUpdate(e) {
+export async function handleProfileUpdate(e) {
     e.preventDefault();
     const name = document.getElementById('profileName').value;
     const password = document.getElementById('profilePassword').value;
@@ -418,7 +418,7 @@ async function handleProfileUpdate(e) {
     }
 }
 
-function hideAppLoader() {
+export function hideAppLoader() {
     const loader = document.getElementById('appLoader');
     const body = document.body;
     
@@ -439,7 +439,7 @@ function hideAppLoader() {
     }
 }
 
-function showAuthPage() {
+export function showAuthPage() {
     hideAppLoader();
     const authPage = document.getElementById('authPage');
     const mainHeader = document.getElementById('mainHeader');
@@ -476,7 +476,7 @@ function showAuthPage() {
     document.body.style.overflow = 'auto';
 }
 
-function showDashboard() {
+export function showDashboard() {
     hideAppLoader();
     // Sécurité : fermer les overlays éventuels qui peuvent bloquer les clics
     document.querySelectorAll('.modal.active').forEach(modal => {
@@ -504,7 +504,7 @@ function showDashboard() {
     }
 }
 
-function checkAuthState() {
+export function checkAuthState() {
     return new Promise((resolve) => {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
@@ -532,6 +532,20 @@ function checkAuthState() {
         });
     });
 }
+
+window.loadProfileData = loadProfileData;
+window.ensureUserProfile = ensureUserProfile;
+window.loadUserRole = loadUserRole;
+window.loadAdminUsers = loadAdminUsers;
+window.renderAdminUsers = renderAdminUsers;
+window.logToTester = logToTester;
+window.addFakeData = addFakeData;
+window.clearAllTransactions = clearAllTransactions;
+window.handleProfileUpdate = handleProfileUpdate;
+window.hideAppLoader = hideAppLoader;
+window.showAuthPage = showAuthPage;
+window.showDashboard = showDashboard;
+window.checkAuthState = checkAuthState;
 
 
 

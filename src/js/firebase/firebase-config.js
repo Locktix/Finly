@@ -4,6 +4,18 @@
 let firebaseApp = null;
 let db = null;
 
+Object.defineProperty(window, 'firebaseApp', {
+    get: () => firebaseApp,
+    set: (value) => { firebaseApp = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'db', {
+    get: () => db,
+    set: (value) => { db = value; },
+    configurable: true
+});
+
 // Configuration Firebase
 const firebaseConfig = {
     apiKey: "AIzaSyBz97Do0f0cn4_-PMc8PzIODJn0S3MVDjw",
@@ -14,6 +26,7 @@ const firebaseConfig = {
     appId: "1:939430426599:web:3f79a47ab8bbaaf7e06f42",
     measurementId: "G-GTQCFFKXS1"
 };
+window.firebaseConfig = firebaseConfig;
 
 // Catégories d'icônes pour les transactions
 const categoryIcons = {
@@ -32,9 +45,12 @@ const categoryIcons = {
     'Revenus': 'fa-chart-line',
     'Autres': 'fa-ellipsis-h'
 };
+window.categoryIcons = categoryIcons;
 
 const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
 const incomeCategories = ['Salaire', 'Revenus', 'Épargne', 'Autres'];
+window.expenseCategories = expenseCategories;
+window.incomeCategories = incomeCategories;
 
 let iconSelectListenersReady = false;
 
@@ -599,7 +615,65 @@ async function importTransactionsData(rawData, mode = 'merge') {
 let currentEditingIndex = null;
 let currentEditingType = null;
 
+Object.defineProperty(window, 'currentEditingIndex', {
+    get: () => currentEditingIndex,
+    set: (value) => { currentEditingIndex = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'currentEditingType', {
+    get: () => currentEditingType,
+    set: (value) => { currentEditingType = value; },
+    configurable: true
+});
+
 // Instances des graphiques
 let expensesChartInstance = null;
 let incomeExpenseChartInstance = null;
 let balanceChartInstance = null;
+
+Object.defineProperty(window, 'expensesChartInstance', {
+    get: () => expensesChartInstance,
+    set: (value) => { expensesChartInstance = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'incomeExpenseChartInstance', {
+    get: () => incomeExpenseChartInstance,
+    set: (value) => { incomeExpenseChartInstance = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'balanceChartInstance', {
+    get: () => balanceChartInstance,
+    set: (value) => { balanceChartInstance = value; },
+    configurable: true
+});
+
+window.getCategoryIcon = getCategoryIcon;
+window.closeIconSelects = closeIconSelects;
+window.syncIconSelectValue = syncIconSelectValue;
+window.handleIconSelectChange = handleIconSelectChange;
+window.buildIconSelect = buildIconSelect;
+window.initializeIconSelects = initializeIconSelects;
+window.refreshIconSelect = refreshIconSelect;
+window.formatDateForExport = formatDateForExport;
+window.formatDateToIso = formatDateToIso;
+window.parseDateValue = parseDateValue;
+window.normalizeTransaction = normalizeTransaction;
+window.getExportRows = getExportRows;
+window.downloadBlob = downloadBlob;
+window.exportTransactionsJson = exportTransactionsJson;
+window.exportTransactionsExcel = exportTransactionsExcel;
+window.readJsonFile = readJsonFile;
+window.readExcelFile = readExcelFile;
+window.parseSemicolonCsvLine = parseSemicolonCsvLine;
+window.toFlatLower = toFlatLower;
+window.parseIngAmount = parseIngAmount;
+window.inferIngDescription = inferIngDescription;
+window.inferIngCategory = inferIngCategory;
+window.parseIngCsvText = parseIngCsvText;
+window.readIngCsvFile = readIngCsvFile;
+window.clearFirebaseTransactions = clearFirebaseTransactions;
+window.addTransactionsToFirebase = addTransactionsToFirebase;
+window.importTransactionsData = importTransactionsData;

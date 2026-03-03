@@ -4,7 +4,7 @@
 let lastSyncTime = null;
 let syncTimeout = null;
 
-function updateSyncStatus(status = 'synced', message = '') {
+export function updateSyncStatus(status = 'synced', message = '') {
     const targets = [
         {
             indicator: document.getElementById('syncIndicator'),
@@ -53,3 +53,5 @@ function updateSyncStatus(status = 'synced', message = '') {
         }, 3000);
     }
 }
+
+window.updateSyncStatus = updateSyncStatus;

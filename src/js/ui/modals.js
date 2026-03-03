@@ -1,19 +1,19 @@
 // ======================
 // GESTION DES MODALES
 // ======================
-function openModal(modalId) {
+export function openModal(modalId) {
     const modal = document.getElementById(modalId);
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
 }
 
-function closeModal(modalId) {
+export function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     modal.classList.remove('active');
     document.body.style.overflow = 'auto';
 }
 
-function setupModalListeners() {
+export function setupModalListeners() {
     // Modal Dépense
     document.getElementById('addExpenseBtn').addEventListener('click', () => {
         document.getElementById('expenseDate').valueAsDate = new Date();
@@ -427,3 +427,7 @@ function setupModalListeners() {
         });
     });
 }
+
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.setupModalListeners = setupModalListeners;

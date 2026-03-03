@@ -1,7 +1,7 @@
 // ======================
 // REGROUPEMENT TEMPOREL
 // ======================
-function getRelativeTimeLabel(dateString) {
+export function getRelativeTimeLabel(dateString) {
     const transactionDate = new Date(dateString);
     const today = new Date();
 
@@ -24,7 +24,7 @@ function getRelativeTimeLabel(dateString) {
     return `Il y a ${diffMonths} mois`;
 }
 
-function groupTransactionsByTime(transactionsList) {
+export function groupTransactionsByTime(transactionsList) {
     const groups = {};
 
     transactionsList.forEach(transaction => {
@@ -37,3 +37,6 @@ function groupTransactionsByTime(transactionsList) {
 
     return groups;
 }
+
+window.getRelativeTimeLabel = getRelativeTimeLabel;
+window.groupTransactionsByTime = groupTransactionsByTime;

@@ -1,7 +1,7 @@
 // ======================
 // GESTION MOT DE PASSE OUBLIÉ
 // ======================
-async function handleForgotPassword(e) {
+export async function handleForgotPassword(e) {
     e.preventDefault();
     const email = document.getElementById('forgotPasswordEmail').value;
     const errorEl = document.getElementById('forgotPasswordError');
@@ -34,15 +34,48 @@ async function handleForgotPassword(e) {
 // ======================
 // GESTION DE L'AUTHENTIFICATION
 // ======================
-let currentUser = null;
-let currentUserRole = 'membre';
+var currentUser = null;
+var currentUserRole = 'membre';
 const ADMIN_UID = '6aqDFLL8obNSdUKoAmdnm9kgMEg2';
 const ROLE_OPTIONS = ['Administrateur', 'testeur', 'membre'];
-let adminUsersCache = [];
-let testerOutputBuffer = [];
-let appLoaderTimeout = null;
+var adminUsersCache = [];
+var testerOutputBuffer = [];
+var appLoaderTimeout = null;
 
-function setupAuthListeners() {
+Object.defineProperty(window, 'currentUser', {
+    get: () => currentUser,
+    set: (value) => { currentUser = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'currentUserRole', {
+    get: () => currentUserRole,
+    set: (value) => { currentUserRole = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'adminUsersCache', {
+    get: () => adminUsersCache,
+    set: (value) => { adminUsersCache = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'testerOutputBuffer', {
+    get: () => testerOutputBuffer,
+    set: (value) => { testerOutputBuffer = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'appLoaderTimeout', {
+    get: () => appLoaderTimeout,
+    set: (value) => { appLoaderTimeout = value; },
+    configurable: true
+});
+
+window.ADMIN_UID = ADMIN_UID;
+window.ROLE_OPTIONS = ROLE_OPTIONS;
+
+export function setupAuthListeners() {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('signupForm').addEventListener('submit', handleSignup);
     document.getElementById('toggleAuthBtn').addEventListener('click', toggleAuthForm);
@@ -63,7 +96,7 @@ function setupAuthListeners() {
     document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
 }
 
-function toggleAuthForm() {
+export function toggleAuthForm() {
     document.getElementById('loginForm').classList.toggle('active');
     document.getElementById('signupForm').classList.toggle('active');
     
@@ -80,14 +113,14 @@ function toggleAuthForm() {
     clearAuthErrors();
 }
 
-function clearAuthErrors() {
+export function clearAuthErrors() {
     document.getElementById('loginError').textContent = '';
     document.getElementById('signupError').textContent = '';
     document.getElementById('loginError').classList.remove('show');
     document.getElementById('signupError').classList.remove('show');
 }
 
-async function handleLogin(e) {
+export async function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value;
     const password = document.getElementById('loginPassword').value;
@@ -112,7 +145,7 @@ async function handleLogin(e) {
     }
 }
 
-async function handleSignup(e) {
+export async function handleSignup(e) {
     e.preventDefault();
     const name = document.getElementById('signupName').value;
     const email = document.getElementById('signupEmail').value;
@@ -163,7 +196,7 @@ async function handleSignup(e) {
     }
 }
 
-async function handleLogout() {
+export async function handleLogout() {
     try {
         await firebase.auth().signOut();
         currentUser = null;
@@ -185,7 +218,7 @@ async function handleLogout() {
     }
 }
 
-function getErrorMessage(code) {
+export function getErrorMessage(code) {
     const messages = {
         'auth/email-already-in-use': 'Cet email est déjà utilisé',
         'auth/invalid-email': 'Adresse email invalide',
@@ -197,3 +230,12 @@ function getErrorMessage(code) {
     };
     return messages[code] || 'Une erreur est survenue. Réessayez.';
 }
+
+window.handleForgotPassword = handleForgotPassword;
+window.setupAuthListeners = setupAuthListeners;
+window.toggleAuthForm = toggleAuthForm;
+window.clearAuthErrors = clearAuthErrors;
+window.handleLogin = handleLogin;
+window.handleSignup = handleSignup;
+window.handleLogout = handleLogout;
+window.getErrorMessage = getErrorMessage;

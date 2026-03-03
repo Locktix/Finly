@@ -2,12 +2,12 @@
 // GESTION DU THÈME
 // ======================
 
-function initializeTheme() {
+export function initializeTheme() {
     const savedTheme = localStorage.getItem('theme') || 'light';
     setTheme(savedTheme);
 }
 
-function setTheme(theme) {
+export function setTheme(theme) {
     if (theme === 'dark') {
         document.documentElement.setAttribute('data-theme', 'dark');
         localStorage.setItem('theme', 'dark');
@@ -17,7 +17,7 @@ function setTheme(theme) {
     }
 }
 
-function toggleTheme() {
+export function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     setTheme(newTheme);
@@ -30,3 +30,7 @@ function toggleTheme() {
     // Mettre à jour le dashboard pour les couleurs dynamiques
     updateDashboard();
 }
+
+window.initializeTheme = initializeTheme;
+window.setTheme = setTheme;
+window.toggleTheme = toggleTheme;

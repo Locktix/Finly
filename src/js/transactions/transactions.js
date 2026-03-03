@@ -13,17 +13,56 @@ let timeGroupingEnabled = false; // Désactiver le regroupement temporel par dé
 const SWIPE_TRIGGER_DISTANCE = 90;
 const SWIPE_MAX_OFFSET = 120;
 
+Object.defineProperty(window, 'transactions', {
+    get: () => transactions,
+    set: (value) => { transactions = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'selectedMonth', {
+    get: () => selectedMonth,
+    set: (value) => { selectedMonth = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'pendingRollover', {
+    get: () => pendingRollover,
+    set: (value) => { pendingRollover = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'activeFilters', {
+    get: () => activeFilters,
+    set: (value) => { activeFilters = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'timeGroupingEnabled', {
+    get: () => timeGroupingEnabled,
+    set: (value) => { timeGroupingEnabled = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'currentSort', {
+    get: () => currentSort,
+    set: (value) => { currentSort = value; },
+    configurable: true
+});
+
+window.SWIPE_TRIGGER_DISTANCE = SWIPE_TRIGGER_DISTANCE;
+window.SWIPE_MAX_OFFSET = SWIPE_MAX_OFFSET;
+
 // État du tri
 let currentSort = {
     field: null,
     direction: 'asc' // 'asc' ou 'desc'
 };
 
-function getSelectedMonth() {
+export function getSelectedMonth() {
     return selectedMonth || new Date().toISOString().slice(0, 7);
 }
 
-function formatMonthLabel(monthStr) {
+export function formatMonthLabel(monthStr) {
     if (!monthStr) return '';
     const parts = monthStr.split('-');
     if (parts.length !== 2) return monthStr;
@@ -33,7 +72,7 @@ function formatMonthLabel(monthStr) {
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 }
 
-function getMonthBalance(monthStr) {
+export function getMonthBalance(monthStr) {
     const monthTransactions = getTransactionsForMonth(monthStr);
     const income = monthTransactions
         .filter(t => t.type === 'income' && !isInternalSavingsTransfer(t))
@@ -44,7 +83,7 @@ function getMonthBalance(monthStr) {
     return income - expense;
 }
 
-function isInternalSavingsTransfer(transaction) {
+export function isInternalSavingsTransfer(transaction) {
     if (!transaction) return false;
 
     if (transaction.rolloverMode === 'savings-transfer') {
@@ -58,23 +97,23 @@ function isInternalSavingsTransfer(transaction) {
         && description.startsWith('épargne report solde');
 }
 
-function getMonthLastDate(monthStr) {
+export function getMonthLastDate(monthStr) {
     const [year, month] = monthStr.split('-').map(value => parseInt(value, 10));
     const lastDay = new Date(year, month, 0).getDate();
     return `${monthStr}-${String(lastDay).padStart(2, '0')}`;
 }
 
-function getPreviousMonth(monthStr) {
+export function getPreviousMonth(monthStr) {
     const [year, month] = monthStr.split('-').map(value => parseInt(value, 10));
     const date = new Date(year, month - 2, 1);
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function hasRolloverForMonth(monthStr) {
+export function hasRolloverForMonth(monthStr) {
     return transactions.some(t => t.rollover === true && t.date && t.date.startsWith(monthStr));
 }
 
-function setRolloverModalContent(previousMonth, balance) {
+export function setRolloverModalContent(previousMonth, balance) {
     const labelEl = document.getElementById('rolloverSourceLabel');
     const amountEl = document.getElementById('rolloverAmount');
     if (labelEl) {
@@ -87,7 +126,7 @@ function setRolloverModalContent(previousMonth, balance) {
     }
 }
 
-function maybePromptRollover(previousMonth, targetMonth) {
+export function maybePromptRollover(previousMonth, targetMonth) {
     if (!previousMonth || !targetMonth) return;
     if (targetMonth <= previousMonth) return;
     if (declinedRolloverMonths.has(targetMonth)) return;
@@ -101,7 +140,7 @@ function maybePromptRollover(previousMonth, targetMonth) {
     openModal('rolloverModal');
 }
 
-async function applyRolloverTransaction(mode = 'balance') {
+export async function applyRolloverTransaction(mode = 'balance') {
     if (!pendingRollover) return;
 
     const { previousMonth, targetMonth, balance } = pendingRollover;
@@ -150,7 +189,7 @@ async function applyRolloverTransaction(mode = 'balance') {
     closeModal('rolloverModal');
 }
 
-function dismissRolloverPrompt(markDeclined = true) {
+export function dismissRolloverPrompt(markDeclined = true) {
     if (pendingRollover && markDeclined) {
         declinedRolloverMonths.add(pendingRollover.targetMonth);
     }
@@ -164,3 +203,15 @@ window.addEventListener('beforeunload', () => {
         localStorage.setItem('transactions', JSON.stringify(transactions));
     }
 });
+
+window.getSelectedMonth = getSelectedMonth;
+window.formatMonthLabel = formatMonthLabel;
+window.getMonthBalance = getMonthBalance;
+window.isInternalSavingsTransfer = isInternalSavingsTransfer;
+window.getMonthLastDate = getMonthLastDate;
+window.getPreviousMonth = getPreviousMonth;
+window.hasRolloverForMonth = hasRolloverForMonth;
+window.setRolloverModalContent = setRolloverModalContent;
+window.maybePromptRollover = maybePromptRollover;
+window.applyRolloverTransaction = applyRolloverTransaction;
+window.dismissRolloverPrompt = dismissRolloverPrompt;

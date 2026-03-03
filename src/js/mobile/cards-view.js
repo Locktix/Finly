@@ -1,7 +1,7 @@
 // ======================
 // MOBILE CARDS VIEW
 // ======================
-function updateTransactionsList() {
+export function updateTransactionsList() {
     const listContainer = document.getElementById('transactionsList');
     const month = getSelectedMonth();
 
@@ -103,7 +103,7 @@ function updateTransactionsList() {
     setupMobileSwipeActions();
 }
 
-function renderTransactionCard(transaction, {
+export function renderTransactionCard(transaction, {
     originalIndex,
     icon,
     formattedDate,
@@ -149,11 +149,11 @@ function renderTransactionCard(transaction, {
     `;
 }
 
-function isMobileSwipeEnabled() {
+export function isMobileSwipeEnabled() {
     return window.matchMedia('(max-width: 768px)').matches && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
 }
 
-function resetSwipeItem(item, withTransition = true) {
+export function resetSwipeItem(item, withTransition = true) {
     const card = item.querySelector('.transaction-card');
     if (!card) return;
 
@@ -162,7 +162,7 @@ function resetSwipeItem(item, withTransition = true) {
     item.classList.remove('swiping-left', 'swiping-right');
 }
 
-function setupMobileSwipeActions() {
+export function setupMobileSwipeActions() {
     const listContainer = document.getElementById('transactionsList');
     if (!listContainer) return;
 
@@ -271,14 +271,22 @@ function setupMobileSwipeActions() {
     });
 }
 
-function formatCurrency(amount) {
+export function formatCurrency(amount) {
     return new Intl.NumberFormat('fr-FR', {
         style: 'currency',
         currency: 'EUR'
     }).format(amount);
 }
 
-function formatDate(dateString) {
+export function formatDate(dateString) {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('fr-FR', options);
 }
+
+window.updateTransactionsList = updateTransactionsList;
+window.renderTransactionCard = renderTransactionCard;
+window.isMobileSwipeEnabled = isMobileSwipeEnabled;
+window.resetSwipeItem = resetSwipeItem;
+window.setupMobileSwipeActions = setupMobileSwipeActions;
+window.formatCurrency = formatCurrency;
+window.formatDate = formatDate;

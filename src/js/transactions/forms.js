@@ -1,7 +1,7 @@
 // ======================
 // GESTION DES FORMULAIRES
 // ======================
-function setupFormListeners() {
+export function setupFormListeners() {
     // Formulaire Dépense
     document.getElementById('expenseForm').addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -92,3 +92,5 @@ function setupFormListeners() {
         }
     });
 }
+
+window.setupFormListeners = setupFormListeners;

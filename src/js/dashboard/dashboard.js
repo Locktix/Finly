@@ -1,19 +1,19 @@
 // ======================
 // MISE À JOUR DU DASHBOARD
 // ======================
-function updateDashboard() {
+export function updateDashboard() {
     updateSummary();
     updateTransactionsTable();
     updateCharts();
 }
 
-function getTransactionsForMonth(month) {
+export function getTransactionsForMonth(month) {
     return transactions.filter(t => {
         return t.date.startsWith(month);
     });
 }
 
-function applyFilters(transactionsList) {
+export function applyFilters(transactionsList) {
     return transactionsList.filter(t => {
         // Filtre recherche
         if (activeFilters.search) {
@@ -32,7 +32,7 @@ function applyFilters(transactionsList) {
     });
 }
 
-function updateSummary() {
+export function updateSummary() {
     const month = getSelectedMonth();
     const monthTransactions = getTransactionsForMonth(month);
     const filteredTransactions = applyFilters(monthTransactions);
@@ -89,7 +89,7 @@ function updateSummary() {
     }
 }
 
-function updateTransactionsTable() {
+export function updateTransactionsTable() {
     const tableBody = document.getElementById('transactionsBody');
     const countElement = document.getElementById('transactionCount');
     const month = getSelectedMonth();
@@ -234,3 +234,9 @@ function updateTransactionsTable() {
     countElement.textContent = `${filteredTransactions.length}`;
     updateTransactionsList(); // Aussi mettre à jour les cartes
 }
+
+window.updateDashboard = updateDashboard;
+window.getTransactionsForMonth = getTransactionsForMonth;
+window.applyFilters = applyFilters;
+window.updateSummary = updateSummary;
+window.updateTransactionsTable = updateTransactionsTable;

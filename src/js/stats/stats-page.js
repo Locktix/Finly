@@ -2,7 +2,7 @@
 // STATISTICS PAGE
 // ======================
 
-function setupStatsPageListeners() {
+export function setupStatsPageListeners() {
     const periodButtons = document.querySelectorAll('.period-btn');
     const yearSelect = document.getElementById('statsYearSelect');
     const monthSelect = document.getElementById('statsMonthSelect');
@@ -12,7 +12,7 @@ function setupStatsPageListeners() {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            currentStatsPeriod = btn.getAttribute('data-period');
+            window.currentStatsPeriod = btn.getAttribute('data-period');
             updateStatsPeriodControls();
             updateStatsDisplay();
         });
@@ -20,10 +20,10 @@ function setupStatsPageListeners() {
 
     if (yearSelect) {
         yearSelect.addEventListener('change', () => {
-            selectedStatsYear = parseInt(yearSelect.value, 10);
+            window.selectedStatsYear = parseInt(yearSelect.value, 10);
 
-            if (!selectedStatsMonth || !selectedStatsMonth.startsWith(`${selectedStatsYear}-`)) {
-                selectedStatsMonth = `${selectedStatsYear}-01`;
+            if (!window.selectedStatsMonth || !window.selectedStatsMonth.startsWith(`${window.selectedStatsYear}-`)) {
+                window.selectedStatsMonth = `${window.selectedStatsYear}-01`;
             }
 
             updateStatsPeriodControls();
@@ -33,7 +33,7 @@ function setupStatsPageListeners() {
 
     if (monthSelect) {
         monthSelect.addEventListener('change', () => {
-            selectedStatsMonth = monthSelect.value;
+            window.selectedStatsMonth = monthSelect.value;
             updateStatsPeriodControls();
             updateStatsDisplay();
         });
@@ -42,7 +42,7 @@ function setupStatsPageListeners() {
     if (weekSelect) {
         weekSelect.addEventListener('change', () => {
             const [start, end] = weekSelect.value.split('|');
-            selectedStatsWeek = start && end ? { start, end } : null;
+            window.selectedStatsWeek = start && end ? { start, end } : null;
             updateStatsDisplay();
         });
     }
@@ -50,15 +50,15 @@ function setupStatsPageListeners() {
     updateStatsPeriodControls();
 }
 
-function refreshStatsPage() {
+export function refreshStatsPage() {
     updateStatsPeriodControls();
     updateStatsDisplay();
 }
 
-function updateStatsDisplay() {
+export function updateStatsDisplay() {
     const selection = getCurrentStatsSelection();
-    const stats = calculateAllStatistics(transactions, currentStatsPeriod, selection);
-    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod, selection);
+    const stats = calculateAllStatistics(transactions, window.currentStatsPeriod, selection);
+    const filtered = filterTransactionsByPeriod(transactions, window.currentStatsPeriod, selection);
 
     // Vue d'ensemble - Totaux
     document.getElementById('statsAvgExpense').textContent = formatCurrency(stats.totalExpense);
@@ -93,7 +93,7 @@ function updateStatsDisplay() {
     updateBalanceChart(stats, filtered);
 }
 
-function updateBalanceChart(stats, filteredTransactions) {
+export function updateBalanceChart(stats, filteredTransactions) {
     const canvas = document.getElementById('balanceChart');
     if (!canvas) return;
 
@@ -200,7 +200,7 @@ function updateBalanceChart(stats, filteredTransactions) {
     });
 }
 
-function updateStatsByCategory(stats, filteredTransactions) {
+export function updateStatsByCategory(stats, filteredTransactions) {
     const container = document.getElementById('categoriesStatsList');
     container.innerHTML = '';
 
@@ -330,3 +330,9 @@ function updateStatsByCategory(stats, filteredTransactions) {
         renderTransactions('date');
     });
 }
+
+window.setupStatsPageListeners = setupStatsPageListeners;
+window.refreshStatsPage = refreshStatsPage;
+window.updateStatsDisplay = updateStatsDisplay;
+window.updateBalanceChart = updateBalanceChart;
+window.updateStatsByCategory = updateStatsByCategory;

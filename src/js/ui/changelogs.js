@@ -1,7 +1,7 @@
 // ======================
 // GESTION DES CHANGELOGS
 // ======================
-function loadChangelogs() {
+export function loadChangelogs() {
     fetch('changelogs.json')
         .then(response => response.json())
         .then(data => {
@@ -58,3 +58,5 @@ function loadChangelogs() {
         }
     });
 }
+
+window.loadChangelogs = loadChangelogs;

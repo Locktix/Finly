@@ -1,7 +1,7 @@
 // ======================
 // INITIALISATION FIREBASE
 // ======================
-async function initializeFirebase() {
+export async function initializeFirebase() {
     try {
         firebaseApp = firebase.initializeApp(firebaseConfig);
         db = firebase.firestore();
@@ -22,8 +22,11 @@ async function initializeFirebase() {
     }
 }
 
-function useLocalStorage() {
+export function useLocalStorage() {
     console.log('Utilisation du mode local (localStorage)');
     db = null;
     // Ne pas charger les données ici, attendre checkAuthState
 }
+
+window.initializeFirebase = initializeFirebase;
+window.useLocalStorage = useLocalStorage;

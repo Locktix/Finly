@@ -1,7 +1,7 @@
 // ======================
 // KEYBOARD SHORTCUTS
 // ======================
-function setupKeyboardListeners() {
+export function setupKeyboardListeners() {
     document.addEventListener('keydown', (e) => {
         // Fermer les modales avec ESC
         if (e.key === 'Escape') {
@@ -31,3 +31,5 @@ function setupKeyboardListeners() {
         }
     });
 }
+
+window.setupKeyboardListeners = setupKeyboardListeners;

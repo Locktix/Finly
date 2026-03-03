@@ -2,7 +2,7 @@
 // PROFILE PAGE
 // ======================
 
-function setupProfilePageListeners() {
+export function setupProfilePageListeners() {
     const themeToggle = document.getElementById('profileThemeToggle');
     const timeGroupingToggle = document.getElementById('profileTimeGroupingToggle');
     const exportBtn = document.getElementById('profileExportBtn');
@@ -80,11 +80,11 @@ function setupProfilePageListeners() {
     }
 }
 
-function refreshProfilePage() {
+export function refreshProfilePage() {
     updateProfileDisplay();
 }
 
-function updateProfileDisplay() {
+export function updateProfileDisplay() {
     const user = firebase.auth().currentUser;
 
     if (user) {
@@ -124,3 +124,7 @@ function updateProfileDisplay() {
         profileTimeGroupingToggle.checked = timeGroupingEnabled;
     }
 }
+
+window.setupProfilePageListeners = setupProfilePageListeners;
+window.refreshProfilePage = refreshProfilePage;
+window.updateProfileDisplay = updateProfileDisplay;

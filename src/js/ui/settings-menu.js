@@ -1,7 +1,7 @@
 // ======================
 // SETTINGS MENU
 // ======================
-function setupSettingsMenu() {
+export function setupSettingsMenu() {
     const settingsBtn = document.getElementById('settingsBtn');
     const settingsDropdown = document.getElementById('settingsDropdown');
 
@@ -33,3 +33,5 @@ function setupSettingsMenu() {
         }
     });
 }
+
+window.setupSettingsMenu = setupSettingsMenu;

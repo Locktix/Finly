@@ -3,24 +3,32 @@
 // ======================
 
 let currentMobilePage = 'homePage';
-let currentStatsPeriod = 'allTime';
-let selectedStatsYear = new Date().getFullYear();
-let selectedStatsMonth = `${selectedStatsYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
-let selectedStatsWeek = null;
+if (typeof window.currentStatsPeriod === 'undefined') {
+    window.currentStatsPeriod = 'allTime';
+}
+if (typeof window.selectedStatsYear === 'undefined') {
+    window.selectedStatsYear = new Date().getFullYear();
+}
+if (typeof window.selectedStatsMonth === 'undefined') {
+    window.selectedStatsMonth = `${window.selectedStatsYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+}
+if (typeof window.selectedStatsWeek === 'undefined') {
+    window.selectedStatsWeek = null;
+}
 let mobileAppInitialized = false;
 let responsiveListenersInitialized = false;
 
-function isMobileViewport() {
+export function isMobileViewport() {
     return window.matchMedia('(max-width: 768px)').matches;
 }
 
-function updateViewportCssVariable() {
+export function updateViewportCssVariable() {
     const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
     const vh = viewportHeight * 0.01;
     document.documentElement.style.setProperty('--app-vh', `${vh}px`);
 }
 
-function isAuthenticatedSession() {
+export function isAuthenticatedSession() {
     if (currentUser) {
         return true;
     }
@@ -37,7 +45,7 @@ function isAuthenticatedSession() {
     }
 }
 
-function applyResponsiveLayoutState() {
+export function applyResponsiveLayoutState() {
     if (!isAuthenticatedSession()) {
         document.body.classList.remove('mobile-layout', 'desktop-layout');
 
@@ -94,7 +102,7 @@ function applyResponsiveLayoutState() {
     }
 }
 
-function setupResponsiveListeners() {
+export function setupResponsiveListeners() {
     if (responsiveListenersInitialized) {
         return;
     }
@@ -129,7 +137,7 @@ function setupResponsiveListeners() {
     responsiveListenersInitialized = true;
 }
 
-function initializeMobileApp() {
+export function initializeMobileApp() {
     const mobileNavButtons = document.querySelectorAll('.navbar-btn');
     const desktopNavButtons = document.querySelectorAll('.desktop-nav-btn');
 
@@ -161,7 +169,7 @@ function initializeMobileApp() {
     setupResponsiveListeners();
 }
 
-function switchPage(pageId) {
+export function switchPage(pageId) {
     if (!isAuthenticatedSession()) {
         return;
     }
@@ -223,21 +231,21 @@ function switchPage(pageId) {
 }
 
 // Alias pour compatibilité
-function switchMobilePage(pageId) {
+export function switchMobilePage(pageId) {
     switchPage(pageId);
 }
 
-function formatDateFrShort(date) {
+export function formatDateFrShort(date) {
     return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
 }
 
-function formatMonthLabelFr(monthValue) {
+export function formatMonthLabelFr(monthValue) {
     const [year, month] = monthValue.split('-').map(Number);
     const date = new Date(year, month - 1, 1);
     return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
 }
 
-function getStatsYears(transactionsList = []) {
+export function getStatsYears(transactionsList = []) {
     const years = new Set([new Date().getFullYear()]);
     transactionsList.forEach(t => {
         const date = new Date(t.date);
@@ -248,7 +256,7 @@ function getStatsYears(transactionsList = []) {
     return Array.from(years).sort((a, b) => b - a);
 }
 
-function getMonthOptionsForYear(year) {
+export function getMonthOptionsForYear(year) {
     const options = [];
     for (let month = 1; month <= 12; month++) {
         const value = `${year}-${String(month).padStart(2, '0')}`;
@@ -260,7 +268,7 @@ function getMonthOptionsForYear(year) {
     return options;
 }
 
-function getMonthWeekRanges(year, month) {
+export function getMonthWeekRanges(year, month) {
     const monthStart = new Date(year, month - 1, 1);
     const monthEnd = new Date(year, month, 0);
     monthStart.setHours(0, 0, 0, 0);
@@ -299,15 +307,15 @@ function getMonthWeekRanges(year, month) {
     return weekRanges;
 }
 
-function getCurrentStatsSelection() {
+export function getCurrentStatsSelection() {
     return {
-        year: selectedStatsYear,
-        month: selectedStatsMonth,
-        week: selectedStatsWeek
+        year: window.selectedStatsYear,
+        month: window.selectedStatsMonth,
+        week: window.selectedStatsWeek
     };
 }
 
-function setSelectOptions(selectEl, options, selectedValue) {
+export function setSelectOptions(selectEl, options, selectedValue) {
     if (!selectEl) return;
 
     selectEl.innerHTML = '';
@@ -325,7 +333,7 @@ function setSelectOptions(selectEl, options, selectedValue) {
     }
 }
 
-function updateStatsPeriodControls() {
+export function updateStatsPeriodControls() {
     const controlsContainer = document.getElementById('statsPeriodControls');
     const yearControl = document.getElementById('statsYearControl');
     const monthControl = document.getElementById('statsMonthControl');
@@ -338,7 +346,7 @@ function updateStatsPeriodControls() {
         return;
     }
 
-    if (currentStatsPeriod === 'allTime') {
+    if (window.currentStatsPeriod === 'allTime') {
         controlsContainer.style.display = 'none';
         yearControl.style.display = 'none';
         monthControl.style.display = 'none';
@@ -349,29 +357,46 @@ function updateStatsPeriodControls() {
     controlsContainer.style.display = 'flex';
 
     const yearOptions = getStatsYears(transactions).map(year => ({ value: String(year), label: String(year) }));
-    const selectedYearValue = String(selectedStatsYear);
+    const selectedYearValue = String(window.selectedStatsYear);
     setSelectOptions(yearSelect, yearOptions, selectedYearValue);
-    selectedStatsYear = parseInt(yearSelect.value, 10);
+    window.selectedStatsYear = parseInt(yearSelect.value, 10);
 
-    const monthOptions = getMonthOptionsForYear(selectedStatsYear);
-    const selectedMonthValue = selectedStatsMonth && selectedStatsMonth.startsWith(`${selectedStatsYear}-`)
-        ? selectedStatsMonth
-        : `${selectedStatsYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    const monthOptions = getMonthOptionsForYear(window.selectedStatsYear);
+    const selectedMonthValue = window.selectedStatsMonth && window.selectedStatsMonth.startsWith(`${window.selectedStatsYear}-`)
+        ? window.selectedStatsMonth
+        : `${window.selectedStatsYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
     setSelectOptions(monthSelect, monthOptions, selectedMonthValue);
-    selectedStatsMonth = monthSelect.value;
+    window.selectedStatsMonth = monthSelect.value;
 
-    const [weekYear, weekMonth] = selectedStatsMonth.split('-').map(Number);
+    const [weekYear, weekMonth] = window.selectedStatsMonth.split('-').map(Number);
     const weekRanges = getMonthWeekRanges(weekYear, weekMonth);
     const weekOptions = weekRanges.map(range => ({ value: range.id, label: range.label }));
-    const defaultWeekValue = selectedStatsWeek ? `${selectedStatsWeek.start}|${selectedStatsWeek.end}` : null;
+    const defaultWeekValue = window.selectedStatsWeek ? `${window.selectedStatsWeek.start}|${window.selectedStatsWeek.end}` : null;
     setSelectOptions(weekSelect, weekOptions, defaultWeekValue);
 
     const selectedWeekRange = weekRanges.find(range => range.id === weekSelect.value) || weekRanges[0] || null;
-    selectedStatsWeek = selectedWeekRange
+    window.selectedStatsWeek = selectedWeekRange
         ? { start: selectedWeekRange.start, end: selectedWeekRange.end }
         : null;
 
-    yearControl.style.display = (currentStatsPeriod === 'year' || currentStatsPeriod === 'month' || currentStatsPeriod === 'week') ? 'flex' : 'none';
-    monthControl.style.display = (currentStatsPeriod === 'month' || currentStatsPeriod === 'week') ? 'flex' : 'none';
-    weekControl.style.display = currentStatsPeriod === 'week' ? 'flex' : 'none';
+    yearControl.style.display = (window.currentStatsPeriod === 'year' || window.currentStatsPeriod === 'month' || window.currentStatsPeriod === 'week') ? 'flex' : 'none';
+    monthControl.style.display = (window.currentStatsPeriod === 'month' || window.currentStatsPeriod === 'week') ? 'flex' : 'none';
+    weekControl.style.display = window.currentStatsPeriod === 'week' ? 'flex' : 'none';
 }
+
+window.isMobileViewport = isMobileViewport;
+window.updateViewportCssVariable = updateViewportCssVariable;
+window.isAuthenticatedSession = isAuthenticatedSession;
+window.applyResponsiveLayoutState = applyResponsiveLayoutState;
+window.setupResponsiveListeners = setupResponsiveListeners;
+window.initializeMobileApp = initializeMobileApp;
+window.switchPage = switchPage;
+window.switchMobilePage = switchMobilePage;
+window.formatDateFrShort = formatDateFrShort;
+window.formatMonthLabelFr = formatMonthLabelFr;
+window.getStatsYears = getStatsYears;
+window.getMonthOptionsForYear = getMonthOptionsForYear;
+window.getMonthWeekRanges = getMonthWeekRanges;
+window.getCurrentStatsSelection = getCurrentStatsSelection;
+window.setSelectOptions = setSelectOptions;
+window.updateStatsPeriodControls = updateStatsPeriodControls;

@@ -1,7 +1,7 @@
 // ======================
 // GESTION DES GRAPHIQUES
 // ======================
-function getChartOptions(type = 'doughnut') {
+export function getChartOptions(type = 'doughnut') {
     const isMobile = window.innerWidth <= 480;
     const isTablet = window.innerWidth <= 768;
 
@@ -93,12 +93,12 @@ function getChartOptions(type = 'doughnut') {
     }
 }
 
-function updateCharts() {
+export function updateCharts() {
     updateExpensesChart();
     updateIncomeExpenseChart();
 }
 
-function updateExpensesChart() {
+export function updateExpensesChart() {
     const month = getSelectedMonth();
     const monthTransactions = getTransactionsForMonth(month);
     const filteredTransactions = applyFilters(monthTransactions);
@@ -144,7 +144,7 @@ function updateExpensesChart() {
     }
 }
 
-function updateIncomeExpenseChart() {
+export function updateIncomeExpenseChart() {
     // Récupérer les 12 derniers mois
     const months = [];
     const incomeData = [];
@@ -202,3 +202,8 @@ function updateIncomeExpenseChart() {
         });
     }
 }
+
+window.getChartOptions = getChartOptions;
+window.updateCharts = updateCharts;
+window.updateExpensesChart = updateExpensesChart;
+window.updateIncomeExpenseChart = updateIncomeExpenseChart;

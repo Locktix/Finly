@@ -1,7 +1,7 @@
 // ======================
 // GESTION DES FILTRES
 // ======================
-function initializeCategoryFilter() {
+export function initializeCategoryFilter() {
     const filterContainer = document.getElementById('categoryFilter');
     const allCategories = [...expenseCategories, ...incomeCategories];
     const uniqueCategories = [...new Set(allCategories)];
@@ -21,7 +21,7 @@ function initializeCategoryFilter() {
     });
 }
 
-function setupFilterListeners() {
+export function setupFilterListeners() {
     const panel = document.getElementById('filtersPanel');
     const toggleButton = document.getElementById('toggleFiltersBtn');
     const isInitiallyActive = panel.classList.contains('active');
@@ -59,7 +59,7 @@ function setupFilterListeners() {
     });
 }
 
-function handleSort(field) {
+export function handleSort(field) {
     // Si on clique sur le même champ, inverser la direction
     if (currentSort.field === field) {
         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
@@ -76,7 +76,7 @@ function handleSort(field) {
     updateDashboard();
 }
 
-function updateSortButtonsUI() {
+export function updateSortButtonsUI() {
     document.querySelectorAll('.sort-header').forEach(button => {
         button.classList.remove('active-up', 'active-down');
         
@@ -90,7 +90,7 @@ function updateSortButtonsUI() {
     });
 }
 
-function sortTransactions(transactionsList) {
+export function sortTransactions(transactionsList) {
     if (!currentSort.field) return transactionsList;
     
     const sorted = [...transactionsList].sort((a, b) => {
@@ -117,7 +117,7 @@ function sortTransactions(transactionsList) {
 }
 
 
-function updateFilters() {
+export function updateFilters() {
     activeFilters.search = document.getElementById('searchFilter').value;
 
     activeFilters.categories = Array.from(document.querySelectorAll('.category-checkbox:checked'))
@@ -126,7 +126,7 @@ function updateFilters() {
     updateDashboard();
 }
 
-function resetFilters() {
+export function resetFilters() {
     document.getElementById('searchFilter').value = '';
     document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = false);
 
@@ -137,3 +137,11 @@ function resetFilters() {
 
     updateDashboard();
 }
+
+window.initializeCategoryFilter = initializeCategoryFilter;
+window.setupFilterListeners = setupFilterListeners;
+window.handleSort = handleSort;
+window.updateSortButtonsUI = updateSortButtonsUI;
+window.sortTransactions = sortTransactions;
+window.updateFilters = updateFilters;
+window.resetFilters = resetFilters;
