@@ -1410,7 +1410,8 @@ body.desktop-layout .period-selector {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: rgba(0, 0, 0, 0.58);
+    backdrop-filter: blur(6px);
     z-index: 1000;
     justify-content: center;
     align-items: center;
@@ -1432,22 +1433,27 @@ body.desktop-layout .period-selector {
 }
 
 .modal-content {
-    background-color: var(--color-bg-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-2xl);
+    background: linear-gradient(180deg, var(--color-bg-primary) 0%, var(--color-bg-primary) 70%, var(--color-bg-secondary) 100%);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--color-border);
+    padding: var(--spacing-xl);
     max-width: 500px;
     width: 100%;
     max-height: 90vh;
     max-height: calc(var(--app-vh, 1vh) * 90);
     overflow-y: auto;
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28), var(--shadow-xl);
     position: relative;
     animation: slideUp var(--transition-base);
 }
 
+.modal-content h2 {
+    padding-right: calc(var(--spacing-xl) + var(--spacing-md));
+}
+
 @keyframes slideUp {
     from {
-        transform: translateY(50px);
+        transform: translateY(18px);
         opacity: 0;
     }
     to {
@@ -1460,8 +1466,8 @@ body.desktop-layout .period-selector {
     position: absolute;
     top: var(--spacing-lg);
     right: var(--spacing-lg);
-    background-color: transparent;
-    border: none;
+    background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
     font-size: var(--font-size-2xl);
     color: var(--color-text-secondary);
     cursor: pointer;
@@ -1470,12 +1476,15 @@ body.desktop-layout .period-selector {
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 999px;
     transition: all var(--transition-fast);
 }
 
 .modal-close:hover {
-    color: var(--color-text-primary);
-    transform: rotate(90deg);
+    color: var(--color-primary);
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-primary);
+    transform: none;
 }
 
 #rolloverModal .modal-close {
@@ -1484,8 +1493,9 @@ body.desktop-layout .period-selector {
 
 .modal-content h2 {
     font-size: var(--font-size-2xl);
-    margin-bottom: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
     color: var(--color-text-primary);
+    letter-spacing: -0.01em;
 }
 
 /* Modal Configuration */
@@ -1518,15 +1528,16 @@ body.desktop-layout .period-selector {
 
 /* Import/Export Modal */
 .data-transfer-modal {
-    max-width: 680px;
+    max-width: 760px;
 }
 
 .data-transfer-section {
-    background-color: var(--color-bg-tertiary);
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
+    box-shadow: inset 3px 0 0 var(--color-primary);
 }
 
 .data-transfer-section h3 {
@@ -1544,6 +1555,13 @@ body.desktop-layout .period-selector {
     flex-wrap: wrap;
 }
 
+.data-transfer-section h4 {
+    margin: var(--spacing-sm) 0;
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+}
+
 .data-transfer-file {
     width: 100%;
     padding: var(--spacing-sm);
@@ -1552,6 +1570,13 @@ body.desktop-layout .period-selector {
     background-color: var(--color-bg-primary);
     color: var(--color-text-secondary);
     margin-bottom: var(--spacing-md);
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.data-transfer-file:hover,
+.data-transfer-file:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .data-transfer-mode {
@@ -1622,6 +1647,16 @@ body.desktop-layout .period-selector {
     margin-bottom: var(--spacing-md);
 }
 
+.admin-panel-modal {
+    max-width: 900px;
+}
+
+#adminPanelModal .config-box {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+}
+
 .admin-search {
     width: 100%;
     padding: var(--spacing-sm) var(--spacing-md);
@@ -1642,7 +1677,10 @@ body.desktop-layout .period-selector {
 .admin-users-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
+    max-height: 52vh;
+    overflow-y: auto;
+    padding-right: var(--spacing-xs);
 }
 
 .admin-user-row {
@@ -1650,10 +1688,17 @@ body.desktop-layout .period-selector {
     justify-content: space-between;
     align-items: center;
     gap: var(--spacing-md);
-    background-color: var(--color-bg-primary);
+    background-color: var(--color-bg-secondary);
     border: 1px solid var(--color-border-light);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+}
+
+.admin-user-row:hover {
+    border-color: var(--color-primary);
+    box-shadow: var(--shadow-sm);
+    transform: none;
 }
 
 .admin-user-main {
@@ -1696,6 +1741,12 @@ body.desktop-layout .period-selector {
     min-width: 140px;
 }
 
+.admin-role-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 .admin-users-empty {
     text-align: center;
     color: var(--color-text-tertiary);
@@ -1704,17 +1755,22 @@ body.desktop-layout .period-selector {
 
 /* Tester Panel */
 .tester-tools {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-lg);
     margin-bottom: var(--spacing-lg);
 }
 
+.tester-panel-modal {
+    max-width: 1020px;
+}
+
 .tester-section {
     background-color: var(--color-bg-secondary);
-    border-radius: var(--radius-md);
-    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
     border: 1px solid var(--color-border-light);
+    box-shadow: none;
 }
 
 .tester-section h3 {
@@ -1731,19 +1787,21 @@ body.desktop-layout .period-selector {
     padding: var(--spacing-xs) var(--spacing-md);
     margin-right: var(--spacing-sm);
     margin-bottom: var(--spacing-sm);
-    background-color: var(--color-primary);
-    color: white;
-    border: none;
-    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-primary);
+    color: var(--color-primary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     font-size: var(--font-size-sm);
     cursor: pointer;
     transition: all var(--transition-fast);
 }
 
 .tester-btn:hover {
-    background-color: #2563eb;
-    transform: translateY(-1px);
-    box-shadow: var(--shadow-md);
+    background-color: var(--color-primary);
+    color: var(--color-bg-primary);
+    border-color: var(--color-primary);
+    transform: none;
+    box-shadow: var(--shadow-sm);
 }
 
 .tester-btn:active {
@@ -1752,6 +1810,7 @@ body.desktop-layout .period-selector {
 
 .tester-output {
     background-color: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
     border-left: 3px solid var(--color-primary);
     padding: var(--spacing-md);
     border-radius: var(--radius-sm);
@@ -1767,6 +1826,36 @@ body.desktop-layout .period-selector {
 
 .tester-output.active {
     display: block;
+    grid-column: 1 / -1;
+}
+
+#profileModal .modal-content {
+    max-width: 660px;
+}
+
+#profileModal .form-group {
+    background-color: transparent;
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+#profileModal .form-group input[readonly] {
+    background-color: var(--color-bg-tertiary);
+}
+
+#profileModal .auth-success,
+#dataTransferModal .auth-success {
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.changelogs-modal-content {
+    max-width: 720px;
+    max-height: 80vh;
+}
+
+.changelogs-container {
+    margin-top: var(--spacing-lg);
 }
 
 /* ======================
@@ -2027,54 +2116,121 @@ body.desktop-layout .period-selector {
     color: var(--color-primary);
 }
 
-/* Changelog Modal */
-.changelog-item {
-    margin-bottom: var(--spacing-lg);
-    padding-bottom: var(--spacing-lg);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.changelog-item:last-child {
-    border-bottom: none;
-    margin-bottom: 0;
-    padding-bottom: 0;
-}
-
-.changelog-header {
+/* Roadmap Modal */
+.roadmap-timeline {
+    position: relative;
     display: flex;
-    align-items: baseline;
+    flex-direction: column;
     gap: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
 }
 
-.changelog-version {
-    font-size: var(--font-size-lg);
+.roadmap-timeline::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--color-primary) 0%, var(--color-border) 100%);
+}
+
+.roadmap-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: var(--spacing-md);
+    align-items: start;
+}
+
+.roadmap-marker {
+    width: 32px;
+    display: flex;
+    justify-content: center;
+    padding-top: 4px;
+}
+
+.roadmap-marker span {
+    width: 12px;
+    height: 12px;
+    border-radius: 999px;
+    background-color: var(--color-primary);
+    border: 2px solid var(--color-bg-primary);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+}
+
+.roadmap-card {
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.roadmap-header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.roadmap-version {
+    font-size: var(--font-size-sm);
     font-weight: 700;
     color: var(--color-primary);
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-border);
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-md);
 }
 
-.changelog-date {
+.roadmap-date {
     font-size: var(--font-size-xs);
     color: var(--color-text-secondary);
 }
 
-.changelog-title {
+.roadmap-status {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 0.15rem 0.5rem;
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-secondary);
+}
+
+.roadmap-title {
     font-size: var(--font-size-base);
     font-weight: 600;
     color: var(--color-text-primary);
-    margin-bottom: var(--spacing-sm);
+    margin: 0 0 var(--spacing-sm) 0;
 }
 
-.changelog-changes {
+.roadmap-changes {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.changelog-changes li {
-    padding: var(--spacing-xs) 0;
+.roadmap-changes li {
+    padding: 0.3rem 0;
     color: var(--color-text-secondary);
     font-size: var(--font-size-sm);
+}
+
+.roadmap-item.planned .roadmap-marker span {
+    background-color: var(--color-bg-primary);
+    border-color: var(--color-primary);
+}
+
+.roadmap-item.planned .roadmap-status {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.roadmap-item.done .roadmap-status {
+    color: var(--color-income);
+    border-color: var(--color-income);
 }
 
 /* ======================
@@ -2101,6 +2257,27 @@ body.desktop-layout .period-selector {
 
     .btn-action {
         min-width: auto;
+    }
+
+    .roadmap-item {
+        grid-template-columns: 24px 1fr;
+        gap: var(--spacing-sm);
+    }
+
+    .roadmap-timeline::before {
+        left: 11px;
+    }
+
+    .roadmap-marker {
+        width: 24px;
+    }
+
+    .roadmap-card {
+        padding: var(--spacing-md);
+    }
+
+    .roadmap-status {
+        margin-left: 0;
     }
 
     .logo span {
@@ -3461,6 +3638,49 @@ body.desktop-layout .period-selector {
     transform: scale(0.95);
 }
 
+.stats-period-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    margin: 0 var(--spacing-md);
+    background: var(--color-bg-secondary);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+.stats-period-control {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 150px;
+    flex: 1;
+}
+
+.stats-period-control label {
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.stats-period-select {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-size: var(--font-size-sm);
+    font-family: var(--font-family);
+}
+
+.stats-period-select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
 /* ======================
    STATISTICS CARDS
    ====================== */
@@ -4161,6 +4381,24 @@ body.desktop-layout .period-selector {
     background: var(--color-bg-tertiary);
 }
 
+.profile-sync-status {
+    cursor: default;
+    border-style: dashed;
+}
+
+.profile-sync-status .setting-left i {
+    color: var(--color-income);
+}
+
+.profile-sync-status.syncing .setting-left i {
+    color: var(--color-primary);
+    animation: spin 1s linear infinite;
+}
+
+.profile-sync-status.error .setting-left i {
+    color: var(--color-expense);
+}
+
 .setting-left {
     display: flex;
     align-items: center;
@@ -4399,5 +4637,17 @@ input:checked + .toggle-slider:before {
     
     .detailed-stats {
         grid-template-columns: 1fr;
+    }
+
+    .tester-tools {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-panel-modal,
+    .tester-panel-modal,
+    .data-transfer-modal,
+    .changelogs-modal-content,
+    #profileModal .modal-content {
+        max-width: 100%;
     }
 }

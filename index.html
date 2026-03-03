@@ -103,7 +103,7 @@
 
     <!-- Modal Profil Utilisateur -->
     <div class="modal" id="profileModal">
-        <div class="modal-content">
+        <div class="modal-content profile-modal-content">
             <button class="modal-close" id="closeProfile">&times;</button>
             <h2>Mon Profil</h2>
             <form id="profileForm">
@@ -161,64 +161,6 @@
                 </button>
             </nav>
 
-            <!-- Settings Menu -->
-            <div class="settings-menu-wrapper">
-                <button class="settings-menu-btn" id="settingsBtn" title="Paramètres">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <div class="settings-dropdown" id="settingsDropdown">
-                    <!-- Sync Status -->
-                    <div class="settings-sync-status" id="syncIndicator">
-                        <i class="fas fa-check-circle"></i>
-                        <span id="syncText">Synchronisé</span>
-                    </div>
-                    <div class="settings-divider"></div>
-
-                    <!-- Profile Button -->
-                    <button class="settings-item" id="profileBtn">
-                        <i class="fas fa-user-circle"></i>
-                        <span>Mon Profil</span>
-                    </button>
-
-                    <!-- Theme Toggle -->
-                    <button class="settings-item" id="themeToggle">
-                        <i class="fas fa-moon"></i>
-                        <span id="themeLabel">Mode Sombre</span>
-                    </button>
-
-                    <!-- Time Grouping Toggle -->
-                    <button class="settings-item" id="timeGroupingToggle">
-                        <i class="fas fa-clock"></i>
-                        <span id="timeGroupingLabel">Regroupement Temporel</span>
-                    </button>
-
-                    <!-- Data Transfer Button -->
-                    <button class="settings-item" id="dataTransferBtn">
-                        <i class="fas fa-file-import"></i>
-                        <span>Importer / Exporter</span>
-                    </button>
-
-                    <!-- Admin Panel Button -->
-                    <button class="settings-item" id="adminPanelBtn" style="display: none;">
-                        <i class="fas fa-user-shield"></i>
-                        <span>Admin Panel</span>
-                    </button>
-
-                    <!-- Tester Panel Button -->
-                    <button class="settings-item" id="testerPanelBtn" style="display: none;">
-                        <i class="fas fa-flask"></i>
-                        <span>Tester Panel</span>
-                    </button>
-
-                    <div class="settings-divider"></div>
-
-                    <!-- Logout Button -->
-                    <button class="settings-item logout-item" id="logoutBtn">
-                        <i class="fas fa-sign-out-alt"></i>
-                        <span>Déconnexion</span>
-                    </button>
-                </div>
-            </div>
         </div>
     </header>
 
@@ -331,7 +273,7 @@
 
     <!-- Modal Admin Panel -->
     <div class="modal" id="adminPanelModal">
-        <div class="modal-content">
+        <div class="modal-content admin-panel-modal">
             <button class="modal-close" id="closeAdminPanel">&times;</button>
             <h2>Admin Panel</h2>
             <p class="config-info">Gestion des utilisateurs et des rôles.</p>
@@ -349,7 +291,7 @@
 
     <!-- Modal Tester Panel -->
     <div class="modal" id="testerPanelModal">
-        <div class="modal-content">
+        <div class="modal-content tester-panel-modal">
             <button class="modal-close" id="closeTesterPanel">&times;</button>
             <h2>Tester Panel</h2>
             <p class="config-info">Outils de test et debug.</p>
@@ -529,16 +471,31 @@
                 </button>
                 <button class="period-btn" data-period="year">
                     <i class="fas fa-calendar-alt"></i>
-                    <span>12 mois</span>
+                    <span>Année</span>
                 </button>
                 <button class="period-btn" data-period="month">
                     <i class="fas fa-calendar-days"></i>
-                    <span>Ce mois</span>
+                    <span>Mois</span>
                 </button>
                 <button class="period-btn" data-period="week">
                     <i class="fas fa-calendar-week"></i>
-                    <span>7 jours</span>
+                    <span>Semaine</span>
                 </button>
+            </div>
+
+            <div class="stats-period-controls" id="statsPeriodControls">
+                <div class="stats-period-control" id="statsYearControl" style="display: none;">
+                    <label for="statsYearSelect">Année</label>
+                    <select id="statsYearSelect" class="stats-period-select"></select>
+                </div>
+                <div class="stats-period-control" id="statsMonthControl" style="display: none;">
+                    <label for="statsMonthSelect">Mois</label>
+                    <select id="statsMonthSelect" class="stats-period-select"></select>
+                </div>
+                <div class="stats-period-control" id="statsWeekControl" style="display: none;">
+                    <label for="statsWeekSelect">Semaine</label>
+                    <select id="statsWeekSelect" class="stats-period-select"></select>
+                </div>
             </div>
 
             <!-- Vue d'ensemble -->
@@ -710,10 +667,33 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
+                    <div class="setting-item">
+                        <div class="setting-left">
+                            <i class="fas fa-clock"></i>
+                            <div class="setting-text">
+                                <span class="setting-title">Regroupement Temporel</span>
+                                <span class="setting-desc">Regrouper les transactions par période</span>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="profileTimeGroupingToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
 
                 <div class="settings-group">
                     <h3>Données</h3>
+                    <div class="setting-item profile-sync-status" id="profileSyncIndicator">
+                        <div class="setting-left">
+                            <i class="fas fa-check-circle"></i>
+                            <div class="setting-text">
+                                <span class="setting-title">Synchronisation</span>
+                                <span class="setting-desc" id="profileSyncText">Synchronisé</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <button class="setting-button" id="profileExportBtn">
                         <i class="fas fa-download"></i>
                         <div class="setting-text">
@@ -930,10 +910,11 @@
 
     <!-- Modal Changelogs -->
     <div class="modal" id="changelogsModal">
-        <div class="modal-content" style="max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <div class="modal-content changelogs-modal-content">
             <button class="modal-close" id="closeChangelogs">&times;</button>
-            <h2>Changelogs</h2>
-            <div id="changelogsContainer" style="margin-top: var(--spacing-lg);">
+            <h2>Roadmap</h2>
+            <p class="config-info">Suivi des versions livrées et des évolutions prévues.</p>
+            <div id="changelogsContainer" class="changelogs-container">
                 <!-- Changelogs loaded from JSON -->
             </div>
         </div>

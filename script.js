@@ -116,39 +116,51 @@ let lastSyncTime = null;
 let syncTimeout = null;
 
 function updateSyncStatus(status = 'synced', message = '') {
-    const indicator = document.getElementById('syncIndicator');
-    const syncText = document.getElementById('syncText');
+    const targets = [
+        {
+            indicator: document.getElementById('syncIndicator'),
+            text: document.getElementById('syncText')
+        },
+        {
+            indicator: document.getElementById('profileSyncIndicator'),
+            text: document.getElementById('profileSyncText')
+        }
+    ].filter(target => target.indicator && target.text);
 
-    if (!indicator) return;
+    if (targets.length === 0) return;
 
-    indicator.classList.remove('syncing', 'error');
+    targets.forEach(target => {
+        target.indicator.classList.remove('syncing', 'error');
 
-    switch(status) {
-        case 'syncing':
-            indicator.classList.add('syncing');
-            syncText.textContent = 'Synchronisation...';
-            break;
-        case 'synced':
-            lastSyncTime = new Date();
-            syncText.textContent = 'Synchronisé';
-            indicator.classList.remove('syncing', 'error');
-            break;
-        case 'error':
-            indicator.classList.add('error');
-            syncText.textContent = message || 'Erreur de sync';
-            break;
-        case 'offline':
-            indicator.classList.add('error');
-            syncText.textContent = 'Mode hors ligne';
-            break;
-    }
+        switch(status) {
+            case 'syncing':
+                target.indicator.classList.add('syncing');
+                target.text.textContent = 'Synchronisation...';
+                break;
+            case 'synced':
+                lastSyncTime = new Date();
+                target.text.textContent = 'Synchronisé';
+                target.indicator.classList.remove('syncing', 'error');
+                break;
+            case 'error':
+                target.indicator.classList.add('error');
+                target.text.textContent = message || 'Erreur de sync';
+                break;
+            case 'offline':
+                target.indicator.classList.add('error');
+                target.text.textContent = 'Mode hors ligne';
+                break;
+        }
+    });
 
     // Auto-reset le statut après 3s
     if (status === 'synced') {
         clearTimeout(syncTimeout);
         syncTimeout = setTimeout(() => {
-            syncText.textContent = 'Synchronisé';
-            indicator.classList.remove('syncing', 'error');
+            targets.forEach(target => {
+                target.text.textContent = 'Synchronisé';
+                target.indicator.classList.remove('syncing', 'error');
+            });
         }, 3000);
     }
 }
@@ -168,7 +180,10 @@ function setupAuthListeners() {
     document.getElementById('loginForm').addEventListener('submit', handleLogin);
     document.getElementById('signupForm').addEventListener('submit', handleSignup);
     document.getElementById('toggleAuthBtn').addEventListener('click', toggleAuthForm);
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    const settingsLogoutBtn = document.getElementById('logoutBtn');
+    if (settingsLogoutBtn) {
+        settingsLogoutBtn.addEventListener('click', handleLogout);
+    }
     
     // Event listeners pour les modales d'authentification
     document.getElementById('forgotPasswordBtn').addEventListener('click', () => {
@@ -906,6 +921,35 @@ function updateTimeGroupingLabel() {
     if (label) {
         label.textContent = timeGroupingEnabled ? 'Regroupement: Activé' : 'Regroupement: Désactivé';
     }
+
+    const profileTimeGroupingToggle = document.getElementById('profileTimeGroupingToggle');
+    if (profileTimeGroupingToggle) {
+        profileTimeGroupingToggle.checked = timeGroupingEnabled;
+    }
+}
+
+function openProfileModal() {
+    loadProfileData().then(() => {
+        openModal('profileModal');
+    });
+}
+
+function openDataTransferModal() {
+    const importFinlyFile = document.getElementById('importFinlyFile');
+    const importBankFile = document.getElementById('importBankFile');
+    const importFinlyError = document.getElementById('importFinlyError');
+    const importFinlySuccess = document.getElementById('importFinlySuccess');
+    const importBankError = document.getElementById('importBankError');
+    const importBankSuccess = document.getElementById('importBankSuccess');
+
+    if (importFinlyFile) importFinlyFile.value = '';
+    if (importBankFile) importBankFile.value = '';
+    if (importFinlyError) importFinlyError.style.display = 'none';
+    if (importFinlySuccess) importFinlySuccess.style.display = 'none';
+    if (importBankError) importBankError.style.display = 'none';
+    if (importBankSuccess) importBankSuccess.style.display = 'none';
+
+    openModal('dataTransferModal');
 }
 
 // ======================
@@ -1655,11 +1699,17 @@ function setupModalListeners() {
         closeModal('editModal');
     });
 
-    // Toggle Thème
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+    // Toggle Thème (si présent)
+    const settingsThemeToggle = document.getElementById('themeToggle');
+    if (settingsThemeToggle) {
+        settingsThemeToggle.addEventListener('click', toggleTheme);
+    }
 
-    // Toggle Regroupement Temporel
-    document.getElementById('timeGroupingToggle').addEventListener('click', toggleTimeGrouping);
+    // Toggle Regroupement Temporel (si présent)
+    const settingsTimeGroupingToggle = document.getElementById('timeGroupingToggle');
+    if (settingsTimeGroupingToggle) {
+        settingsTimeGroupingToggle.addEventListener('click', toggleTimeGrouping);
+    }
 
     // Modal Configuration
     const configBtn = document.getElementById('configBtn');
@@ -1716,22 +1766,7 @@ function setupModalListeners() {
     // Modal Data Transfer
     const dataTransferBtn = document.getElementById('dataTransferBtn');
     if (dataTransferBtn) {
-        dataTransferBtn.addEventListener('click', () => {
-            const importFinlyFile = document.getElementById('importFinlyFile');
-            const importBankFile = document.getElementById('importBankFile');
-            const importFinlyError = document.getElementById('importFinlyError');
-            const importFinlySuccess = document.getElementById('importFinlySuccess');
-            const importBankError = document.getElementById('importBankError');
-            const importBankSuccess = document.getElementById('importBankSuccess');
-
-            if (importFinlyFile) importFinlyFile.value = '';
-            if (importBankFile) importBankFile.value = '';
-            if (importFinlyError) importFinlyError.style.display = 'none';
-            if (importFinlySuccess) importFinlySuccess.style.display = 'none';
-            if (importBankError) importBankError.style.display = 'none';
-            if (importBankSuccess) importBankSuccess.style.display = 'none';
-            openModal('dataTransferModal');
-        });
+        dataTransferBtn.addEventListener('click', openDataTransferModal);
     }
 
     document.getElementById('closeDataTransfer').addEventListener('click', () => {
@@ -2020,11 +2055,11 @@ function setupModalListeners() {
         Toast.success('Transactions supprimées', 'Tous les données ont été effacées');
     });
 
-    // Modal Profil
-    document.getElementById('profileBtn').addEventListener('click', async () => {
-        await loadProfileData();
-        openModal('profileModal');
-    });
+    // Modal Profil (si raccourci présent)
+    const profileBtn = document.getElementById('profileBtn');
+    if (profileBtn) {
+        profileBtn.addEventListener('click', openProfileModal);
+    }
 
     document.getElementById('closeProfile').addEventListener('click', () => {
         closeModal('profileModal');
@@ -2062,23 +2097,37 @@ function loadChangelogs() {
         .then(data => {
             const container = document.getElementById('changelogsContainer');
             container.innerHTML = '';
+            container.classList.add('roadmap-timeline');
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
             data.versions.forEach(version => {
-                const changelogItem = document.createElement('div');
-                changelogItem.className = 'changelog-item';
+                const roadmapItem = document.createElement('article');
+                const releaseDate = new Date(version.date);
+                releaseDate.setHours(0, 0, 0, 0);
 
-                changelogItem.innerHTML = `
-                    <div class="changelog-header">
-                        <span class="changelog-version">v${version.version}</span>
-                        <span class="changelog-date">${new Date(version.date).toLocaleDateString('fr-FR')}</span>
+                const isPlanned = releaseDate > today;
+                roadmapItem.className = `roadmap-item ${isPlanned ? 'planned' : 'done'}`;
+
+                roadmapItem.innerHTML = `
+                    <div class="roadmap-marker" aria-hidden="true">
+                        <span></span>
                     </div>
-                    <h3 class="changelog-title">${version.title}</h3>
-                    <ul class="changelog-changes">
-                        ${version.changes.map(change => `<li>${change}</li>`).join('')}
-                    </ul>
+                    <div class="roadmap-card">
+                        <div class="roadmap-header">
+                            <span class="roadmap-version">v${version.version}</span>
+                            <span class="roadmap-date">${new Date(version.date).toLocaleDateString('fr-FR')}</span>
+                            <span class="roadmap-status">${isPlanned ? 'Prévu' : 'Livré'}</span>
+                        </div>
+                        <h3 class="roadmap-title">${version.title}</h3>
+                        <ul class="roadmap-changes">
+                            ${version.changes.map(change => `<li>${change}</li>`).join('')}
+                        </ul>
+                    </div>
                 `;
 
-                container.appendChild(changelogItem);
+                container.appendChild(roadmapItem);
             });
         })
         .catch(error => console.error('Erreur lors du chargement des changelogs:', error));
@@ -3541,6 +3590,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 let currentMobilePage = 'homePage';
 let currentStatsPeriod = 'allTime';
+let selectedStatsYear = new Date().getFullYear();
+let selectedStatsMonth = `${selectedStatsYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+let selectedStatsWeek = null;
 let mobileAppInitialized = false;
 let responsiveListenersInitialized = false;
 
@@ -3713,30 +3765,216 @@ function switchMobilePage(pageId) {
     switchPage(pageId);
 }
 
+function formatDateFrShort(date) {
+    return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+}
+
+function formatMonthLabelFr(monthValue) {
+    const [year, month] = monthValue.split('-').map(Number);
+    const date = new Date(year, month - 1, 1);
+    return date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+}
+
+function getStatsYears(transactionsList = []) {
+    const years = new Set([new Date().getFullYear()]);
+    transactionsList.forEach(t => {
+        const date = new Date(t.date);
+        if (!Number.isNaN(date.getTime())) {
+            years.add(date.getFullYear());
+        }
+    });
+    return Array.from(years).sort((a, b) => b - a);
+}
+
+function getMonthOptionsForYear(year) {
+    const options = [];
+    for (let month = 1; month <= 12; month++) {
+        const value = `${year}-${String(month).padStart(2, '0')}`;
+        options.push({
+            value,
+            label: formatMonthLabelFr(value)
+        });
+    }
+    return options;
+}
+
+function getMonthWeekRanges(year, month) {
+    const monthStart = new Date(year, month - 1, 1);
+    const monthEnd = new Date(year, month, 0);
+    monthStart.setHours(0, 0, 0, 0);
+    monthEnd.setHours(23, 59, 59, 999);
+
+    const weekRanges = [];
+    let cursor = new Date(monthStart);
+
+    while (cursor <= monthEnd) {
+        const dayOfWeek = cursor.getDay();
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const weekStart = new Date(cursor);
+        weekStart.setDate(cursor.getDate() - daysFromMonday);
+        weekStart.setHours(0, 0, 0, 0);
+
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+        weekEnd.setHours(23, 59, 59, 999);
+
+        const rangeStart = new Date(Math.max(weekStart.getTime(), monthStart.getTime()));
+        const rangeEnd = new Date(Math.min(weekEnd.getTime(), monthEnd.getTime()));
+
+        const index = weekRanges.length + 1;
+        weekRanges.push({
+            id: `${rangeStart.toISOString().slice(0, 10)}|${rangeEnd.toISOString().slice(0, 10)}`,
+            start: rangeStart.toISOString().slice(0, 10),
+            end: rangeEnd.toISOString().slice(0, 10),
+            label: `Semaine ${index} (du ${formatDateFrShort(rangeStart)} au ${formatDateFrShort(rangeEnd)})`
+        });
+
+        cursor = new Date(weekEnd);
+        cursor.setDate(cursor.getDate() + 1);
+        cursor.setHours(0, 0, 0, 0);
+    }
+
+    return weekRanges;
+}
+
+function getCurrentStatsSelection() {
+    return {
+        year: selectedStatsYear,
+        month: selectedStatsMonth,
+        week: selectedStatsWeek
+    };
+}
+
+function setSelectOptions(selectEl, options, selectedValue) {
+    if (!selectEl) return;
+
+    selectEl.innerHTML = '';
+    options.forEach(option => {
+        const optionEl = document.createElement('option');
+        optionEl.value = option.value;
+        optionEl.textContent = option.label;
+        selectEl.appendChild(optionEl);
+    });
+
+    if (selectedValue && options.some(option => option.value === selectedValue)) {
+        selectEl.value = selectedValue;
+    } else if (options.length > 0) {
+        selectEl.value = options[0].value;
+    }
+}
+
+function updateStatsPeriodControls() {
+    const controlsContainer = document.getElementById('statsPeriodControls');
+    const yearControl = document.getElementById('statsYearControl');
+    const monthControl = document.getElementById('statsMonthControl');
+    const weekControl = document.getElementById('statsWeekControl');
+    const yearSelect = document.getElementById('statsYearSelect');
+    const monthSelect = document.getElementById('statsMonthSelect');
+    const weekSelect = document.getElementById('statsWeekSelect');
+
+    if (!controlsContainer || !yearControl || !monthControl || !weekControl || !yearSelect || !monthSelect || !weekSelect) {
+        return;
+    }
+
+    if (currentStatsPeriod === 'allTime') {
+        controlsContainer.style.display = 'none';
+        yearControl.style.display = 'none';
+        monthControl.style.display = 'none';
+        weekControl.style.display = 'none';
+        return;
+    }
+
+    controlsContainer.style.display = 'flex';
+
+    const yearOptions = getStatsYears(transactions).map(year => ({ value: String(year), label: String(year) }));
+    const selectedYearValue = String(selectedStatsYear);
+    setSelectOptions(yearSelect, yearOptions, selectedYearValue);
+    selectedStatsYear = parseInt(yearSelect.value, 10);
+
+    const monthOptions = getMonthOptionsForYear(selectedStatsYear);
+    const selectedMonthValue = selectedStatsMonth && selectedStatsMonth.startsWith(`${selectedStatsYear}-`)
+        ? selectedStatsMonth
+        : `${selectedStatsYear}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
+    setSelectOptions(monthSelect, monthOptions, selectedMonthValue);
+    selectedStatsMonth = monthSelect.value;
+
+    const [weekYear, weekMonth] = selectedStatsMonth.split('-').map(Number);
+    const weekRanges = getMonthWeekRanges(weekYear, weekMonth);
+    const weekOptions = weekRanges.map(range => ({ value: range.id, label: range.label }));
+    const defaultWeekValue = selectedStatsWeek ? `${selectedStatsWeek.start}|${selectedStatsWeek.end}` : null;
+    setSelectOptions(weekSelect, weekOptions, defaultWeekValue);
+
+    const selectedWeekRange = weekRanges.find(range => range.id === weekSelect.value) || weekRanges[0] || null;
+    selectedStatsWeek = selectedWeekRange
+        ? { start: selectedWeekRange.start, end: selectedWeekRange.end }
+        : null;
+
+    yearControl.style.display = (currentStatsPeriod === 'year' || currentStatsPeriod === 'month' || currentStatsPeriod === 'week') ? 'flex' : 'none';
+    monthControl.style.display = (currentStatsPeriod === 'month' || currentStatsPeriod === 'week') ? 'flex' : 'none';
+    weekControl.style.display = currentStatsPeriod === 'week' ? 'flex' : 'none';
+}
+
 // ======================
 // STATISTICS PAGE
 // ======================
 
 function setupStatsPageListeners() {
     const periodButtons = document.querySelectorAll('.period-btn');
+    const yearSelect = document.getElementById('statsYearSelect');
+    const monthSelect = document.getElementById('statsMonthSelect');
+    const weekSelect = document.getElementById('statsWeekSelect');
     
     periodButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentStatsPeriod = btn.getAttribute('data-period');
+            updateStatsPeriodControls();
             updateStatsDisplay();
         });
     });
+
+    if (yearSelect) {
+        yearSelect.addEventListener('change', () => {
+            selectedStatsYear = parseInt(yearSelect.value, 10);
+
+            if (!selectedStatsMonth || !selectedStatsMonth.startsWith(`${selectedStatsYear}-`)) {
+                selectedStatsMonth = `${selectedStatsYear}-01`;
+            }
+
+            updateStatsPeriodControls();
+            updateStatsDisplay();
+        });
+    }
+
+    if (monthSelect) {
+        monthSelect.addEventListener('change', () => {
+            selectedStatsMonth = monthSelect.value;
+            updateStatsPeriodControls();
+            updateStatsDisplay();
+        });
+    }
+
+    if (weekSelect) {
+        weekSelect.addEventListener('change', () => {
+            const [start, end] = weekSelect.value.split('|');
+            selectedStatsWeek = start && end ? { start, end } : null;
+            updateStatsDisplay();
+        });
+    }
+
+    updateStatsPeriodControls();
 }
 
 function refreshStatsPage() {
+    updateStatsPeriodControls();
     updateStatsDisplay();
 }
 
 function updateStatsDisplay() {
-    const stats = calculateAllStatistics(transactions, currentStatsPeriod);
-    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod);
+    const selection = getCurrentStatsSelection();
+    const stats = calculateAllStatistics(transactions, currentStatsPeriod, selection);
+    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod, selection);
 
     // Vue d'ensemble - Totaux
     document.getElementById('statsAvgExpense').textContent = formatCurrency(stats.totalExpense);
@@ -3765,20 +4003,18 @@ function updateStatsDisplay() {
     document.getElementById('statsMaxIncome').textContent = formatCurrency(stats.maxIncome);
 
     // Categories
-    updateStatsByCategory(stats);
+    updateStatsByCategory(stats, filtered);
     
     // Update balance chart
-    updateBalanceChart(stats);
+    updateBalanceChart(stats, filtered);
 }
 
-function updateBalanceChart(stats) {
+function updateBalanceChart(stats, filteredTransactions) {
     const canvas = document.getElementById('balanceChart');
     if (!canvas) return;
 
     const ctx = canvas.getContext('2d');
-    
-    // Préparer les données pour le graphique
-    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod);
+    const filtered = filteredTransactions || [];
     
     // Regrouper par date et calculer le solde cumulatif
     const balanceData = [];
@@ -3880,7 +4116,7 @@ function updateBalanceChart(stats) {
     });
 }
 
-function updateStatsByCategory(stats) {
+function updateStatsByCategory(stats, filteredTransactions) {
     const container = document.getElementById('categoriesStatsList');
     container.innerHTML = '';
 
@@ -3888,7 +4124,7 @@ function updateStatsByCategory(stats) {
         .sort((a, b) => b[1].total - a[1].total);
 
     // Filtrer les transactions pour la période actuelle
-    const filtered = filterTransactionsByPeriod(transactions, currentStatsPeriod);
+    const filtered = filteredTransactions || [];
 
     sortedCategories.forEach(([name, data]) => {
         const categoryDiv = document.createElement('div');
@@ -4017,6 +4253,7 @@ function updateStatsByCategory(stats) {
 
 function setupProfilePageListeners() {
     const themeToggle = document.getElementById('profileThemeToggle');
+    const timeGroupingToggle = document.getElementById('profileTimeGroupingToggle');
     const exportBtn = document.getElementById('profileExportBtn');
     const editBtn = document.getElementById('profileEditBtn');
     const changelogBtn = document.getElementById('profileChangelogBtn');
@@ -4026,19 +4263,27 @@ function setupProfilePageListeners() {
 
     if (themeToggle) {
         themeToggle.addEventListener('change', () => {
-            document.getElementById('themeToggle').click();
+            toggleTheme();
+            updateProfileDisplay();
+        });
+    }
+
+    if (timeGroupingToggle) {
+        timeGroupingToggle.addEventListener('change', () => {
+            toggleTimeGrouping();
+            updateProfileDisplay();
         });
     }
 
     if (exportBtn) {
         exportBtn.addEventListener('click', () => {
-            document.getElementById('dataTransferBtn').click();
+            openDataTransferModal();
         });
     }
 
     if (editBtn) {
         editBtn.addEventListener('click', () => {
-            document.getElementById('profileBtn').click();
+            openProfileModal();
         });
     }
 
@@ -4049,9 +4294,7 @@ function setupProfilePageListeners() {
     }
 
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            document.getElementById('logoutBtn').click();
-        });
+        logoutBtn.addEventListener('click', handleLogout);
     }
 
     if (adminBtn) {
@@ -4124,14 +4367,19 @@ function updateProfileDisplay() {
     if (themeToggle) {
         themeToggle.checked = isDark;
     }
+
+    const profileTimeGroupingToggle = document.getElementById('profileTimeGroupingToggle');
+    if (profileTimeGroupingToggle) {
+        profileTimeGroupingToggle.checked = timeGroupingEnabled;
+    }
 }
 
 // ======================
 // STATISTICS CALCULATIONS
 // ======================
 
-function calculateAllStatistics(transactionsList, period = 'allTime') {
-    const filtered = filterTransactionsByPeriod(transactionsList, period);
+function calculateAllStatistics(transactionsList, period = 'allTime', selection = {}) {
+    const filtered = filterTransactionsByPeriod(transactionsList, period, selection);
     
     const expenses = filtered.filter(t => t.type === 'expense');
     const incomes = filtered.filter(t => t.type === 'income');
@@ -4194,12 +4442,14 @@ function calculateAllStatistics(transactionsList, period = 'allTime') {
     return stats;
 }
 
-function filterTransactionsByPeriod(transactionsList, period) {
-    const today = new Date();
+function filterTransactionsByPeriod(transactionsList, period, selection = {}) {
     const filtered = [];
 
     transactionsList.forEach(t => {
         const date = new Date(t.date);
+        if (Number.isNaN(date.getTime())) {
+            return;
+        }
         let include = false;
 
         switch(period) {
@@ -4207,19 +4457,22 @@ function filterTransactionsByPeriod(transactionsList, period) {
                 include = true;
                 break;
             case 'year':
-                // 12 derniers mois
-                const oneYearAgo = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate());
-                include = date >= oneYearAgo && date <= today;
+                include = date.getFullYear() === selection.year;
                 break;
             case 'month':
-                // Ce mois
-                include = date.getMonth() === today.getMonth() &&
-                         date.getFullYear() === today.getFullYear();
+                if (selection.month) {
+                    const [year, month] = selection.month.split('-').map(Number);
+                    include = date.getFullYear() === year && (date.getMonth() + 1) === month;
+                }
                 break;
             case 'week':
-                // 7 derniers jours
-                const sevenDaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-                include = date >= sevenDaysAgo && date <= today;
+                if (selection.week?.start && selection.week?.end) {
+                    const weekStart = new Date(selection.week.start);
+                    const weekEnd = new Date(selection.week.end);
+                    weekStart.setHours(0, 0, 0, 0);
+                    weekEnd.setHours(23, 59, 59, 999);
+                    include = date >= weekStart && date <= weekEnd;
+                }
                 break;
         }
 
