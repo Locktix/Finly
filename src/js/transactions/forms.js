@@ -5,6 +5,11 @@ export function setupFormListeners() {
     // Formulaire Dépense
     document.getElementById('expenseForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+            Toast.warning('Lecture seule', 'Ajout désactivé dans la vue utilisateur');
+            return;
+        }
+
         const button = e.target.querySelector('button[type="submit"]');
         showSpinner(button, button.textContent);
 
@@ -17,7 +22,11 @@ export function setupFormListeners() {
                 date: document.getElementById('expenseDate').value,
                 timestamp: new Date().toISOString()
             };
-            await addTransaction(transaction);
+            const added = await addTransaction(transaction);
+            if (!added) {
+                hideSpinner(button);
+                return;
+            }
             document.getElementById('expenseForm').reset();
             refreshIconSelect('expenseCategory');
             closeModal('expenseModal');
@@ -31,6 +40,11 @@ export function setupFormListeners() {
     // Formulaire Recette
     document.getElementById('incomeForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+            Toast.warning('Lecture seule', 'Ajout désactivé dans la vue utilisateur');
+            return;
+        }
+
         const button = e.target.querySelector('button[type="submit"]');
         showSpinner(button, button.textContent);
 
@@ -43,7 +57,11 @@ export function setupFormListeners() {
                 date: document.getElementById('incomeDate').value,
                 timestamp: new Date().toISOString()
             };
-            await addTransaction(transaction);
+            const added = await addTransaction(transaction);
+            if (!added) {
+                hideSpinner(button);
+                return;
+            }
             document.getElementById('incomeForm').reset();
             refreshIconSelect('incomeCategory');
             closeModal('incomeModal');
@@ -57,6 +75,11 @@ export function setupFormListeners() {
     // Formulaire Modifier
     document.getElementById('editForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+            Toast.warning('Lecture seule', 'Modification désactivée dans la vue utilisateur');
+            return;
+        }
+
         const button = e.target.querySelector('button[type="submit"]');
         showSpinner(button, button.textContent);
 
@@ -82,7 +105,11 @@ export function setupFormListeners() {
                 updatedTransaction.rolloverMode = transactions[currentEditingIndex].rolloverMode;
             }
 
-            await updateTransaction(currentEditingIndex, updatedTransaction);
+            const updated = await updateTransaction(currentEditingIndex, updatedTransaction);
+            if (!updated) {
+                hideSpinner(button);
+                return;
+            }
             document.getElementById('editForm').reset();
             closeModal('editModal');
             hideSpinner(button);

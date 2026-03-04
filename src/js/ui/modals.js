@@ -16,6 +16,10 @@ export function closeModal(modalId) {
 export function setupModalListeners() {
     // Modal Dépense
     document.getElementById('addExpenseBtn').addEventListener('click', () => {
+        if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+            Toast.warning('Lecture seule', 'Ajout désactivé dans la vue utilisateur');
+            return;
+        }
         document.getElementById('expenseDate').valueAsDate = new Date();
         openModal('expenseModal');
     });
@@ -26,6 +30,10 @@ export function setupModalListeners() {
 
     // Modal Recette
     document.getElementById('addIncomeBtn').addEventListener('click', () => {
+        if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+            Toast.warning('Lecture seule', 'Ajout désactivé dans la vue utilisateur');
+            return;
+        }
         document.getElementById('incomeDate').valueAsDate = new Date();
         openModal('incomeModal');
     });

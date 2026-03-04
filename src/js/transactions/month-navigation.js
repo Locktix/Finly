@@ -44,6 +44,11 @@ export function updateMonthDisplay() {
 }
 
 export async function addTransaction(transaction) {
+    if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+        Toast.warning('Lecture seule', 'Ajout désactivé dans la vue utilisateur');
+        return false;
+    }
+
     transactions.push(transaction);
     Toast.success('Transaction ajoutée', `${transaction.description} - ${formatCurrency(transaction.amount)}`);
     updateSyncStatus('syncing');
@@ -66,9 +71,15 @@ export async function addTransaction(transaction) {
     }
 
     updateDashboard();
+    return true;
 }
 
 export async function deleteTransaction(index) {
+    if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+        Toast.warning('Lecture seule', 'Suppression désactivée dans la vue utilisateur');
+        return false;
+    }
+
     const transaction = transactions[index];
 
     const confirmed = window.confirm(`Voulez-vous vraiment supprimer cette transaction : "${transaction.description}" (${formatCurrency(transaction.amount)}) ?`);
@@ -94,9 +105,15 @@ export async function deleteTransaction(index) {
     }
 
     updateDashboard();
+    return true;
 }
 
 export async function updateTransaction(index, updatedTransaction) {
+    if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+        Toast.warning('Lecture seule', 'Modification désactivée dans la vue utilisateur');
+        return false;
+    }
+
     const oldTransaction = transactions[index];
     transactions[index] = updatedTransaction;
     Toast.success('Mise à jour', updatedTransaction.description);
@@ -118,9 +135,15 @@ export async function updateTransaction(index, updatedTransaction) {
     }
 
     updateDashboard();
+    return true;
 }
 
 export function openEditModal(index) {
+    if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+        Toast.warning('Lecture seule', 'Édition désactivée dans la vue utilisateur');
+        return;
+    }
+
     const transaction = transactions[index];
     currentEditingIndex = index;
     currentEditingType = transaction.type;
@@ -160,11 +183,22 @@ export function openEditModal(index) {
     openModal('editModal');
 }
 
-export async function loadTransactionsFromFirebase() {
+export async function loadTransactionsFromFirebase(targetUid = null) {
     try {
-        // Charger les transactions de l'utilisateur connecté
+        const uid = targetUid
+            || (adminViewUser && adminViewUser.uid)
+            || (currentUser && currentUser.uid)
+            || null;
+        const isAdminViewTarget = Boolean(targetUid) || (Boolean(adminViewUser && adminViewUser.uid) && uid !== (currentUser && currentUser.uid));
+
+        if (!uid) {
+            transactions = [];
+            updateDashboard();
+            return;
+        }
+
         const querySnapshot = await db.collection('users')
-            .doc(currentUser.uid)
+            .doc(uid)
             .collection('transactions')
             .get();
         transactions = [];
@@ -173,11 +207,22 @@ export async function loadTransactionsFromFirebase() {
             data.firebaseId = doc.id;
             transactions.push(data);
         });
-        console.log(`${transactions.length} transactions chargées depuis Firebase pour l'utilisateur ${currentUser.uid}`);
+        console.log(`${transactions.length} transactions chargées depuis Firebase pour l'utilisateur ${uid}`);
         updateDashboard();
     } catch (error) {
         console.error('Erreur lors de la récupération:', error);
         if (error.code === 'permission-denied') {
+            if (isAdminViewTarget) {
+                console.warn('Permissions insuffisantes pour afficher les transactions de cet utilisateur.');
+                transactions = [];
+                updateDashboard();
+                if (typeof refreshStatsPage === 'function') {
+                    refreshStatsPage();
+                }
+                Toast.error('Accès refusé', 'Les règles Firestore bloquent la lecture des transactions de cet utilisateur');
+                return;
+            }
+
             console.warn('Permissions insuffisantes pour accéder à Firebase. Basculement en mode local.');
             useLocalStorage();
         }

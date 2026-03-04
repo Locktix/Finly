@@ -143,6 +143,133 @@ export async function loadUserRole(user) {
     }
 }
 
+export function isAdminReadOnlyView() {
+    return Boolean(adminViewUser && adminViewUser.uid);
+}
+
+function ensureAdminViewBanner() {
+    const mainContainer = document.getElementById('mainContainer');
+    if (!mainContainer) return null;
+
+    let banner = document.getElementById('adminViewBanner');
+    if (banner) return banner;
+
+    banner = document.createElement('div');
+    banner.id = 'adminViewBanner';
+    banner.className = 'admin-view-banner';
+    banner.innerHTML = `
+        <div class="admin-view-banner-content">
+            <i class="fas fa-eye"></i>
+            <span class="admin-view-banner-label" id="adminViewBannerLabel"></span>
+        </div>
+        <button type="button" class="btn-secondary" id="exitAdminViewBtn">Quitter la vue</button>
+    `;
+
+    mainContainer.insertBefore(banner, mainContainer.firstChild);
+
+    const exitButton = document.getElementById('exitAdminViewBtn');
+    if (exitButton) {
+        exitButton.addEventListener('click', async () => {
+            await stopAdminUserView();
+            renderAdminUsers();
+        });
+    }
+
+    return banner;
+}
+
+function updateAdminReadOnlyUI() {
+    const readOnly = isAdminReadOnlyView();
+    const addIncomeBtn = document.getElementById('addIncomeBtn');
+    const addExpenseBtn = document.getElementById('addExpenseBtn');
+    const expenseSubmit = document.querySelector('#expenseForm button[type="submit"]');
+    const incomeSubmit = document.querySelector('#incomeForm button[type="submit"]');
+    const editSubmit = document.querySelector('#editForm button[type="submit"]');
+
+    [addIncomeBtn, addExpenseBtn, expenseSubmit, incomeSubmit, editSubmit].forEach(button => {
+        if (!button) return;
+        button.disabled = readOnly;
+        button.classList.toggle('is-readonly-disabled', readOnly);
+    });
+
+    if (readOnly) {
+        closeModal('expenseModal');
+        closeModal('incomeModal');
+        closeModal('editModal');
+    }
+
+    const banner = ensureAdminViewBanner();
+    if (!banner) return;
+
+    if (!readOnly) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    const label = document.getElementById('adminViewBannerLabel');
+    if (label) {
+        const labelName = adminViewUser?.name || adminViewUser?.email || adminViewUser?.uid || 'Utilisateur';
+        label.textContent = `Vue lecture seule de ${labelName}`;
+    }
+    banner.style.display = 'flex';
+}
+
+export async function startAdminUserView(user) {
+    if (currentUserRole !== 'Administrateur') {
+        Toast.error('Accès refusé', 'Réservé aux administrateurs');
+        return;
+    }
+
+    if (!db) {
+        Toast.error('Firestore indisponible', 'Impossible de charger la vue utilisateur');
+        return;
+    }
+
+    if (!user || !user.uid) {
+        Toast.error('Utilisateur invalide', 'Impossible de charger cette vue');
+        return;
+    }
+
+    adminViewUser = {
+        uid: user.uid,
+        name: user.name || 'Sans nom',
+        email: user.email || ''
+    };
+
+    updateAdminReadOnlyUI();
+    closeModal('adminPanelModal');
+    await loadTransactionsFromFirebase(user.uid);
+    if (typeof refreshStatsPage === 'function') {
+        refreshStatsPage();
+    }
+    Toast.info('Mode lecture seule', `Vue chargée pour ${adminViewUser.name}`);
+}
+
+export async function stopAdminUserView(showToast = true) {
+    if (!isAdminReadOnlyView()) {
+        updateAdminReadOnlyUI();
+        return;
+    }
+
+    adminViewUser = null;
+    updateAdminReadOnlyUI();
+
+    if (db && currentUser && currentUser.uid) {
+        await loadTransactionsFromFirebase(currentUser.uid);
+    } else {
+        loadTransactionsFromLocal();
+        updateDashboard();
+    }
+
+    if (typeof refreshStatsPage === 'function') {
+        refreshStatsPage();
+    }
+
+    if (showToast) {
+        Toast.success('Vue restaurée', 'Retour sur vos données');
+    }
+}
+
 export async function loadAdminUsers() {
     const container = document.getElementById('adminUsersList');
     if (!container) return;
@@ -175,42 +302,6 @@ export async function loadAdminUsers() {
 
         adminUsersCache = users;
         renderAdminUsers();
-
-        container.querySelectorAll('.admin-role-select').forEach(select => {
-            select.addEventListener('change', async (e) => {
-                const target = e.target;
-                const uid = target.getAttribute('data-uid');
-                const newRole = target.value;
-
-                if (!uid || !newRole) return;
-
-                try {
-                    await db.collection('users').doc(uid).update({ role: newRole });
-                    if (uid === currentUser.uid) {
-                        currentUserRole = newRole;
-                        await loadProfileData();
-                        const adminBtn = document.getElementById('adminPanelBtn');
-                        const testerBtn = document.getElementById('testerPanelBtn');
-                        const profileAdminSection = document.getElementById('profileAdminSection');
-                        
-                        if (adminBtn) {
-                            adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
-                        }
-                        if (testerBtn) {
-                            testerBtn.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'flex' : 'none';
-                        }
-                        if (profileAdminSection) {
-                            profileAdminSection.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'block' : 'none';
-                        }
-                    }
-                    Toast.success('Rôle mis à jour', `${newRole}`);
-                } catch (error) {
-                    console.error('Erreur mise à jour role:', error);
-                    Toast.error('Erreur', 'Impossible de mettre à jour le rôle');
-                    await loadAdminUsers();
-                }
-            });
-        });
     } catch (error) {
         console.error('Erreur chargement utilisateurs:', error);
         const isPermission = error && error.code === 'permission-denied';
@@ -218,6 +309,68 @@ export async function loadAdminUsers() {
             ? '<p class="config-text">Permissions insuffisantes. Mettez à jour les règles Firestore.</p>'
             : '<p class="config-text">Erreur lors du chargement.</p>';
     }
+}
+
+function bindAdminUserActions(container) {
+    container.querySelectorAll('.admin-role-select').forEach(select => {
+        select.addEventListener('change', async (e) => {
+            const target = e.target;
+            const uid = target.getAttribute('data-uid');
+            const newRole = target.value;
+
+            if (!uid || !newRole) return;
+
+            try {
+                await db.collection('users').doc(uid).update({ role: newRole });
+                const cachedUser = adminUsersCache.find(user => user.uid === uid);
+                if (cachedUser) {
+                    cachedUser.role = newRole;
+                }
+
+                if (uid === currentUser.uid) {
+                    currentUserRole = newRole;
+                    await loadProfileData();
+                    const adminBtn = document.getElementById('adminPanelBtn');
+                    const testerBtn = document.getElementById('testerPanelBtn');
+                    const profileAdminSection = document.getElementById('profileAdminSection');
+
+                    if (adminBtn) {
+                        adminBtn.style.display = currentUserRole === 'Administrateur' ? 'flex' : 'none';
+                    }
+                    if (testerBtn) {
+                        testerBtn.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'flex' : 'none';
+                    }
+                    if (profileAdminSection) {
+                        profileAdminSection.style.display = (currentUserRole === 'Administrateur' || currentUserRole === 'testeur') ? 'block' : 'none';
+                    }
+                }
+                Toast.success('Rôle mis à jour', `${newRole}`);
+            } catch (error) {
+                console.error('Erreur mise à jour role:', error);
+                Toast.error('Erreur', 'Impossible de mettre à jour le rôle');
+                await loadAdminUsers();
+            }
+        });
+    });
+
+    container.querySelectorAll('.admin-view-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const uid = button.getAttribute('data-uid');
+            if (!uid) return;
+
+            if (adminViewUser && adminViewUser.uid === uid) {
+                await stopAdminUserView(false);
+                renderAdminUsers();
+                return;
+            }
+
+            const user = adminUsersCache.find(item => item.uid === uid);
+            if (!user) return;
+
+            await startAdminUserView(user);
+            renderAdminUsers();
+        });
+    });
 }
 
 export function renderAdminUsers() {
@@ -242,6 +395,8 @@ export function renderAdminUsers() {
         const options = ROLE_OPTIONS
             .map(option => `<option value="${option}" ${option === user.role ? 'selected' : ''}>${option}</option>`)
             .join('');
+        const isViewing = adminViewUser && adminViewUser.uid === user.uid;
+        const viewIcon = isViewing ? 'fa-eye-slash' : 'fa-eye';
 
         return `
             <div class="admin-user-row">
@@ -250,14 +405,20 @@ export function renderAdminUsers() {
                     <div class="admin-user-email">${user.email}</div>
                     <div class="admin-user-uid">UID: ${user.uid}</div>
                 </div>
-                <select class="admin-role-select" data-uid="${user.uid}">
-                    ${options}
-                </select>
+                <div class="admin-user-actions">
+                    <button type="button" class="admin-view-btn ${isViewing ? 'active' : ''}" data-uid="${user.uid}" title="Voir en lecture seule">
+                        <i class="fas ${viewIcon}"></i>
+                    </button>
+                    <select class="admin-role-select" data-uid="${user.uid}">
+                        ${options}
+                    </select>
+                </div>
             </div>
         `;
     });
 
     container.innerHTML = rows.join('');
+    bindAdminUserActions(container);
 }
 
 export function logToTester(message) {
@@ -502,6 +663,8 @@ export function showDashboard() {
         loadTransactionsFromLocal();
         updateDashboard();
     }
+
+    updateAdminReadOnlyUI();
 }
 
 export function checkAuthState() {
@@ -509,6 +672,7 @@ export function checkAuthState() {
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
                 currentUser = user;
+                adminViewUser = null;
                 if (db) {
                     ensureUserProfile(currentUser)
                         .then(() => loadUserRole(currentUser))
@@ -526,6 +690,8 @@ export function checkAuthState() {
                 loadUserRole(currentUser);
                 showDashboard();
             } else {
+                adminViewUser = null;
+                updateAdminReadOnlyUI();
                 showAuthPage();
             }
             resolve();
@@ -536,6 +702,9 @@ export function checkAuthState() {
 window.loadProfileData = loadProfileData;
 window.ensureUserProfile = ensureUserProfile;
 window.loadUserRole = loadUserRole;
+window.isAdminReadOnlyView = isAdminReadOnlyView;
+window.startAdminUserView = startAdminUserView;
+window.stopAdminUserView = stopAdminUserView;
 window.loadAdminUsers = loadAdminUsers;
 window.renderAdminUsers = renderAdminUsers;
 window.logToTester = logToTester;

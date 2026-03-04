@@ -39,6 +39,7 @@ var currentUserRole = 'membre';
 const ADMIN_UID = '6aqDFLL8obNSdUKoAmdnm9kgMEg2';
 const ROLE_OPTIONS = ['Administrateur', 'testeur', 'membre'];
 var adminUsersCache = [];
+var adminViewUser = null;
 var testerOutputBuffer = [];
 var appLoaderTimeout = null;
 
@@ -57,6 +58,12 @@ Object.defineProperty(window, 'currentUserRole', {
 Object.defineProperty(window, 'adminUsersCache', {
     get: () => adminUsersCache,
     set: (value) => { adminUsersCache = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'adminViewUser', {
+    get: () => adminViewUser,
+    set: (value) => { adminViewUser = value; },
     configurable: true
 });
 
@@ -201,6 +208,7 @@ export async function handleLogout() {
         await firebase.auth().signOut();
         currentUser = null;
         currentUserRole = 'membre';
+        adminViewUser = null;
         const adminBtn = document.getElementById('adminPanelBtn');
         const testerBtn = document.getElementById('testerPanelBtn');
         const profileAdminSection = document.getElementById('profileAdminSection');

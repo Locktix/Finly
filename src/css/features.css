@@ -134,6 +134,14 @@
     box-shadow: var(--shadow-lg);
 }
 
+.btn-action:disabled,
+.btn-action.is-readonly-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 /* ======================
    SECTION TRANSACTIONS
    ====================== */
@@ -647,6 +655,13 @@
     transform: scale(1.1);
 }
 
+.btn-edit:disabled,
+.btn-delete:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+}
+
 /* ======================
    MODALES
    ====================== */
@@ -977,6 +992,38 @@
     text-overflow: ellipsis;
 }
 
+.admin-user-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    flex-shrink: 0;
+}
+
+.admin-view-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    background-color: var(--color-bg-primary);
+    color: var(--color-primary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.admin-view-btn:hover {
+    border-color: var(--color-primary);
+    background-color: var(--color-bg-secondary);
+    box-shadow: var(--shadow-sm);
+}
+
+.admin-view-btn.active {
+    border-color: var(--color-primary);
+    background-color: rgba(59, 130, 246, 0.08);
+}
+
 .admin-role-select {
     padding: var(--spacing-xs) var(--spacing-sm);
     border-radius: var(--radius-sm);
@@ -998,6 +1045,26 @@
     text-align: center;
     color: var(--color-text-tertiary);
     font-size: var(--font-size-sm);
+}
+
+.admin-view-banner {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-secondary);
+}
+
+.admin-view-banner-content {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--color-text-primary);
+    font-weight: 600;
 }
 
 /* Tester Panel */

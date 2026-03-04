@@ -4,6 +4,7 @@
 export function updateTransactionsList() {
     const listContainer = document.getElementById('transactionsList');
     const month = getSelectedMonth();
+    const readOnly = typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView();
 
     const monthTransactions = getTransactionsForMonth(month);
     const filteredTransactions = applyFilters(monthTransactions);
@@ -76,7 +77,8 @@ export function updateTransactionsList() {
                     icon,
                     formattedDate,
                     formattedAmount,
-                    typeClass
+                    typeClass,
+                    readOnly
                 });
             });
         });
@@ -94,7 +96,8 @@ export function updateTransactionsList() {
                 icon,
                 formattedDate,
                 formattedAmount,
-                typeClass
+                typeClass,
+                readOnly
             });
         });
     }
@@ -108,8 +111,16 @@ export function renderTransactionCard(transaction, {
     icon,
     formattedDate,
     formattedAmount,
-    typeClass
+    typeClass,
+    readOnly = false
 }) {
+    const editButton = readOnly
+        ? `<button class="btn-edit" type="button" title="Modifier" disabled><i class="fas fa-edit"></i></button>`
+        : `<button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier"><i class="fas fa-edit"></i></button>`;
+    const deleteButton = readOnly
+        ? `<button class="btn-delete" type="button" title="Supprimer" disabled><i class="fas fa-trash-alt"></i></button>`
+        : `<button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer"><i class="fas fa-trash-alt"></i></button>`;
+
     return `
         <div class="transaction-swipe-item" data-transaction-index="${originalIndex}">
             <div class="transaction-swipe-bg swipe-edit">
@@ -136,12 +147,8 @@ export function renderTransactionCard(transaction, {
                 <div class="transaction-card-footer">
                     <div class="transaction-card-date"><i class="fas fa-clock"></i> ${formattedDate}</div>
                     <div class="transaction-card-actions">
-                        <button class="btn-edit" onclick="openEditModal(${originalIndex})" title="Modifier">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})" title="Supprimer">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        ${editButton}
+                        ${deleteButton}
                     </div>
                 </div>
             </div>
@@ -168,6 +175,11 @@ export function setupMobileSwipeActions() {
 
     const swipeItems = listContainer.querySelectorAll('.transaction-swipe-item');
     if (swipeItems.length === 0) return;
+
+    if (typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView()) {
+        swipeItems.forEach((item) => resetSwipeItem(item));
+        return;
+    }
 
     if (!isMobileSwipeEnabled()) {
         swipeItems.forEach((item) => resetSwipeItem(item));

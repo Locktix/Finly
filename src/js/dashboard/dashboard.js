@@ -93,6 +93,7 @@ export function updateTransactionsTable() {
     const tableBody = document.getElementById('transactionsBody');
     const countElement = document.getElementById('transactionCount');
     const month = getSelectedMonth();
+    const readOnly = typeof window.isAdminReadOnlyView === 'function' && window.isAdminReadOnlyView();
 
     const monthTransactions = getTransactionsForMonth(month);
     const filteredTransactions = applyFilters(monthTransactions);
@@ -170,6 +171,27 @@ export function updateTransactionsTable() {
                 const formattedAmount = formatCurrency(transaction.amount);
                 const typeClass = transaction.type === 'income' ? 'income' : 'expense';
                 const typeLabel = transaction.type === 'income' ? 'Recette' : 'Dépense';
+                const actionsHtml = readOnly
+                    ? `
+                        <div class="action-buttons">
+                            <button class="btn-edit" type="button" disabled>
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn-delete" type="button" disabled>
+                                <i class="fas fa-trash-alt"></i> Supprimer
+                            </button>
+                        </div>
+                    `
+                    : `
+                        <div class="action-buttons">
+                            <button class="btn-edit" onclick="openEditModal(${originalIndex})">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                            <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
+                                <i class="fas fa-trash-alt"></i> Supprimer
+                            </button>
+                        </div>
+                    `;
 
                 html += `
                     <tr>
@@ -181,16 +203,7 @@ export function updateTransactionsTable() {
                         </td>
                         <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
                         <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn-edit" onclick="openEditModal(${originalIndex})">
-                                    <i class="fas fa-edit"></i> Modifier
-                                </button>
-                                <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
-                                    <i class="fas fa-trash-alt"></i> Supprimer
-                                </button>
-                            </div>
-                        </td>
+                        <td>${actionsHtml}</td>
                     </tr>
                 `;
             });
@@ -204,6 +217,27 @@ export function updateTransactionsTable() {
             const formattedAmount = formatCurrency(transaction.amount);
             const typeClass = transaction.type === 'income' ? 'income' : 'expense';
             const typeLabel = transaction.type === 'income' ? 'Recette' : 'Dépense';
+            const actionsHtml = readOnly
+                ? `
+                    <div class="action-buttons">
+                        <button class="btn-edit" type="button" disabled>
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn-delete" type="button" disabled>
+                            <i class="fas fa-trash-alt"></i> Supprimer
+                        </button>
+                    </div>
+                `
+                : `
+                    <div class="action-buttons">
+                        <button class="btn-edit" onclick="openEditModal(${originalIndex})">
+                            <i class="fas fa-edit"></i> Modifier
+                        </button>
+                        <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
+                            <i class="fas fa-trash-alt"></i> Supprimer
+                        </button>
+                    </div>
+                `;
 
             html += `
                 <tr>
@@ -215,16 +249,7 @@ export function updateTransactionsTable() {
                     </td>
                     <td class="transaction-amount ${typeClass}">${formattedAmount}</td>
                     <td><span class="transaction-type ${typeClass}">${typeLabel}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-edit" onclick="openEditModal(${originalIndex})">
-                                <i class="fas fa-edit"></i> Modifier
-                            </button>
-                            <button class="btn-delete" onclick="deleteTransaction(${originalIndex})">
-                                <i class="fas fa-trash-alt"></i> Supprimer
-                            </button>
-                        </div>
-                    </td>
+                    <td>${actionsHtml}</td>
                 </tr>
             `;
         });

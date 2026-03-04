@@ -29,9 +29,9 @@ service cloud.firestore {
       
       // Subcollection transactions
       match /transactions/{document=**} {
-        // Lecture: seulement les transactions de l'utilisateur connecté
+        // Lecture: utilisateur propriétaire OU administrateur (vue lecture seule)
         allow read: if request.auth != null && 
-                       request.auth.uid == uid;
+                       (request.auth.uid == uid || isAdmin());
         
         // Création: seulement pour l'utilisateur connecté
         allow create: if request.auth != null && 
@@ -90,7 +90,7 @@ service cloud.firestore {
       
       match /transactions/{document=**} {
         allow read: if request.auth != null && 
-                       request.auth.uid == uid;
+                       (request.auth.uid == uid || isAdmin());
         
         allow create: if request.auth != null && 
                          request.auth.uid == uid &&
