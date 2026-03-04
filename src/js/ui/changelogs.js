@@ -1,10 +1,50 @@
 // ======================
 // GESTION DES CHANGELOGS
 // ======================
+const CHANGELOG_SEEN_KEY = 'finly:lastSeenChangelogVersion';
+let latestChangelogVersion = null;
+
+function setProfileChangelogBadge(hasUpdate) {
+    const profileChangelogBtn = document.getElementById('profileChangelogBtn');
+    const profileNavButtons = document.querySelectorAll('[data-page="profilePage"]');
+    const enabled = Boolean(hasUpdate);
+
+    if (profileChangelogBtn) {
+        profileChangelogBtn.classList.toggle('has-update', enabled);
+    }
+
+    profileNavButtons.forEach(button => {
+        button.classList.toggle('has-update', enabled);
+    });
+}
+
+function getSeenChangelogVersion() {
+    return localStorage.getItem(CHANGELOG_SEEN_KEY) || null;
+}
+
+function markChangelogAsSeen() {
+    if (!latestChangelogVersion) return;
+    localStorage.setItem(CHANGELOG_SEEN_KEY, latestChangelogVersion);
+    setProfileChangelogBadge(false);
+}
+
+function refreshChangelogBadge() {
+    if (!latestChangelogVersion) {
+        setProfileChangelogBadge(false);
+        return;
+    }
+
+    const seenVersion = getSeenChangelogVersion();
+    setProfileChangelogBadge(seenVersion !== latestChangelogVersion);
+}
+
 export function loadChangelogs() {
     fetch('changelogs.json')
         .then(response => response.json())
         .then(data => {
+            latestChangelogVersion = data?.versions?.[0]?.version || null;
+            refreshChangelogBadge();
+
             const container = document.getElementById('changelogsContainer');
             container.innerHTML = '';
             container.classList.add('roadmap-timeline');
@@ -40,10 +80,14 @@ export function loadChangelogs() {
                 container.appendChild(roadmapItem);
             });
         })
-        .catch(error => console.error('Erreur lors du chargement des changelogs:', error));
+        .catch(error => {
+            console.error('Erreur lors du chargement des changelogs:', error);
+            setProfileChangelogBadge(false);
+        });
 
     // Événements pour le modal changelogs
     document.getElementById('changelogs-btn').addEventListener('click', () => {
+        markChangelogAsSeen();
         openModal('changelogsModal');
     });
 

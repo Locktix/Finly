@@ -366,6 +366,18 @@ body.desktop-layout .period-selector {
     outline-offset: 2px;
 }
 
+.desktop-nav-btn.has-update::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-expense);
+    box-shadow: 0 0 0 2px var(--color-bg-secondary);
+}
+
 /* Responsive pour petits écrans desktop */
 @media (max-width: 1024px) {
     .desktop-nav-btn {

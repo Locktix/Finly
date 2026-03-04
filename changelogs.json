@@ -1,6 +1,18 @@
 {
   "versions": [
     {
+      "version": "1.8.0",
+      "date": "2026-03-04",
+      "title": "Vue Admin Utilisateur (Lecture Seule) & Totaux par Catégorie",
+      "changes": [
+        "👁️ Admin Panel : ajout d'un bouton oeil pour ouvrir la vue d'un utilisateur spécifique",
+        "🔒 Mode lecture seule en vue admin : ajout / modification / suppression désactivés pour éviter toute altération",
+        "📊 Chargement des transactions, graphiques et statistiques de l'utilisateur sélectionné",
+        "🧾 Statistiques > Par catégorie : affichage du total cumulé pour chaque catégorie",
+        "🔔 Profil : ajout d'une bulle de notification indiquant qu'une nouvelle mise à jour est disponible"
+      ]
+    },
+    {
       "version": "1.7.0",
       "date": "2026-03-03",
       "title": "Refonte Navigation & Expérience Multi-Écrans",

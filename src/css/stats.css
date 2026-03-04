@@ -533,6 +533,33 @@
     font-size: var(--font-size-sm);
 }
 
+.category-values-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.category-values-meta {
+    text-align: right;
+}
+
+.category-total-label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    line-height: 1.2;
+}
+
+.category-total-value {
+    font-weight: 700;
+    font-size: var(--font-size-base);
+    line-height: 1.25;
+}
+
+.category-range-value {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+}
+
 .category-value.expense {
     color: var(--color-expense);
 }

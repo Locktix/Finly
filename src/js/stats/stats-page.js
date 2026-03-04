@@ -280,10 +280,12 @@ export function updateStatsByCategory(stats, filteredTransactions) {
                         <p>${data.count} transaction${data.count > 1 ? 's' : ''}</p>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: var(--spacing-sm);">
-                    <div>
-                        <div class="category-value ${iconColor}">${formatCurrency(data.avg)}</div>
-                        <div style="font-size: 0.75rem; color: var(--color-text-tertiary); text-align: right;">
+                <div class="category-values-wrap">
+                    <div class="category-values-meta">
+                        <div class="category-total-label">Total</div>
+                        <div class="category-total-value ${iconColor}">${formatCurrency(data.total)}</div>
+                        <div class="category-value ${iconColor}">Moyenne: ${formatCurrency(data.avg)}</div>
+                        <div class="category-range-value">
                             ${formatCurrency(data.min)} - ${formatCurrency(data.max)}
                         </div>
                     </div>

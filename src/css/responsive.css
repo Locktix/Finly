@@ -1099,6 +1099,18 @@
     z-index: 1;
 }
 
+.navbar-btn.has-update::after {
+    content: '';
+    position: absolute;
+    top: 14px;
+    right: calc(50% - 18px);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--color-expense);
+    box-shadow: 0 0 0 2px var(--color-bg-primary);
+}
+
 /* ======================
    RESPONSIVE MOBILE
    ====================== */
