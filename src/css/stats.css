@@ -4,7 +4,7 @@
 
 .period-selector {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: var(--spacing-sm);
     padding: var(--spacing-md);
     background: var(--color-bg-secondary);

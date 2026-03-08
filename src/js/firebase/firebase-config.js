@@ -37,6 +37,7 @@ const categoryIcons = {
     'Transport': 'fa-car',
     'Santé': 'fa-hospital',
     'Restaurants': 'fa-utensils',
+    'Dettes': 'fa-hand-holding-dollar',
     'Services': 'fa-wrench',
     'Abonnements': 'fa-file-invoice',
     'Factures': 'fa-file-invoice-dollar',
@@ -47,8 +48,8 @@ const categoryIcons = {
 };
 window.categoryIcons = categoryIcons;
 
-const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
-const incomeCategories = ['Salaire', 'Revenus', 'Épargne', 'Autres'];
+const expenseCategories = ['Assurances', 'Magasins', 'Épargne', 'Loisirs', 'Transport', 'Santé', 'Restaurants', 'Dettes', 'Services', 'Abonnements', 'Factures', 'FastFood', 'Autres'];
+const incomeCategories = ['Salaire', 'Revenus', 'Épargne', 'Dettes', 'Autres'];
 window.expenseCategories = expenseCategories;
 window.incomeCategories = incomeCategories;
 
@@ -631,6 +632,7 @@ Object.defineProperty(window, 'currentEditingType', {
 let expensesChartInstance = null;
 let incomeExpenseChartInstance = null;
 let balanceChartInstance = null;
+let dayBalanceChartInstance = null;
 
 Object.defineProperty(window, 'expensesChartInstance', {
     get: () => expensesChartInstance,
@@ -647,6 +649,12 @@ Object.defineProperty(window, 'incomeExpenseChartInstance', {
 Object.defineProperty(window, 'balanceChartInstance', {
     get: () => balanceChartInstance,
     set: (value) => { balanceChartInstance = value; },
+    configurable: true
+});
+
+Object.defineProperty(window, 'dayBalanceChartInstance', {
+    get: () => dayBalanceChartInstance,
+    set: (value) => { dayBalanceChartInstance = value; },
     configurable: true
 });
 

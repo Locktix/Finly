@@ -486,6 +486,10 @@
                     <i class="fas fa-calendar-week"></i>
                     <span>Semaine</span>
                 </button>
+                <button class="period-btn" data-period="day">
+                    <i class="fas fa-calendar-day"></i>
+                    <span>Jour</span>
+                </button>
             </div>
 
             <div class="stats-period-controls" id="statsPeriodControls">
@@ -500,6 +504,10 @@
                 <div class="stats-period-control" id="statsWeekControl" style="display: none;">
                     <label for="statsWeekSelect">Semaine</label>
                     <select id="statsWeekSelect" class="stats-period-select"></select>
+                </div>
+                <div class="stats-period-control" id="statsDayControl" style="display: none;">
+                    <label for="statsDaySelect">Jour</label>
+                    <select id="statsDaySelect" class="stats-period-select"></select>
                 </div>
             </div>
 
@@ -544,13 +552,24 @@
             </div>
 
             <!-- Balance Evolution Chart -->
-            <div class="chart-card">
+            <div class="chart-card" id="statsMainBalanceChartCard">
                 <h3 class="chart-title">
                     <i class="fas fa-chart-area"></i>
                     Évolution de la balance
                 </h3>
                 <div class="balance-chart">
                     <canvas id="balanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Balance Evolution Chart (Jour uniquement) -->
+            <div class="chart-card" id="dayBalanceChartCard" style="display: none;">
+                <h3 class="chart-title">
+                    <i class="fas fa-clock"></i>
+                    Évolution de la balance (jour)
+                </h3>
+                <div class="balance-chart">
+                    <canvas id="dayBalanceChart"></canvas>
                 </div>
             </div>
 
@@ -853,6 +872,7 @@
                             <option value="Abonnements">Abonnements</option>
                             <option value="Factures">Factures</option>
                             <option value="FastFood">Fast-Food</option>
+                            <option value="Dettes">Dettes</option>
                             <option value="Services">Services</option>
                             <option value="Autres">Autres</option>
                         </select>
@@ -893,6 +913,7 @@
                             <option value="Salaire">Salaire</option>
                             <option value="Revenus">Revenus</option>
                             <option value="Épargne">Épargne</option>
+                            <option value="Dettes">Dettes</option>
                             <option value="Autres">Autres</option>
                         </select>
                     </div>

@@ -7,6 +7,7 @@ export function setupStatsPageListeners() {
     const yearSelect = document.getElementById('statsYearSelect');
     const monthSelect = document.getElementById('statsMonthSelect');
     const weekSelect = document.getElementById('statsWeekSelect');
+    const daySelect = document.getElementById('statsDaySelect');
     
     periodButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -43,6 +44,13 @@ export function setupStatsPageListeners() {
         weekSelect.addEventListener('change', () => {
             const [start, end] = weekSelect.value.split('|');
             window.selectedStatsWeek = start && end ? { start, end } : null;
+            updateStatsDisplay();
+        });
+    }
+
+    if (daySelect) {
+        daySelect.addEventListener('change', () => {
+            window.selectedStatsDay = daySelect.value || null;
             updateStatsDisplay();
         });
     }
@@ -91,9 +99,135 @@ export function updateStatsDisplay() {
     
     // Update balance chart
     updateBalanceChart(stats, filtered);
+    updateDayBalanceChart(stats, filtered);
+}
+
+export function updateDayBalanceChart(stats, filteredTransactions) {
+    const mainChartCard = document.getElementById('statsMainBalanceChartCard');
+    const chartCard = document.getElementById('dayBalanceChartCard');
+    const canvas = document.getElementById('dayBalanceChart');
+    if (!chartCard || !canvas) return;
+
+    const isDayPeriod = window.currentStatsPeriod === 'day';
+    chartCard.style.display = isDayPeriod ? 'block' : 'none';
+    if (mainChartCard) {
+        mainChartCard.style.display = isDayPeriod ? 'none' : 'block';
+    }
+
+    if (!isDayPeriod) {
+        if (dayBalanceChartInstance) {
+            dayBalanceChartInstance.destroy();
+            dayBalanceChartInstance = null;
+        }
+        return;
+    }
+
+    const filtered = filteredTransactions || [];
+    const withTime = [...filtered].sort((a, b) => {
+        const dateA = new Date(a.timestamp || `${a.date}T00:00:00`);
+        const dateB = new Date(b.timestamp || `${b.date}T00:00:00`);
+        return dateA - dateB;
+    });
+
+    const labels = [];
+    const balanceData = [];
+    let cumulativeBalance = 0;
+
+    withTime.forEach((transaction, index) => {
+        const rawDate = new Date(transaction.timestamp || `${transaction.date}T00:00:00`);
+        const hasValidTime = !Number.isNaN(rawDate.getTime()) && transaction.timestamp;
+        const label = hasValidTime
+            ? rawDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+            : `Transaction ${index + 1}`;
+
+        const amount = transaction.type === 'income' ? transaction.amount : -transaction.amount;
+        cumulativeBalance += amount;
+
+        labels.push(label);
+        balanceData.push(cumulativeBalance);
+    });
+
+    if (balanceData.length === 0) {
+        labels.push('Aucune transaction');
+        balanceData.push(stats.totalIncome - stats.totalExpense);
+    }
+
+    if (dayBalanceChartInstance) {
+        dayBalanceChartInstance.destroy();
+    }
+
+    dayBalanceChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [{
+                label: 'Solde (jour)',
+                data: balanceData,
+                backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                borderColor: 'rgb(16, 185, 129)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 3,
+                pointHoverRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    callbacks: {
+                        label: function(context) {
+                            return 'Solde: ' + formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#9ca3af',
+                        callback: function(value) {
+                            return formatCurrency(value);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)',
+                        drawBorder: false
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { size: 10 },
+                        color: '#9ca3af',
+                        maxRotation: 45,
+                        minRotation: 0
+                    },
+                    grid: {
+                        display: false
+                    }
+                }
+            }
+        }
+    });
 }
 
 export function updateBalanceChart(stats, filteredTransactions) {
+    if (window.currentStatsPeriod === 'day') {
+        if (balanceChartInstance) {
+            balanceChartInstance.destroy();
+            balanceChartInstance = null;
+        }
+        return;
+    }
+
     const canvas = document.getElementById('balanceChart');
     if (!canvas) return;
 
@@ -337,4 +471,5 @@ window.setupStatsPageListeners = setupStatsPageListeners;
 window.refreshStatsPage = refreshStatsPage;
 window.updateStatsDisplay = updateStatsDisplay;
 window.updateBalanceChart = updateBalanceChart;
+window.updateDayBalanceChart = updateDayBalanceChart;
 window.updateStatsByCategory = updateStatsByCategory;

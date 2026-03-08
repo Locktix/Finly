@@ -98,6 +98,15 @@ export function filterTransactionsByPeriod(transactionsList, period, selection =
                     include = date >= weekStart && date <= weekEnd;
                 }
                 break;
+            case 'day':
+                if (selection.day) {
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const currentDate = `${year}-${month}-${day}`;
+                    include = currentDate === selection.day;
+                }
+                break;
         }
 
         if (include) {
@@ -119,6 +128,7 @@ export function getCategoryIconClass(category) {
         'Transport': 'fas fa-bus',
         'Santé': 'fas fa-heart',
         'Restaurants': 'fas fa-utensils',
+        'Dettes': 'fas fa-hand-holding-dollar',
         'Abonnements': 'fas fa-subscript',
         'Factures': 'fas fa-file-invoice',
         'FastFood': 'fas fa-hamburger',

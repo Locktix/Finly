@@ -15,6 +15,9 @@ if (typeof window.selectedStatsMonth === 'undefined') {
 if (typeof window.selectedStatsWeek === 'undefined') {
     window.selectedStatsWeek = null;
 }
+if (typeof window.selectedStatsDay === 'undefined') {
+    window.selectedStatsDay = null;
+}
 let mobileAppInitialized = false;
 let responsiveListenersInitialized = false;
 
@@ -307,11 +310,38 @@ export function getMonthWeekRanges(year, month) {
     return weekRanges;
 }
 
+export function getDayOptionsForMonth(year, month) {
+    const options = [];
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month - 1, day);
+        const value = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const label = date.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            day: '2-digit',
+            month: '2-digit'
+        });
+
+        options.push({ value, label });
+    }
+
+    return options;
+}
+
+function getIsoDateLocal(date = new Date()) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
 export function getCurrentStatsSelection() {
     return {
         year: window.selectedStatsYear,
         month: window.selectedStatsMonth,
-        week: window.selectedStatsWeek
+        week: window.selectedStatsWeek,
+        day: window.selectedStatsDay
     };
 }
 
@@ -338,11 +368,13 @@ export function updateStatsPeriodControls() {
     const yearControl = document.getElementById('statsYearControl');
     const monthControl = document.getElementById('statsMonthControl');
     const weekControl = document.getElementById('statsWeekControl');
+    const dayControl = document.getElementById('statsDayControl');
     const yearSelect = document.getElementById('statsYearSelect');
     const monthSelect = document.getElementById('statsMonthSelect');
     const weekSelect = document.getElementById('statsWeekSelect');
+    const daySelect = document.getElementById('statsDaySelect');
 
-    if (!controlsContainer || !yearControl || !monthControl || !weekControl || !yearSelect || !monthSelect || !weekSelect) {
+    if (!controlsContainer || !yearControl || !monthControl || !weekControl || !dayControl || !yearSelect || !monthSelect || !weekSelect || !daySelect) {
         return;
     }
 
@@ -351,6 +383,7 @@ export function updateStatsPeriodControls() {
         yearControl.style.display = 'none';
         monthControl.style.display = 'none';
         weekControl.style.display = 'none';
+        dayControl.style.display = 'none';
         return;
     }
 
@@ -371,7 +404,16 @@ export function updateStatsPeriodControls() {
     const [weekYear, weekMonth] = window.selectedStatsMonth.split('-').map(Number);
     const weekRanges = getMonthWeekRanges(weekYear, weekMonth);
     const weekOptions = weekRanges.map(range => ({ value: range.id, label: range.label }));
-    const defaultWeekValue = window.selectedStatsWeek ? `${window.selectedStatsWeek.start}|${window.selectedStatsWeek.end}` : null;
+    const today = new Date();
+    const todayIso = getIsoDateLocal(today);
+    const currentWeekRange = weekRanges.find(range => todayIso >= range.start && todayIso <= range.end) || null;
+    const fallbackWeekValue = currentWeekRange ? currentWeekRange.id : null;
+    const selectedWeekValue = window.selectedStatsWeek
+        ? `${window.selectedStatsWeek.start}|${window.selectedStatsWeek.end}`
+        : null;
+    const defaultWeekValue = weekOptions.some(option => option.value === selectedWeekValue)
+        ? selectedWeekValue
+        : fallbackWeekValue;
     setSelectOptions(weekSelect, weekOptions, defaultWeekValue);
 
     const selectedWeekRange = weekRanges.find(range => range.id === weekSelect.value) || weekRanges[0] || null;
@@ -379,9 +421,18 @@ export function updateStatsPeriodControls() {
         ? { start: selectedWeekRange.start, end: selectedWeekRange.end }
         : null;
 
-    yearControl.style.display = (window.currentStatsPeriod === 'year' || window.currentStatsPeriod === 'month' || window.currentStatsPeriod === 'week') ? 'flex' : 'none';
-    monthControl.style.display = (window.currentStatsPeriod === 'month' || window.currentStatsPeriod === 'week') ? 'flex' : 'none';
+    const dayOptions = getDayOptionsForMonth(weekYear, weekMonth);
+    const fallbackDayValue = dayOptions.some(option => option.value === todayIso) ? todayIso : null;
+    const defaultDayValue = dayOptions.some(option => option.value === window.selectedStatsDay)
+        ? window.selectedStatsDay
+        : fallbackDayValue;
+    setSelectOptions(daySelect, dayOptions, defaultDayValue);
+    window.selectedStatsDay = daySelect.value || null;
+
+    yearControl.style.display = (window.currentStatsPeriod === 'year' || window.currentStatsPeriod === 'month' || window.currentStatsPeriod === 'week' || window.currentStatsPeriod === 'day') ? 'flex' : 'none';
+    monthControl.style.display = (window.currentStatsPeriod === 'month' || window.currentStatsPeriod === 'week' || window.currentStatsPeriod === 'day') ? 'flex' : 'none';
     weekControl.style.display = window.currentStatsPeriod === 'week' ? 'flex' : 'none';
+    dayControl.style.display = window.currentStatsPeriod === 'day' ? 'flex' : 'none';
 }
 
 window.isMobileViewport = isMobileViewport;
@@ -397,6 +448,7 @@ window.formatMonthLabelFr = formatMonthLabelFr;
 window.getStatsYears = getStatsYears;
 window.getMonthOptionsForYear = getMonthOptionsForYear;
 window.getMonthWeekRanges = getMonthWeekRanges;
+window.getDayOptionsForMonth = getDayOptionsForMonth;
 window.getCurrentStatsSelection = getCurrentStatsSelection;
 window.setSelectOptions = setSelectOptions;
 window.updateStatsPeriodControls = updateStatsPeriodControls;
